@@ -29,9 +29,10 @@ recortar_asm:
 	mov rbp, rsp
     push r12
     push r13
+	push r14
 
-    mov r12, rdx
-    mov r13, rcx
+    mov r12, rdx	;H
+    mov r13, rcx	;W
 
 ;Cuadrante B
 ;--------------
@@ -45,8 +46,27 @@ recortar_asm:
 	sub r10d, [rbp+16]	;Le resto el tam para obtener el offset
 
 .cuadradoB:
+	xor r14, r14	;Acumulador
+	xor r11, r11
+	mov rax, r9
+	imul [rbp+16]
+	mov r11d, eax	;Calculo el offset vertical de destino
+
+.ciclo:
 	mov rcx, r10	;Me paro al inicio del cuadrado
-	
+.loopLinea:
+	add rcx, rdx	;Me muevo al principio del cuadrado en la linea rdx
+	movdqu xmm0, [rdi+rcx]	;Tomo el pedazo de memoria
+
+	movdqu [rsi+r11], xmm0	;Guardo los valores en destino
+	add rcx, 16
+	cmp rcx, r8	;Me fijo que el desplazamiento horizontal todavia este dentro de la linea
+	jge .loopLinea
+
+	add rdx, r8
+	inc r14
+	cmp r14, [rbp+16]	;Me fijo que el acumulador sea menor que el total de filas
+	jne .ciclo
 
 ;	push qword [rbp + 16]
 ;	call recortar_c
