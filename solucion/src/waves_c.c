@@ -5,7 +5,7 @@ float sin_taylor (float x) {
     int k = floor(x/(2*pi));
     float r = x - (k*2*pi);
     x = r - pi;
-    return x - pow(x, 3)/6 + pow(x, 5)/120 - pow(x, 7)/5040
+    return x - pow(x, 3)/6 + pow(x, 5)/120 - pow(x, 7)/5040;
 }
 
 void waves_c (
