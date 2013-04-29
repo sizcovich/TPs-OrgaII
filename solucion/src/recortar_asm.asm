@@ -196,9 +196,6 @@ recortar_asm:
 	cmp r14d, [rbp+16]	;Me fijo que el acumulador sea menor que el total de filas
 	jne .cicloC
 
-;	push qword [rbp + 16]
-;	call recortar_c
-;	add rsp, 8
     pop rbx
     pop r15
     pop r14
