@@ -9,20 +9,24 @@ void rotar_c (
 ) {
 	unsigned char (*src_matrix)[src_row_size] = (unsigned char (*)[src_row_size]) src;
 	unsigned char (*dst_matrix)[dst_row_size] = (unsigned char (*)[dst_row_size]) dst;
-	int i,j;
-	int u,v;
-	int cx = floor(w/2);
-	int cy = floor(h/2);
-	for (i=0; i < h; ++i){
-		for (j=0; j < w; ++j){
-			float dx = (float) i - cx;
-			float dy = (float) j - cy;
-			u = cx + ((sqrt(2)/2.0) * dx) - ((sqrt(2)/2.0) * dy);
-			v = cy + ((sqrt(2)/2.0) * dx) + ((sqrt(2)/2.0) * dy);
-			if ((0<=u && u<=w) && (0<=v && v<=h)){
-				dst_matrix[i][j] = src_matrix[u][v];
+	
+	double sqrt2 = sqrt(2.0)/2.0;
+	
+	int cx = floor(w/2.0);
+	int cy = floor(h/2.0);
+	for (int i=0; i < w; ++i){
+		for (int j=0; j < h; ++j){
+			
+			double dx = i - cx;
+			double dy = j - cy;
+			
+			int u = cx + (sqrt2 * dx) - (sqrt2 * dy);
+			int v = cy + (sqrt2 * dx) + (sqrt2 * dy);
+			
+			if ((0 <= u && u < w) && (0 <= v && v < h) ){
+				dst_matrix[j][i] = src_matrix[v][u];
 			}else{
-				dst_matrix[i][j] = 0x00;
+				dst_matrix[j][i] = 0;
 			}
 		}
 	}
