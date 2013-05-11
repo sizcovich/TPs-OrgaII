@@ -10,80 +10,81 @@ void colorizar_c (
 	unsigned char (*src_matrix)[src_row_size] = (unsigned char (*)[src_row_size]) src;
 	unsigned char (*dst_matrix)[dst_row_size] = (unsigned char (*)[dst_row_size]) dst;
 	//1er Byte = B, 2do = G, 3ero = R
-	int i, j, l, k, maximo;
+	int i, j, l, k;
 	
-	for(i=1; i<h; ++i){
-		for (j=3; j < 3*w; j+=3){
-			int maximoR, maximoB, maximoG = 0;
-			
-			for(k=-1; k<1; ++k){	//Busco el maximoR
-				for (l=-3; l < 3; l+=3){	
-					if(maximoR < src_matrix[i+k][j+2+l]){
-						maximoR = src_matrix[i+k][j+2+l];
-					}
-				}
-			}
-			for(k=-1; k<1; ++k){	//Busco el maximoG
-				for (l=-3; l < 3; l+=3){	
-					if(maximoG < src_matrix[i+k][j+1+l]){
-						maximoG = src_matrix[i+k][j+1+l];
-					}
-				}
-			}
-			for(k=-1; k<1; ++k){	//Busco el maximoB
-				for (l=-3; l < 3; l+=3){	
-					if(maximoB < src_matrix[i+k][j+0+l]){
-						maximoB = src_matrix[i+k][j+0+l];
-					}
-				}
-			}
+	//Completo la primer linea
+	for (j = 0; j < (3*w); ++j) {
+		dst_matrix[0][j] = src_matrix[0][j];
+	}
 
-			//Llamamos 0 a B, 1 a G y 2 a R 
-			if(maximoR >= maximoG && maximoR >= maximoB)
-				maximo = 2;
-			if(maximoR < maximoG && maximoG >= maximoB)
-				maximo = 1;
-			if(maximoR < maximoB && maximoR < maximoB)
-				maximo = 0;
+	for (i = 1; i < (h - 1); ++i) {
+		for (j = 0; j < 3; ++j) {
+			dst_matrix[i][j] = src_matrix[i][j];
+		}
+
+		for (j = 1; j < (w - 1); j += 1) {
+			int maximoR, maximoB, maximoG;
+
+			maximoR = 0;
+			maximoB = 0;
+			maximoG = 0;
+
+			for (k = -1; k <= 1; ++k) {
+				for (l = -1; l <= 1; l += 1) {	
+					if (maximoR < src_matrix[i+k][(3*(j+l))+2]) {	//Busco el maximoR
+						maximoR = src_matrix[i+k][(3*(j+l))+2];
+					}
+
+					if (maximoG < src_matrix[i+k][(3*(j+l))+1]) {	//Busco el maximoG
+						maximoG = src_matrix[i+k][(3*(j+l))+1];
+					}
+
+					if (maximoB < src_matrix[i+k][(3*(j+l))+0]) {	//Busco el maximoB
+						maximoB = src_matrix[i+k][(3*(j+l))+0];
+					}
+				}
+			}
 
 			float fcR, fcB, fcG;
-			switch (maximo){
-				case 0:
-					fcB = (1+alpha);
-					fcG = (1-alpha);
-					fcR = (1-alpha);
-					break;
-				case 1:
-					fcB = (1-alpha);
-					fcG = (1+alpha);
-					fcR = (1-alpha);
-					break;
-				case 2:
-					fcB = (1-alpha);
-					fcG = (1-alpha);
-					fcR = (1+alpha);
-					break;
+			fcR = fcB = fcG = (1-alpha);
+
+			if (maximoR >= maximoG && maximoR >= maximoB) {
+				fcR = (1+alpha);
+			}
+			if (maximoR < maximoG && maximoG >= maximoB) {
+				fcG = (1+alpha);
+			}
+			if (maximoR < maximoB && maximoG < maximoB) {
+				fcB = (1+alpha);
 			}
 
-			int val = fcB*src_matrix[i][j];
+			int val = fcB*src_matrix[i][(3*j)];
 			if(val < 255){
-				dst_matrix[i][j] = val;
+				dst_matrix[i][(3*j)] = val;
 			} else {
-				dst_matrix[i][j] = 255;
+				dst_matrix[i][(3*j)] = 255;
 			}
-			val = fcG*src_matrix[i][j+1];
+			val = fcG*src_matrix[i][(3*j)+1];
 			if(val < 255){
-				dst_matrix[i][j+1] = val;
+				dst_matrix[i][(3*j)+1] = val;
 			} else {
-				dst_matrix[i][j+1] = 255;
+				dst_matrix[i][(3*j)+1] = 255;
 			}
-			val = fcR*src_matrix[i][j+2];
+			val = fcR*src_matrix[i][(3*j)+2];
 			if(val < 255){
-				dst_matrix[i][j+2] = val;
+				dst_matrix[i][(3*j)+2] = val;
 			} else {
-				dst_matrix[i][j+2] = 255;
+				dst_matrix[i][(3*j)+2] = 255;
 			}
 			
 		}
+
+		for (j = 3*(w-1); j < (3*w); ++j) {
+			dst_matrix[i][j] = src_matrix[i][j];
+		}
+	}
+
+	for (j = 0; j < (3*w); ++j) {
+		dst_matrix[h-1][j] = src_matrix[h-1][j];
 	}
 }
