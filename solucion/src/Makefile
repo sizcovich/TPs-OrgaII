@@ -2,7 +2,7 @@ CC = gcc
 ASM = nasm
 DBG = gdb
 CFLAGS = -ggdb -Wall -std=c99 -pedantic -m64
-ASMFLAGS = -f macho -g -F
+ASMFLAGS = -f elf64 -g -F
 OPENCV_LIB = `pkg-config --cflags --libs opencv`
 
 BUNDLEDIR = ../../tp2-bundle
