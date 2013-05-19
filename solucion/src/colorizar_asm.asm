@@ -1,3 +1,4 @@
+BITS 64
 ; void colorizar_asm (
 ; 	unsigned char *src,
 ; 	unsigned char *dst,

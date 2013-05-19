@@ -1,3 +1,4 @@
+BITS 64
 ; void rotar_asm (
 ; 	unsigned char *src,
 ; 	unsigned char *dst,
