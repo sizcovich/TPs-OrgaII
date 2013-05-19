@@ -1,3 +1,4 @@
+BITS 64
 ; void waves_c (
 ;	unsigned char *src,
 ;	unsigned char *dst,
