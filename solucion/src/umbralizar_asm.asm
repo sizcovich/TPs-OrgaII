@@ -45,19 +45,20 @@ umbralizar_asm:
 	movq xmm0, r9
 	pxor xmm2, xmm2
 	pshufb xmm0, xmm2 ;me guardo el minimo en xmm0
+	pxor xmm1, xmm1
 	movdqu xmm1, [rbp+16]
-	pshufb xmm1, xmm2 ;me guardo el maximo en xmm1
+	pshufb xmm1, xmm2 ;me guardo el maximo en xmm1****** lo guarda como -128
 .ciclo:
 	movdqu xmm2, [rdi]
 	;-----empiezo a comparar
-	movups xmm3, xmm0 ;me guardo el minimo
+	movdqu xmm3, xmm0 ;me guardo el minimo
 	pcmpgtw xmm3, xmm2 ;min > pixel, voy a ver cuando es 0
 	;-----quiero ver cuando el pixel es menor al minimo
-	movups xmm4, xmm1 ;max > pixel
-	pcmpgtw xmm4, xmm2
+	movdqu xmm4, xmm1 
+	pcmpgtw xmm4, xmm2 ;max > pixel
 	;-----me guardo la mascara de maximo
 	pxor xmm15, xmm15
-    movdqu xmm6, xmm2
+    movdqu xmm6, xmm2 ;************** despues de est xmm6 vale 0 y xmm2 vale otras cosas
 	punpckhbw xmm6, xmm15 ;en xmm6 tengo la parte alta
 	punpcklbw xmm2, xmm15 ;en xmm2 tengo la parte baja
 	movdqu xmm10, xmm6
