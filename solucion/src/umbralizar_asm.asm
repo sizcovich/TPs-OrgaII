@@ -30,18 +30,23 @@ umbralizar_asm:
 	push rbp
 	mov rbp, rsp
 	;-----voy a calcular el tamaño
-    mov rcx, r8
-	imul rcx, rdx ;me guardo el tamaño
+    mov rax, r8
+	imul rax, rdx ;me guardo el tamaño
+	xor rdx, rdx
+	mov rcx, 16
+	idiv rcx
+	mov rcx, rax
 	;-----me guardo los parametros
 	;me guardo los parámetros de entrada necesarios
-	mov xmm5, [rbp+24]
+	movdqu xmm5, [rbp+24]
 	pshufd xmm5, xmm5, 0 ;Q en XMM5
 	movdqu xmm7, xmm5 ;me guardo Q en float
 	cvtdq2ps xmm7, xmm7
-	movdqu xmm0, r9
-	pshufb xmm0, 0 ;me guardo el minimo en xmm0
+	movq xmm0, r9
+	pxor xmm2, xmm2
+	pshufb xmm0, xmm2 ;me guardo el minimo en xmm0
 	movdqu xmm1, [rbp+16]
-	pshufb xmm1, 0 ;me guardo el maximo en xmm1
+	pshufb xmm1, xmm2 ;me guardo el maximo en xmm1
 .ciclo:
 	movdqu xmm2, [rdi]
 	;-----empiezo a comparar
@@ -89,15 +94,18 @@ umbralizar_asm:
 	;----empaqueto
 	packusdw xmm10, xmm6
 	packusdw xmm2, xmm11
-	packusdw xmm10, xmm2
+	packuswb xmm10, xmm2
 	;----filtrado por mascara
 	pand xmm10, xmm3 ;filtre por el minimo
 	por xmm10, xmm4 ;filtre por el maximo
 	movdqu [rsi], xmm10 ;lo guardo en destino
-	sub rcx, 15
+	;sub rcx, 15
 	add rdi, 16
 	add rsi, 16
-	loop .ciclo
+	;loop .ciclo
+	dec rcx
+	cmp rcx, 0
+	jne .ciclo
 .fin:
 	pop rbp
 	ret
