@@ -30,12 +30,12 @@ umbralizar_asm:
 	push rbp
 	mov rbp, rsp
 	;-----voy a calcular el tamaño
-    mov rax, r8
-	imul rax, rdx ;me guardo el tamaño
-	xor rdx, rdx
-	mov rcx, 16
-	idiv rcx
-	mov rcx, rax
+    mov rcx, r8
+	imul rcx, rdx ;me guardo el tamaño
+	;xor rdx, rdx
+	;mov rcx, 16
+	;idiv rcx
+	;mov rcx, rax
 	;-----me guardo los parametros
 	;me guardo los parámetros de entrada necesarios
 	movdqu xmm5, [rbp+24]
@@ -99,11 +99,11 @@ umbralizar_asm:
 	pand xmm10, xmm3 ;filtre por el minimo
 	por xmm10, xmm4 ;filtre por el maximo
 	movdqu [rsi], xmm10 ;lo guardo en destino
-	;sub rcx, 15
+	sub rcx, 16
 	add rdi, 16
 	add rsi, 16
 	;loop .ciclo
-	dec rcx
+	;dec rcx
 	cmp rcx, 0
 	jne .ciclo
 .fin:
