@@ -24,20 +24,20 @@ extern umbralizar_c
 
 global umbralizar_asm
 
+section .rodata:
+;Para invertir las mascaras
+notMask: dw 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF
+;Para acomodar el filtro por maximo
+maxfilter: dw 0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFF00, 0xFF00
+
 section .text
 
 umbralizar_asm:
 	push rbp
 	mov rbp, rsp
-	;-----voy a calcular el tamaño
-    mov rcx, r8
-	imul rcx, rdx ;me guardo el tamaño
-	;xor rdx, rdx
-	;mov rcx, 16
-	;idiv rcx
-	;mov rcx, rax
-	;-----me guardo los parametros
-	;me guardo los parámetros de entrada necesarios
+	;-----voy a calcular el tamanio
+	mov rcx, r8
+	imul rcx, rdx ;me guardo el tamanio
 	movdqu xmm5, [rbp+24]
 	pshufd xmm5, xmm5, 0 ;Q en XMM5
 	movdqu xmm7, xmm5 ;me guardo Q en float
@@ -48,25 +48,54 @@ umbralizar_asm:
 	pxor xmm1, xmm1
 	movdqu xmm1, [rbp+16]
 	pshufb xmm1, xmm2 ;me guardo el maximo en xmm1****** lo guarda como -128
+	pxor xmm15, xmm15
+	punpcklbw xmm0, xmm15
+	punpcklbw xmm1, xmm15
+
 .ciclo:
 	movdqu xmm2, [rdi]
-	;-----empiezo a comparar
-	movdqu xmm3, xmm0 ;me guardo el minimo
-	pcmpgtw xmm3, xmm2 ;min > pixel, voy a ver cuando es 0
-	;-----quiero ver cuando el pixel es menor al minimo
-	movdqu xmm4, xmm1 
-	pcmpgtw xmm4, xmm2 ;max > pixel
-	;-----me guardo la mascara de maximo
-	pxor xmm15, xmm15
-    movdqu xmm6, xmm2 ;************** despues de est xmm6 vale 0 y xmm2 vale otras cosas
+	movdqu xmm6, xmm2 ;************** despues de est xmm6 vale 0 y xmm2 vale otras cosas
 	punpckhbw xmm6, xmm15 ;en xmm6 tengo la parte alta
 	punpcklbw xmm2, xmm15 ;en xmm2 tengo la parte baja
+
+	;-----empiezo a comparar
+	movdqu xmm3, xmm0 ;me guardo el minimo
+	movdqu xmm13, xmm0 ;me guardo el minimo
+	pcmpgtw xmm3, xmm2 ;min > pixel, voy a ver cuando es 0 [Parte baja]
+	pcmpgtw xmm13, xmm6 ;min > pixel, voy a ver cuando es 0 [Parte alta]
+	;-----quiero ver cuando el pixel es menor al minimo
+	movdqu xmm4, xmm1 
+	movdqu xmm14, xmm1
+	pcmpgtw xmm4, xmm2 ;max > pixel [Parte baja]
+	pcmpgtw xmm14, xmm6 ;max > pixel [Parte alta]
+
+	;Para que las mascaras me queden bien armadas necesito tambien necesito
+	;comparar por igual al maximo
+	movdqu xmm10, xmm1
+	pcmpeqw xmm10, xmm2
+	por xmm4, xmm10
+
+	movdqu xmm10, xmm1
+	pcmpeqw xmm10, xmm6
+	por xmm14, xmm10
+	;-----me guardo la mascara de maximo
+
+	;-----Invierto las mascaras
+	movdqu xmm10, [notMask]
+	pxor xmm3, xmm10	;FF si min < pixel
+	pxor xmm4, xmm10	;FF si max < pixel
+	pxor xmm13, xmm10
+	pxor xmm14, xmm10
+	movdqu xmm10, [maxfilter]
+	psubusw xmm4, xmm10	;FF si max < pixel
+	psubusw xmm14, xmm10
+
 	movdqu xmm10, xmm6
 	movdqu xmm11, xmm2
-	punpckhwd xmm10, xmm15 ;desempaqueto
-	punpcklwd xmm11, xmm15
-	punpcklwd xmm6, xmm15
-	punpckhwd xmm2, xmm15
+	punpckhwd xmm10, xmm15	;1 cuarto
+	punpcklwd xmm11, xmm15	;4 cuarto
+	punpcklwd xmm6, xmm15	;2 cuarto
+	punpckhwd xmm2, xmm15	;3 cuarto
 	;-----convertimos los int a float
 	cvtdq2ps xmm10, xmm10
 	cvtdq2ps xmm6, xmm6
@@ -92,14 +121,20 @@ umbralizar_asm:
 	cvtps2dq xmm10, xmm10
 	cvtps2dq xmm11, xmm11
 	cvtps2dq xmm2, xmm2
+	
 	;----empaqueto
-	packusdw xmm10, xmm6
-	packusdw xmm2, xmm11
-	packuswb xmm10, xmm2
+	packusdw xmm6, xmm10
+	packusdw xmm11, xmm2
+
 	;----filtrado por mascara
-	pand xmm10, xmm3 ;filtre por el minimo
-	por xmm10, xmm4 ;filtre por el maximo
-	movdqu [rsi], xmm10 ;lo guardo en destino
+	pand xmm6, xmm13 ;filtre por el minimo	[Parte alta]
+	pand xmm11, xmm3 ;filtre por el minimo	[Parte baja]
+	por xmm6, xmm14 ;filtre por el maximo	[Parte alta]
+	por xmm11, xmm4 ;filtre por el maximo	[Parte baja]
+
+	packuswb xmm11, xmm6
+
+	movdqu [rsi], xmm11 ;lo guardo en destino
 	sub rcx, 16
 	add rdi, 16
 	add rsi, 16
