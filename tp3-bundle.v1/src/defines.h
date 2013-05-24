@@ -24,6 +24,12 @@ NOTA:
 
 /* INDICES EN LA GDT */
 #define GDT_IDX_NULL_DESC		0
+#define GDT_IDX_CODE0_DESC		1
+#define GDT_IDX_DATA0_DESC		2
+#define GDT_IDX_CODE2_DESC		3
+#define GDT_IDX_DATA2_DESC		4
+#define GDT_IDX_CODE3_DESC		5
+#define GDT_IDX_DATA3_DESC		6
 
 /* DIRECCIONES VIRTUALES DE CÓDIGO, PILA y DATOS */
 #define TASK_CODE    			0x003A0000 /* direccion virtual codigo */
