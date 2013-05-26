@@ -38,10 +38,11 @@ umbralizar_asm:
 	;-----voy a calcular el tamanio
 	mov rcx, r8
 	imul rcx, rdx ;me guardo el tamanio
-	movdqu xmm5, [rbp+24]
-	pshufd xmm5, xmm5, 0 ;Q en XMM5
-	movdqu xmm7, xmm5 ;me guardo Q en float
-	cvtdq2ps xmm7, xmm7
+	xor r10, r10
+	mov r10b, [rbp+24]
+	movq xmm7, r10
+	pshufd xmm7, xmm7, 0 ;Q en XMM5
+	cvtdq2ps xmm7, xmm7	;me guardo Q en float
 	movq xmm0, r9
 	pxor xmm2, xmm2
 	pshufb xmm0, xmm2 ;me guardo el minimo en xmm0
