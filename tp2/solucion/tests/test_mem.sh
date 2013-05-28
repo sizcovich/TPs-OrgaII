@@ -45,63 +45,63 @@ do
 
 
 	# halftone
-#	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i c halftone $file
-#	if [ $? != "0" ]; then
-#		OKVALGRIND=0
-#		echo "Error/es en el filtro: halftone"
-#	fi
-#
-#	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i asm halftone $file
-#	if [ $? != "0" ]; then
-#		OKVALGRIND=0
-#		echo "Error/es en el filtro: halftone"
-#	fi
-#
-#
-#
-#	# colorizar
-#	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i c colorizar $file 0.5
-#	if [ $? != "0" ]; then
-#		OKVALGRIND=0
-#		echo "Error/es en el filtro: colorizar"
-#	fi
-#
-#	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i asm colorizar $file 0.5
-#	if [ $? != "0" ]; then
-#		OKVALGRIND=0
-#		echo "Error/es en el filtro: colorizar"
-#	fi
-#
-#
-#
-#	# umbralizar
-#	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i c umbralizar $file 64 128 16
-#	if [ $? != "0" ]; then
-#		OKVALGRIND=0
-#		echo "Error/es en el filtro: umbralizar"
-#	fi
-#
-#	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i asm umbralizar $file 64 128 16
-#	if [ $? != "0" ]; then
-#		OKVALGRIND=0
-#		echo "Error/es en el filtro: umbralizar"
-#	fi
-#
-#
-#	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i c umbralizar $file 71 169 21
-#	if [ $? != "0" ]; then
-#		OKVALGRIND=0
-#		echo "Error/es en el filtro: umbralizar"
-#	fi
-#
-#	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i asm umbralizar $file 71 169 21
-#	if [ $? != "0" ]; then
-#		OKVALGRIND=0
-#		echo "Error/es en el filtro: umbralizar"
-#	fi
-#
-#
-#
+	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i c halftone $file
+	if [ $? != "0" ]; then
+		OKVALGRIND=0
+		echo "Error/es en el filtro: halftone"
+	fi
+
+	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i asm halftone $file
+	if [ $? != "0" ]; then
+		OKVALGRIND=0
+		echo "Error/es en el filtro: halftone"
+	fi
+
+
+
+	# colorizar
+	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i c colorizar $file 0.5
+	if [ $? != "0" ]; then
+		OKVALGRIND=0
+		echo "Error/es en el filtro: colorizar"
+	fi
+
+	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i asm colorizar $file 0.5
+	if [ $? != "0" ]; then
+		OKVALGRIND=0
+		echo "Error/es en el filtro: colorizar"
+	fi
+
+
+
+	# umbralizar
+	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i c umbralizar $file 64 128 16
+	if [ $? != "0" ]; then
+		OKVALGRIND=0
+		echo "Error/es en el filtro: umbralizar"
+	fi
+
+	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i asm umbralizar $file 64 128 16
+	if [ $? != "0" ]; then
+		OKVALGRIND=0
+		echo "Error/es en el filtro: umbralizar"
+	fi
+
+
+	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i c umbralizar $file 71 169 21
+	if [ $? != "0" ]; then
+		OKVALGRIND=0
+		echo "Error/es en el filtro: umbralizar"
+	fi
+
+	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i asm umbralizar $file 71 169 21
+	if [ $? != "0" ]; then
+		OKVALGRIND=0
+		echo "Error/es en el filtro: umbralizar"
+	fi
+
+
+
 	# waves
 	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i c waves $file 1 1 64
 	if [ $? != "0" ]; then
