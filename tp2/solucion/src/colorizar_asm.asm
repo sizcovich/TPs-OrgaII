@@ -51,11 +51,9 @@ colorizar_asm:
 		
 		;add RDI, R8	;Avanzo una fila el puntero de la imagen fuente
 		;add RSI, R9	;Avanzo una fila el puntero de la imagen destino
-	sub rsp, 8
 
-	call colorizar_c
-
-	add rsp, 8
+	movdqu xmm0, [rdi]
+	movdqu [rsi], xmm0
 	;pop RBP
 	ret
 

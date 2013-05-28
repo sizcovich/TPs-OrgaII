@@ -65,6 +65,7 @@ recortar_asm:
 
 .cicloB:
 	xor r15, r15    ;Acumulador
+	add r15, 16
 	mov rcx, r10	;Me paro al inicio del cuadrado
 	add rcx, rdx	;Me muevo al principio del cuadrado en la linea rdx
 .loopLineaB:
@@ -76,13 +77,18 @@ recortar_asm:
   
 	cmp r15d, eax	;Me fijo que el desplazamiento horizontal todavia este dentro de la linea
 	jl .loopLineaB
+	sub r15d, eax	;Me quedo con la diferencia por la que me pase
+	sub ecx, r15d	;Retrocedo el exceso
+	sub ebx, r15d
+	movdqu xmm0, [rdi+rcx]	;Tomo el pedazo de memoria
+	movdqu [rsi+rbx], xmm0	;Guardo los valores en destino
 
 	add rdx, r8
 	add r11, r9
 	mov rbx, r11
 	inc r14
 	cmp r14d, eax	;Me fijo que el acumulador sea menor que el total de filas
-	jne .cicloB
+	jl .cicloB
 
 ;-------------------------------------------------
 .cuadradoD:
@@ -105,6 +111,7 @@ recortar_asm:
 
 .cicloD:
 	xor r15, r15    ;Acumulador
+	add r15, 16
 	mov rcx, r10	;Me paro al inicio del cuadrado
 	add rcx, rdx	;Me muevo al principio del cuadrado en la linea rdx
 .loopLineaD:
@@ -117,13 +124,18 @@ recortar_asm:
   
 	cmp r15d, eax	;Me fijo que el desplazamiento horizontal todavia este dentro de la linea
 	jl .loopLineaD
+	sub r15d, eax	;Me quedo con la diferencia por la que me pase
+	sub ecx, r15d	;Retrocedo el exceso
+	sub ebx, r15d
+	movdqu xmm0, [rdi+rcx]	;Tomo el pedazo de memoria
+	movdqu [rsi+rbx], xmm0	;Guardo los valores en destino
 
 	add rdx, r8
 	add r11, r9
 	mov rbx, r11
 	inc r14
 	cmp r14d, eax	;Me fijo que el acumulador sea menor que el total de filas
-	jne .cicloD
+	jl .cicloD
   
 ;-------------------------------------------------
 .cuadradoA:
@@ -214,7 +226,7 @@ recortar_asm:
 	mov rbx, r11
 	inc r14
 	cmp r14d, eax	;Me fijo que el acumulador sea menor que el total de filas
-	jne .cicloC
+	jl .cicloC
 
 	add rsp, 8
     pop rbx
