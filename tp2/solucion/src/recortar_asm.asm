@@ -122,39 +122,39 @@ recortar_asm:
 	jne .cicloD
   
 ;-------------------------------------------------
-;.cuadradoA:
-;    xor rdx, rdx    ;primer fila
-;	xor r10, r10    ;Offset vertical src
-;  
-;	xor r14, r14	;Acumulador
-;	xor r11, r11    ;Offset vertical dst
-;	mov eax, [rbp+16]
-;	imul dword r9
-;	mov r11d, eax	;Calculo el offset vertical de destino
-;	add r11d, [rbp+16]
-;	mov rbx, r11
-;
-;.cicloA:
-;	xor r15, r15    ;Acumulador
-;	mov rcx, r10	;Me paro al inicio del cuadrado
-;	add rcx, rdx	;Me muevo al principio del cuadrado en la linea rdx
-;.loopLineaA:
-;	movdqu xmm0, [rdi+rcx]	;Tomo el pedazo de memoria
-;
-;	movdqu [rsi+rbx], xmm0	;Guardo los valores en destino
-;	add rcx, 16
-;	add rbx, 16
-;	add r15, 16
-;  
-;	cmp r15d, [rbp + 16]	;Me fijo que el desplazamiento horizontal todavia este dentro de la linea
-;	jl .loopLineaA
-;
-;	add rdx, r8
-;	add r11, r9
-;	mov rbx, r11
-;	inc r14
-;	cmp r14d, [rbp+16]	;Me fijo que el acumulador sea menor que el total de filas
-;	jne .cicloA
+.cuadradoA:
+    xor rdx, rdx    ;primer fila
+	xor r10, r10    ;Offset vertical src
+  
+	xor r14, r14	;Acumulador
+	xor r11, r11    ;Offset vertical dst
+	mov eax, [rbp+16]
+	imul dword r9
+	mov r11d, eax	;Calculo el offset vertical de destino
+	add r11d, [rbp+16]
+	mov rbx, r11
+
+.cicloA:
+	xor r15, r15    ;Acumulador
+	mov rcx, r10	;Me paro al inicio del cuadrado
+	add rcx, rdx	;Me muevo al principio del cuadrado en la linea rdx
+.loopLineaA:
+	movdqu xmm0, [rdi+rcx]	;Tomo el pedazo de memoria
+
+	movdqu [rsi+rbx], xmm0	;Guardo los valores en destino
+	add rcx, 16
+	add rbx, 16
+	add r15, 16
+  
+	cmp r15d, [rbp + 16]	;Me fijo que el desplazamiento horizontal todavia este dentro de la linea
+	jl .loopLineaA
+
+	add rdx, r8
+	add r11, r9
+	mov rbx, r11
+	inc r14
+	cmp r14d, [rbp+16]	;Me fijo que el acumulador sea menor que el total de filas
+	jl .cicloA
 
 ;-------------------------------------------------
 .cuadradoC:
@@ -164,10 +164,12 @@ recortar_asm:
     sub eax, [rbp+16]
     imul r8
     mov edx, eax    ;offset vertical
+
+	 mov eax, [rbp+16]	;tam
    
 	xor r10, r10
-	mov r10d, r13d	;Copio el ancho
-	sub r10d, [rbp+16]	;Le resto el tam para obtener el offset horizontal
+	;mov r10d, r13d	;Copio el ancho
+	;sub r10d, eax	;Le resto el tam para obtener el offset horizontal
   
 	xor r14, r14	;Acumulador
 	xor r11, r11    ;Offset vertical dst(osea 0)
@@ -177,6 +179,7 @@ recortar_asm:
 	xor r15, r15    ;Acumulador
 	mov rcx, r10	;Me paro al inicio del cuadrado
 	add rcx, rdx	;Me muevo al principio del cuadrado en la linea rdx
+	add ebx, eax
 .loopLineaC:
 	movdqu xmm0, [rdi+rcx]	;Tomo el pedazo de memoria
 
@@ -185,14 +188,14 @@ recortar_asm:
 	add rbx, 16
 	add r15, 16
   
-	cmp r15d, [rbp + 16]	;Me fijo que el desplazamiento horizontal todavia este dentro de la linea
+	cmp r15d, eax	;Me fijo que el desplazamiento horizontal todavia este dentro de la linea
 	jl .loopLineaC
 
 	add rdx, r8
 	add r11, r9
 	mov rbx, r11
 	inc r14
-	cmp r14d, [rbp+16]	;Me fijo que el acumulador sea menor que el total de filas
+	cmp r14d, eax	;Me fijo que el acumulador sea menor que el total de filas
 	jne .cicloC
 
 	add rsp, 8
