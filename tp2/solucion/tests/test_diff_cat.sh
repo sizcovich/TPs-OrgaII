@@ -24,12 +24,12 @@ if [ $? != "0" ]; then
 	echo "Diferencias en filtro: recortar"
 fi
 
-$BINFILE -v -i asm recortar $file 100
-$DIFF $DIFFFLAGS $file".recortar.tam-100.asm.bmp" $TESTIMGCATEDRA/"lena.recortar.catedra.bmp" 0
-if [ $? != "0" ]; then
-	OKDIFF=0
-	echo "Diferencias en filtro: recortar"
-fi
+#$BINFILE -v -i asm recortar $file 100
+#$DIFF $DIFFFLAGS $file".recortar.tam-100.asm.bmp" $TESTIMGCATEDRA/"lena.recortar.catedra.bmp" 0
+#if [ $? != "0" ]; then
+#	OKDIFF=0
+#	echo "Diferencias en filtro: recortar"
+#fi
 
 
 
@@ -41,29 +41,29 @@ if [ $? != "0" ]; then
 	echo "Diferencias en filtro: halftone"
 fi
 
-$BINFILE -v -i asm halftone $file
-$DIFF $DIFFFLAGS $file".halftone.asm.bmp" $TESTIMGCATEDRA/"lena.halftone.catedra.bmp" 0
-if [ $? != "0" ]; then
-	OKDIFF=0
-	echo "Diferencias en filtro: halftone"
-fi
+#$BINFILE -v -i asm halftone $file
+#$DIFF $DIFFFLAGS $file".halftone.asm.bmp" $TESTIMGCATEDRA/"lena.halftone.catedra.bmp" 0
+#if [ $? != "0" ]; then
+#	OKDIFF=0
+#	echo "Diferencias en filtro: halftone"
+#fi
 
 
 
 # colorizar
 $BINFILE -v -i c colorizar $file 0.5
-$DIFF $DIFFFLAGS $file".colorizar.alpha-0.50.c.bmp" $TESTIMGCATEDRA/"lena.colorizar.catedra.bmp" 5
+$DIFF $DIFFFLAGS $file".colorizar-0.50.c.bmp" $TESTIMGCATEDRA/"lena.colorizar.catedra.bmp" 5
 if [ $? != "0" ]; then
 	OKDIFF=0
 	echo "Diferencias en filtro: colorizar"
 fi
 
-$BINFILE -v -i asm colorizar $file 0.5
-$DIFF $DIFFFLAGS $file".colorizar.alpha-0.50.asm.bmp" $TESTIMGCATEDRA/"lena.colorizar.catedra.bmp" 5
-if [ $? != "0" ]; then
-	OKDIFF=0
-	echo "Diferencias en filtro: colorizar"
-fi
+#$BINFILE -v -i asm colorizar $file 0.5
+#$DIFF $DIFFFLAGS $file".colorizar.alpha-0.50.asm.bmp" $TESTIMGCATEDRA/"lena.colorizar.catedra.bmp" 5
+#if [ $? != "0" ]; then
+#	OKDIFF=0
+#	echo "Diferencias en filtro: colorizar"
+#fi
 
 
 
@@ -75,12 +75,12 @@ if [ $? != "0" ]; then
 	echo "Diferencias en filtro: umbralizar"
 fi
 
-$BINFILE -v -i asm umbralizar $file 64 128 16
-$DIFF $DIFFFLAGS $file".umbralizar.min-64.max-128.q-16.asm.bmp" $TESTIMGCATEDRA/"lena.umbralizar.catedra.bmp" 5
-if [ $? != "0" ]; then
-	OKDIFF=0
-	echo "Diferencias en filtro: umbralizar"
-fi
+#$BINFILE -v -i asm umbralizar $file 64 128 16
+#$DIFF $DIFFFLAGS $file".umbralizar.min-64.max-128.q-16.asm.bmp" $TESTIMGCATEDRA/"lena.umbralizar.catedra.bmp" 5
+#if [ $? != "0" ]; then
+#	OKDIFF=0
+#	echo "Diferencias en filtro: umbralizar"
+#fi
 
 
 
@@ -92,12 +92,12 @@ if [ $? != "0" ]; then
 	echo "Diferencias en filtro: waves"
 fi
 
-$BINFILE -v -i asm waves $file 8 8 32
-$DIFF $DIFFFLAGS $file".waves.x_scale-8.00.y_scale-8.00.g_scale-32.00.asm.bmp" $TESTIMGCATEDRA/"lena.waves.catedra.bmp" 5
-if [ $? != "0" ]; then
-	OKDIFF=0
-	echo "Diferencias en filtro: waves"
-fi
+#$BINFILE -v -i asm waves $file 8 8 32
+#$DIFF $DIFFFLAGS $file".waves.x_scale-8.00.y_scale-8.00.g_scale-32.00.asm.bmp" $TESTIMGCATEDRA/"lena.waves.catedra.bmp" 5
+#if [ $? != "0" ]; then
+#	OKDIFF=0
+#	echo "Diferencias en filtro: waves"
+#fi
 
 
 

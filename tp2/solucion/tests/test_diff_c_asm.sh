@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DIFF=../bin/tp2diff
-DIFFFLAGS= ""
+DIFFFLAGS="-q"
 TESTINFILE=../data/test-in/test.in
 TESTINDIR=../data/test-in
 TESTOUTDIR=../data/test-out
@@ -39,47 +39,47 @@ do
 
 
 	# halftone
-#	$BINFILE -v -i c halftone $file
-#	$BINFILE -v -i asm halftone $file
+	$BINFILE -v -i c halftone $file
+	$BINFILE -v -i asm halftone $file
 
-#	$DIFF $DIFFFLAGS $file".halftone.c.bmp" $file".halftone.asm.bmp" 0
-#	if [ $? != "0" ]; then
-#		OKDIFF=0
-#		echo "diferencias en filtro: halftone"
-#	fi
+	$DIFF $DIFFFLAGS $file".halftone.c.bmp" $file".halftone.asm.bmp" 0
+	if [ $? != "0" ]; then
+		OKDIFF=0
+		echo "diferencias en filtro: halftone"
+	fi
 
 
 
 	# colorizar
-#	$BINFILE -v -i c colorizar $file 0.5
-#	$BINFILE -v -i asm colorizar $file 0.5
+	$BINFILE -v -i c colorizar $file 0.5
+	$BINFILE -v -i asm colorizar $file 0.5
 
-#	$DIFF $DIFFFLAGS $file".colorizar.alpha-0.50.c.bmp" $file".colorizar.alpha-0.50.asm.bmp" 5
-#	if [ $? != "0" ]; then
-#		OKDIFF=0
-#		echo "diferencias en filtro: colorizar"
-#	fi
+	$DIFF $DIFFFLAGS $file".colorizar-0.50.c.bmp" $file".colorizar-0.50.asm.bmp" 5
+	if [ $? != "0" ]; then
+		OKDIFF=0
+		echo "diferencias en filtro: colorizar"
+	fi
 
 
 
 	# umbralizar
-#	$BINFILE -v -i c umbralizar $file 64 128 16
-#	$BINFILE -v -i asm umbralizar $file 64 128 16
+	$BINFILE -v -i c umbralizar $file 64 128 16
+	$BINFILE -v -i asm umbralizar $file 64 128 16
 
-#	$DIFF $DIFFFLAGS $file".umbralizar.min-64.max-128.q-16.c.bmp" $file".umbralizar.min-64.max-128.q-16.asm.bmp" 5
-#	if [ $? != "0" ]; then
-#		OKDIFF=0
-#		echo "diferencias en filtro: umbralizar"
-#	fi
+	$DIFF $DIFFFLAGS $file".umbralizar.min-64.max-128.q-16.c.bmp" $file".umbralizar.min-64.max-128.q-16.asm.bmp" 5
+	if [ $? != "0" ]; then
+		OKDIFF=0
+		echo "diferencias en filtro: umbralizar"
+	fi
 
-#	$BINFILE -v -i c umbralizar $file 71 169 21
-#	$BINFILE -v -i asm umbralizar $file 71 169 21
+	$BINFILE -v -i c umbralizar $file 71 169 21
+	$BINFILE -v -i asm umbralizar $file 71 169 21
 
-#	$DIFF $DIFFFLAGS $file".umbralizar.min-71.max-169.q-21.c.bmp" $file".umbralizar.min-71.max-169.q-21.asm.bmp" 5
-#	if [ $? != "0" ]; then
-#		OKDIFF=0
-#		echo "diferencias en filtro: umbralizar"
-#	fi
+	$DIFF $DIFFFLAGS $file".umbralizar.min-71.max-169.q-21.c.bmp" $file".umbralizar.min-71.max-169.q-21.asm.bmp" 5
+	if [ $? != "0" ]; then
+		OKDIFF=0
+		echo "diferencias en filtro: umbralizar"
+	fi
 
 
 
