@@ -41,21 +41,22 @@ umbralizar_asm:
 	xor r10, r10
 	mov r10b, [rbp+24]
 	movq xmm7, r10
-	pshufd xmm7, xmm7, 0 ;Q en XMM5
+	pshufd xmm7, xmm7, 0 ;Q en XMM7
 	cvtdq2ps xmm7, xmm7	;me guardo Q en float
 	movq xmm0, r9
 	pxor xmm2, xmm2
 	pshufb xmm0, xmm2 ;me guardo el minimo en xmm0
 	pxor xmm1, xmm1
 	movdqu xmm1, [rbp+16]
-	pshufb xmm1, xmm2 ;me guardo el maximo en xmm1****** lo guarda como -128
+	pshufb xmm1, xmm2 ;me guardo el maximo en xmm1
 	pxor xmm15, xmm15
 	punpcklbw xmm0, xmm15
 	punpcklbw xmm1, xmm15
+	;xor rax, rax	;Preparo un indice de columna
 
 .ciclo:
 	movdqu xmm2, [rdi]
-	movdqu xmm6, xmm2 ;************** despues de est xmm6 vale 0 y xmm2 vale otras cosas
+	movdqu xmm6, xmm2
 	punpckhbw xmm6, xmm15 ;en xmm6 tengo la parte alta
 	punpcklbw xmm2, xmm15 ;en xmm2 tengo la parte baja
 
@@ -136,13 +137,31 @@ umbralizar_asm:
 	packuswb xmm11, xmm6
 
 	movdqu [rsi], xmm11 ;lo guardo en destino
+	;add rax, 16
+	;cmp 
 	sub rcx, 16
 	add rdi, 16
 	add rsi, 16
+	cmp rcx, 0
+	jl .reprocess
 	;loop .ciclo
 	;dec rcx
 	cmp rcx, 0
 	jne .ciclo
+	je .fin
+
+	.reprocess:
+		xor rax, rax
+		sub rax, rcx
+		add rcx, rax	;Ahora estoy en 0
+		sub rdi, rax	;Retrocedi los pixels que me pase
+		sub rdi, rax	;Retrocedi los pixels que me pase
+		;Me hubico 16 pixels antes del final
+		add rcx, 16
+		sub rdi, 16
+		sub rsi, 16
+		jmp .ciclo
+
 .fin:
 	pop rbp
 	ret
