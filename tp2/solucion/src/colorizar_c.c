@@ -45,7 +45,7 @@ void colorizar_c (
 				}
 			}
 
-			float fcR, fcB, fcG;
+			double fcR, fcB, fcG;
 			fcR = fcB = fcG = (1-alpha);
 
 			if (maximoR >= maximoG && maximoR >= maximoB) {

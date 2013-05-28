@@ -35,6 +35,7 @@ void recortar_c (
 	 destino en el lugar correspondiente teniendo en cuenta el desplazamiento*/
 	for (j = 0; j < tam; ++j) {
 		for (i = 0; i < tam; ++i) {
+		
 			dst_matrix[i][tam+j] = src_matrix[i+h-tam][j];
 		}
 	}
