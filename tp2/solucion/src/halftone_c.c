@@ -9,6 +9,12 @@ void halftone_c (
 	unsigned char (*src_matrix)[src_row_size] = (unsigned char (*)[src_row_size]) src;
 	unsigned char (*dst_matrix)[dst_row_size] = (unsigned char (*)[dst_row_size]) dst;
 	int suma, i, j;
+	if ((h % 2) != 0) {
+		--h;
+	}
+	if ((w % 2) != 0) {
+		--w;
+	}
 	for (i=0; i < h; i+=2){
 		for (j=0; j < w; j+=2){
 			suma = src_matrix[i][j] + src_matrix[i][j+1] + src_matrix[i+1][j] + src_matrix[i+1][j+1];
