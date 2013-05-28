@@ -10,7 +10,7 @@ void rotar_c (
 	unsigned char (*src_matrix)[src_row_size] = (unsigned char (*)[src_row_size]) src;
 	unsigned char (*dst_matrix)[dst_row_size] = (unsigned char (*)[dst_row_size]) dst;
 	
-	double sqrt2 = sqrt(2.0)/2.0;
+	float sqrt2 = sqrt(2.0)/2.0;
 	
 	int cx = floor(w/2.0);
 	int cy = floor(h/2.0);
