@@ -47,21 +47,29 @@ start:
 
 	xchg bx, bx
 
-
 	; habilitar A20
-
-	; dehsabilitar las interrupciones
-
+	call deshabilitar_A20
+	call checkear_A20 ;muestra por pantalla que esta deshabilitada
+	call habilitar_A20
 	; cargar la GDT
-
+	lgdt [GDT_DESC]
 	; setear el bit PE del registro CR0
-
+	mov eax, cr0
+	or eax, 1
+	mov cr0, eax
 	; pasar a modo protegido
-
-	; acomodar los segmentos
-
+	jmp 0x8:modoprotegido
+modoprotegido:
 	; seteo la pila
+	mov ax, 0x10
+	mov ss, ax;GDT_IDX_DATA0_DESC|TI|RPL 0|0
+	mov ds, ax       ; data segment
+	mov es, ax
+	mov gs, ax
 
+	mov ebp, 0x20000
+	mov esp, 0x20000
+		
 	; pintar pantalla, todos los colores, que bonito!
 
 	; inicializar el manejador de memoria
