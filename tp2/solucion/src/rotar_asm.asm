@@ -23,7 +23,13 @@ global rotar_asm
 section .text
 
 rotar_asm:
-
+	push RBP
+	mov RBP, RSP
+	push R15
+	push R14
+	push R13
+	push R12
+	
 ;*******************
 ;	sub rsp, 8
 
@@ -31,5 +37,9 @@ rotar_asm:
 
 ;	add rsp, 8
 ;*******************	
-
+	push R12
+	push R13
+	push R14
+	push R15
+	push RBP
 	ret
