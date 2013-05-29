@@ -64,8 +64,8 @@
 \vspace*{0.7cm}
 
 \huge{\bf TRABAJO PR\'ACTICO N\'UMERO 2}\\
-\huge{Nombre del Grupo: Napolitana con Jam\'on y Morrones}
-\vspace*{7.5cm}
+\huge{Nombre de Grupo: Napolitana con Jam\'on y Morrones}
+\vspace*{8cm}
 
 \end{center}
 
@@ -76,7 +76,7 @@
 \vspace*{0.3cm}
 \Large{\textsl{L\'opez Veluscek, Matías} \hspace{0.1cm}$|$ milopezv@gmail.com $|$ 926/10}\\
 \vspace*{0.3cm}
-\vspace{0.6cm}
+\vspace{0.5cm}
  
 \newpage
 %Pagina de titulo e indice
@@ -88,12 +88,32 @@
 \section{Introducci\'on}
 El objetivo de este trabajo pr\'actico fue experimentar utilizando el modelo de programaci\'on SIMD. Para ello, fue requerido implementar seis filtros para procesamiento de im\'agenes (Recortar, Halftone, Umbralizar, Colorizar, Efecto Plasma y Rotar) tanto en $C$ como en $Assembler$.\newline
 Por otro lado, debimos analizar la performance de un procesador al hacer uso de las operaciones SIMD. Para ello, realizamos comparaciones de velocidad entre los dos tipos de implementaciones realizados utilizando la herramienta Time Stamp Counter (TSC) del procesador.
+
 \section{Desarrollo}
-hay que decir que en rotar.c si definimos a la raiz como un double pierde precision contra ponerlo como float.\newline
+Nuestro trabajo consistió en implementar los filtros mencionados anteriormente. Para el desarrollo del mismo, diversas herramientas fueron necesarias. En esta sección, se explicita la utilización de las mismas aclarando en qué nos ayudaron a lograr una correcta ejecución de nuestra implementación.  
+\subsection{Implementación en C}
+En el caso de $C$, las implementaciones se realizaron siguiendo algoritmos sencillos. Para recorrer las matrices de píxeles utilizamos $for$ pues nos pareció lo más conveniente considerando que nuestros valores estaban pre-establecidos y que al colocar un for dentro de otro (uno para las filas y otro para las columnas) era más simple recorrer todas las posiciones de una matriz.\newline
+Al probar iterar primero las columnas y luego las filas, rotar.c giraba la imagen hacia el otro lado; luego, nos decidimos por iterar primero las filas y luego las columnas. **********esto?
+\newline
+Por otro lado, utilizamos, como tipos de datos, enteros y doubles. Esto se debió a que era lo más conveniente para las operaciones que debía realizar nuestro programa ya que el nivel de precisón alcanzado era mayor y esa cualidad es muy importante para no perder información en cada píxel. Un incoveniente que tuvimos y que nos resultó llamativo fue al implementar rotar.c ya que al definir $\sqrt{2}/2$ como double la imagen obtenida presentaba diferencias con la imagen que debíamos encontrar. Para resolverlo, definimos $\sqrt{2}/2$ como float y dicho problema se solucionó. Lo extraño resultó ser con mayor precisión la diferencia debería ser la misma, pero no fue el caso.\newline
+\newline
+Luego, con el fin de disminuir el tiempo de ejecución de los $C$, comprimimos partes del código reduciendo, a su vez, la cantidad de líneas. También, alteramos pequeños detalles que sumados marcarían diferencia. Por ejemplo, cambiamos j++ por ++j.
+
+\subsection{Implementación en Assembler}
+En el caso de $Assembler$, utilizamos la extensión SSE para procesar varios bits a la vez. Esta herramienta nos permitió acelerar la ejecución de nuestro programa dado que en cada ciclo (en la mayoría de los casos) fueron tratados 16 bits a la vez.\newline
+Nuestros filtros fueron realizados de la siguiente manera:
+\begin{itemize}
+\item {\textbf{Recortar:}}
+En el caso del filtro recortar, 
+\item {\textbf{Halftone:}}
+\item {\textbf{Umbralizar:}}
+\item {\textbf{Colorizar:}} 
+\item {\textbf{Waves:}} 
+\item {\textbf{Rotar:}} 
+
+\end{itemize}
 
 hay que poner el pseudocodigo detallado que utilizamos explicando por que recorrimos de la manera que recorrimos la matriz y por que nos parecio lo mas efectivo y eficiente para programar, detallando para que sirve cada cosa. Tambien tenemos que decir que cosas hicimos para facilitar la implementacion en asm, o sea si lo hicimos pensando en como ibamos a resolverlo en asm o si directamente lo hicimos de una manera que fuera rapida. algo que se me ocurre es que preferimos, por ejemplo, usar muchas variables para definir pequeñas operaciones que usaba una sola ecuacion en vez de que fuera todo resuelto de una para poder darles tipos a esas operaciones y que el resultado fuera mas preciso y acertado a lo pedido.\newline
-
-tenemos que decir que tipos de variaciones obtuvimos al cambiar el codigo en detalles, por ejemplo, la ejecucion del codigo resulto un poco mas rapida al poner ++j que j++. tambien cambiaba el resultado si iterabamos primero columnas y despues filas o viceversa por lo que tuvimos que ser cautelosos con esto (por ejemplo, en el rotar si lo poniamos al revés rotaba para el otro lado).\newline
 
 que transformaciones podriamos hacer para que sea mejor lo que hacemos, mejor tiempo, que fue lo que probamos, etc. Por ejemplo si paso de float a double. En umbralizar pasamos Q de float a double. Pusimos Q, max y min en double porque para hacer las cuentas con doubles era lo mas conveniente.
 \newline
