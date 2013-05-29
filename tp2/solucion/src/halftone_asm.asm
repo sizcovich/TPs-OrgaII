@@ -22,12 +22,24 @@ global halftone_asm
 section .text
 
 halftone_asm:
-	;; TODO: Implementar
-
-	sub rsp, 8
+	push RBP
+	mov RBP, RSP
+	push R12
+	push R13
+	
+;	mov r12, rdx
+;	mov r13, rcx
+	;veo si tiene ancho y largo pares
+;	mov rax, r12
+;.paridad:	
+;	cmp rax, 
+;	div rdi, 2
+;*******************************
 
 	call halftone_c
 
-	add rsp, 8
-
+;*******************************	
+	pop R13
+	pop R12
+	pop RBP
 	ret

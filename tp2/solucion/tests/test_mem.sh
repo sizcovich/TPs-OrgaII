@@ -127,6 +127,14 @@ do
 		OKVALGRIND=0
 		echo "Error/es en el filtro: waves"
 	fi
+
+
+	# rotar
+	$VALGRIND $VALGRINDFLAGS $BINFILE -v -i c rotar $file
+	if [ $? != "0" ]; then
+		OKVALGRIND=0
+		echo "Error/es en el filtro: rotar"
+	fi
 done < $TESTINFILE
 
 

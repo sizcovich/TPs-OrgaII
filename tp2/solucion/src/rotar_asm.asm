@@ -23,12 +23,13 @@ global rotar_asm
 section .text
 
 rotar_asm:
-	;; TODO: Implementar
 
-	sub rsp, 8
+;*******************
+;	sub rsp, 8
 
-	call rotar_c
+;	call rotar_c
 
-	add rsp, 8
+;	add rsp, 8
+;*******************	
 
 	ret
