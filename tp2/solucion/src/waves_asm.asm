@@ -148,9 +148,9 @@ waves_asm:
 			mulps xmm12, xmm7	;Multiplico por el y_scale
 
 	.procesarFila:
-		movups xmm8, [col_inc]
 		call sin_taylor_i
 		movdqu xmm0, xmm11	;pixels[0:3]
+		movups xmm8, [col_inc]
 		addps xmm13, xmm8
 		;calculo prof para los pixels[0:3]
 		addps xmm0, xmm12
