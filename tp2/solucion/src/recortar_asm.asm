@@ -57,7 +57,7 @@ recortar_asm:
 	xor r14, r14	;Acumulador
 	xor r11, r11    ;Offset vertical
 	mov rax, r9
-	imul dword [rbp+16]
+	imul dword [rbp+16] 
 	mov r11d, eax	;Calculo el offset vertical de destino
 	mov rbx, r11
 	mov eax, [rbp+16]	;tam

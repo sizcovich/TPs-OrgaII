@@ -10,8 +10,8 @@
 ; Parámetros:
 ; 	rdi = src
 ; 	rsi = dst
-; 	rdx = m
-; 	rcx = n
+; 	rdx = h
+; 	rcx = w
 ; 	r8 = src_row_size
 ; 	r9 = dst_row_size
 
@@ -27,13 +27,18 @@ halftone_asm:
 	push R12
 	push R13
 	
-;	mov r12, rdx
-;	mov r13, rcx
+;	mov r12, rdx ;me guardo el alto
+;	mov r13, rcx ;me guardo el ancho
 	;veo si tiene ancho y largo pares
 ;	mov rax, r12
-;.paridad:	
-;	cmp rax, 
+;.paridad:
+;	cmp rax, 0
+	jl .resto
 ;	div rdi, 2
+
+.resto:
+	sub r12, 1
+	
 ;*******************************
 
 	call halftone_c
