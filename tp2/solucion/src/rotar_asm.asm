@@ -39,10 +39,10 @@ rotar_asm:
 	;cy = [Isrc_height/2]
 	mov r12, rdx ;tengo a h
 	mov r14, rcx ;tengo a w
-	mov rax, rdx
+	mov rax, rdx ;voy a dividir h
 	div 2
 	mov r13, rax ;Cy
-	mov rax, rcx
+	mov rax, rcx ;voy a dividir w
 	div 2
 	mov r15, rax ;Cx
 	;en r8 y en r9 voy a guardar u y v
