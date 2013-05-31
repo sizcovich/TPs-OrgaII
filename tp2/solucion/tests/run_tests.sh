@@ -4,7 +4,7 @@
 ./gen_imgs.sh
 
 # Test de memoria
-./test_mem.sh
+#./test_mem.sh
 
 # Test de diferencia entre versiones de C y ASM
 ./test_diff_c_asm.sh
