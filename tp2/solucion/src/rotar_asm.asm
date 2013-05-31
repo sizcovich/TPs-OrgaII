@@ -20,6 +20,10 @@ extern rotar_c
 
 global rotar_asm
 
+section .rodata
+	tiraDeDos: dd 2.0, 2.0, 2.0, 2.0
+	escalera: db 0x0000, 0x0001, 0x0002, 0x0003, 0x0004, 0x0005, 0x0006, 0x0007, 0x0008, 0x0009, 0x000A, 0x000B, 0x000C, 0x000D, 0x000E, 0x000F
+ 
 section .text
 
 rotar_asm:
@@ -39,79 +43,87 @@ rotar_asm:
 	;cy = [Isrc_height/2]
 	mov r12, rdx ;tengo a h
 	mov r14, rcx ;tengo a w
-	mov rax, rdx ;voy a dividir h
-	div 2
-	mov r13, rax ;Cy
-	mov rax, rcx ;voy a dividir w
-	div 2
-	mov r15, rax ;Cx
-	;en r8 y en r9 voy a guardar u y v
+	shr rdx, 1 ;Cy en rdx
+	shr rcx, 1 ;Cx en rcx
+	;armo x e y
+	mov r15, 0 ;contador x
+	movq xmm1, r15;contador y
+	mov r10, r8
+	sub r10, rcx ;en r10 tengo lo que tengo que es basura
+	movdqu xmm3, [escalera]
+	movups xmm15, [tiraDeDos]
 	
+	;desempaqueto la escalera
+	punpckhwd xmm10, xmm3	;1 cuarto
+	punpcklwd xmm11, xmm3	;4 cuarto
+	punpcklwd xmm12, xmm3	;2 cuarto
+	punpckhwd xmm13, xmm3	;3 cuarto
 	
-	;aca veo u
-	cmp rsi, 0
+	;me genero una copia para calcularle la raiz
+	movdqu xmm0, xmm15	;1 cuarto
+	
+	;calculo la raiz cuadrada
+	sqrtps xmm0, xmm0
+	
+	;divido por 2
+	divps xmm0, xmm15
+
+.inicioCiclo:
+
+	movq xmm5, rcx ;tengo Cx
+	movq xmm2, rdx ;tengo Cy
+	pshufd xmm2, xmm2, 0
+	pshufd xmm5, xmm5, 0
+	
+	;convierto los cx y cy a float
+	cvtdq2ps xmm2, xmm2
+	cvtdq2ps xmm5, xmm5
+	
+	subps xmm10, xmm2
+	subps xmm1, xmm5
+	
+	mulps xmm10, xmm0 ;multiplico (x-Cx)sqrt(2)/2
+	mulps xmm1, xmm0 ;multiplico (y-Cy)sqrt(2)/2
+	
+	movdqu xmm4, xmm10
+	movdqu xmm6, xmm1
+	;sumo Cx y Cy
+	addps xmm4, xmm5
+	addps xmm6, xmm2
+	
+	subps xmm4, xmm10 ;u esta en xmm4
+	addps xmm6, xmm1 ;v esta en xmm6
+	
+	;u<-XMM4 v<-XMM6
+	
 	jl .noEntra
-	cmp rsi, r14
+	cmp r13, r14
 	jge .noEntra
 	;aca veo v
-	cmp rdi, 0
+	cmp r15, 0
 	jl .noEntra
-	cmp rdi, r14
+	cmp rdi, r12
 	jge .noEntra
+	
 ;no salto entonces hay que operar
 .esMenor:
-	mov r8, r15
-	mov r10, 2
-	sqrtps r10, r10
-	mov rax, r10
-	div 2
-	mov r10, rax
-	mov r11, x
-	sub r11, r15
-	mov rax, r15
-	mul r10
+
 	
 .noEntra:
-	mov rsi, 0
+	mov qword rsi, 0
 
+	
+.veoSiLlegoAlFin:	
+	add r15, 16 ;le sumo 16
+	cmp r15, r12
+	jne .inicioCiclo
+	mov r15, 0
+	cmp r13, rcx
+	je .fin
+	add r13, 1
+	jmp .inicioCiclo
 		
-	;empiezo a comparar
-	;aca recorro la matriz
-.ciclo:
-	xor r15, r15    ;Acumulador
-	add r15, 16
-	mov rcx, r10	;Me paro al inicio del cuadrado
-	add rcx, rdx	;Me muevo al principio del cuadrado en la linea rdx
-.loopLinea:
-	movdqu xmm0, [rdi+rcx]	;Tomo el pedazo de memoria
-	movdqu [rsi+rbx], xmm0	;Guardo los valores en destino
-	add rcx, 16
-	add rbx, 16
-	add r15, 16
-  
-	cmp r15d, eax	;Me fijo que el desplazamiento horizontal todavia este dentro de la linea
-	jl .loopLinea
-	sub r15d, eax	;Me quedo con la diferencia por la que me pase
-	sub ecx, r15d	;Retrocedo el exceso
-	sub ebx, r15d
-	movdqu xmm0, [rdi+rcx]	;Tomo el pedazo de memoria
-	movdqu [rsi+rbx], xmm0	;Guardo los valores en destino
-
-	add rdx, r8
-	add r11, r9
-	mov rbx, r11
-	inc r14
-	cmp r14d, eax	;Me fijo que el acumulador sea menor que el total de filas
-	jl .ciclo
-	
-	
-;*******************
-;	sub rsp, 8
-
-;	call rotar_c
-
-;	add rsp, 8
-;*******************	
+.fin:
 	add RSP,8
 	pop RBX
 	pop R12
