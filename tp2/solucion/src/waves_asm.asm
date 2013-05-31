@@ -72,9 +72,9 @@ waves_asm:
 		sub rcx, 16
 
 		;Preservo los scales para usarlos cuando son necesarios
-		movq r9, xmm0
-		movq r10, xmm1
-		movq r11, xmm2
+		movq r9, xmm1	;x_scale
+		movq r10, xmm0	;y_scale
+		movq r11, xmm2	;g_scale
 
 		;Cargo los valores que voy a estar usando mucho en registros de
 		;proposito general para acceso rapido
@@ -196,7 +196,7 @@ waves_asm:
 		
 		pxor xmm10, xmm10	;Para desempaquetar
 		movdqu xmm5, [rdi+rax]	;16 pixels de la fila que estoy procesando
-		movdqu xmm6, xmm4
+		movdqu xmm6, xmm5
 		punpckhbw xmm6, xmm10	;Desempaqueto la parte alta
 		punpcklbw xmm5, xmm10	;Desempaqueto la parte baja
 		;Obtengo el original en formato word en xmm5:xmm4
@@ -238,9 +238,110 @@ waves_asm:
 
 		.avanzarColumna:
 			.ultimo_pedazo:
+				;Calculo el corrimiento hacia atras que aplicarle al calculo de
+				;sin_taylor_i
+				.retorceder:
+					sub rax, rcx
+					movd xmm8, eax
+					pshufd xmm8, xmm8, 0
+					cvtdq2ps xmm8, xmm8
+					subps xmm13, xmm8	;Le resto la diferencia
+
+				.calcular:
+				mov rax, 4
+
+				call sin_taylor_i
+				movdqu xmm0, xmm11	;pixels[0:3]
+				movd xmm8, eax
+				pshufd xmm8, xmm8, 0
+				cvtdq2ps xmm8, xmm8
+				addps xmm13, xmm8
+				;calculo prof para los pixels[0:3]
+				addps xmm0, xmm12
+				movd xmm7, r15d	;2.0
+				shufps xmm7, xmm7, 0
+				divps xmm0, xmm7
+
+				call sin_taylor_i
+				movdqu xmm1, xmm11	;pixels[4:7]
+				addps xmm13, xmm8
+				;calculo prof para los pixels[4:7]
+				addps xmm1, xmm12
+				movd xmm7, r15d	;2.0
+				shufps xmm7, xmm7, 0
+				divps xmm1, xmm7
+
+				call sin_taylor_i
+				movdqu xmm2, xmm11	;pixels[8:11]
+				addps xmm13, xmm8
+				;calculo prof para los pixels[8:11]
+				addps xmm2, xmm12
+				movd xmm7, r15d	;2.0
+				shufps xmm7, xmm7, 0
+				divps xmm2, xmm7
+
+				call sin_taylor_i
+				movdqu xmm3, xmm11	;pixels[12:15]
+				addps xmm13, xmm8
+				;calculo prof para los pixels[12:15]
+				addps xmm3, xmm12
+				movd xmm7, r15d	;2.0
+				shufps xmm7, xmm7, 0
+				divps xmm3, xmm7
+
+				;Cargo en xmm10 el g_scale
+				movq xmm10, r11
+				shufps xmm10, xmm10, 0
+				;Multiplico prof por g_scale
+				mulps xmm3, xmm10
+				mulps xmm2, xmm10
+				mulps xmm1, xmm10
+				mulps xmm0, xmm10
 				
-			movups xmm8, [row_inc]
-			addps xmm14, xmm8
+				mov rax, rcx	;Me paro en la posicion el tramo final
+
+				pxor xmm10, xmm10	;Para desempaquetar
+				movdqu xmm5, [rdi+rax]	;16 pixels de la fila que estoy procesando
+				movdqu xmm6, xmm5
+				punpckhbw xmm6, xmm10	;Desempaqueto la parte alta
+				punpcklbw xmm5, xmm10	;Desempaqueto la parte baja
+				;Obtengo el original en formato word en xmm5:xmm4
+				movdqu xmm4, xmm5
+				movdqu xmm7, xmm6
+				punpckhwd xmm7, xmm10
+				punpcklwd xmm6, xmm10
+				punpckhwd xmm5, xmm10
+				punpcklwd xmm4, xmm10
+				;Obtengo el original en formato doubleword xmm7:xmm6:xmm5:xmm4
+
+				;Convierto los dword a float
+				cvtdq2ps xmm7, xmm7
+				cvtdq2ps xmm6, xmm6
+				cvtdq2ps xmm5, xmm5
+				cvtdq2ps xmm4, xmm4
+				;Multiplico prof por el pixel
+				addps xmm7, xmm3
+				addps xmm6, xmm2
+				addps xmm5, xmm1
+				addps xmm4, xmm0
+
+				cvttps2dq xmm7, xmm7
+				cvttps2dq xmm6, xmm6
+				cvttps2dq xmm5, xmm5
+				cvttps2dq xmm4, xmm4
+
+				packssdw xmm6, xmm7
+				packssdw xmm4, xmm5
+
+				packuswb xmm4, xmm6	;Volvi a empaquetar a bytes
+
+				movdqu [rsi+rax], xmm4	;Escribo en destino
+
+			mov rax, 1
+			movd xmm8, eax
+			pshufd xmm8, xmm8, 0
+			cvtdq2ps xmm8, xmm8
+			addps xmm14, xmm8	;Avanzo la fila
 			add rdi, r8
 			add rsi, r8
 			xor rax, rax
@@ -249,15 +350,6 @@ waves_asm:
 			cmp rdx, 0
 			jg .sin_taylor_j
 
-;		cmp rcx, rdx	;Me fijo si llegue al final de la imagen
-;		jge .return
-;		cmp rax, r8	;Me fijo si estoy al final de la linea
-;		jl .procesarFila
-;		;Si termine la fila voy a resetear los contadores y avanzar una fila
-;		xor rax, rax
-;		;movdqu 
-;		;addps ;TODO this counting shit yo
-		
 	.return:
 	pop rbx
 	pop r12
