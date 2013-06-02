@@ -1,4 +1,3 @@
-
 ; void rotar_asm (
 ; 	unsigned char *src,
 ; 	unsigned char *dst,
@@ -8,7 +7,7 @@
 ; 	int dst_row_size
 ; );
 
-; Parámetros:
+; ParÃ¡metros:
 ; 	rdi = src
 ; 	rsi = dst
 ; 	rdx = h
@@ -67,6 +66,7 @@ rotar_asm:
 	
 	;divido por 2
 	divps xmm0, xmm15
+	
 
 .inicioCiclo:
 
