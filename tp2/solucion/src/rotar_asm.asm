@@ -153,15 +153,15 @@ rotar_asm:
 	sub rsp, 8
 .continuo0:
 	xor r13, r13
-	pextrd r13d, xmm4, 3
+	pextrd r13d, xmm4, 0
 	cmp r13, 0
 	je .daCero0
 	
 	xor rbx, rbx
 	xor rax, rax
-	pextrd ebx, xmm2, 3	;Obtengo la coordenada vertical
+	pextrd ebx, xmm2, 0	;Obtengo la coordenada vertical
 	imul rbx, r8	;Calculo el offset vertical de la coordenada
-	pextrd eax, xmm8, 3	;Obtengo la coordenada horizontal
+	pextrd eax, xmm8, 0	;Obtengo la coordenada horizontal
 	add rbx, rax	;Calculo el offset final de la coordenada
 	mov cl, [rdi+rbx]	;Obtengo el pixel que quiero mover
 	
@@ -179,15 +179,15 @@ rotar_asm:
 
 .continuo1:
 	xor r13, r13
-	pextrd r13d, xmm4, 2
+	pextrd r13d, xmm4, 1
 	cmp r13, 0
 	je .daCero1
 	
 	xor rbx, rbx
 	xor rax, rax
-	pextrd ebx, xmm2, 2	;Obtengo la coordenada vertical
+	pextrd ebx, xmm2, 1	;Obtengo la coordenada vertical
 	imul rbx, r8	;Calculo el offset vertical de la coordenada
-	pextrd eax, xmm8, 2	;Obtengo la coordenada horizontal
+	pextrd eax, xmm8, 1	;Obtengo la coordenada horizontal
 	add rbx, rax	;Calculo el offset final de la coordenada
 	mov cl, [rdi+rbx]	;Obtengo el pixel que quiero mover
 	
@@ -205,15 +205,15 @@ rotar_asm:
 	
 .continuo2:
 	xor r13, r13
-	pextrd r13d, xmm4, 1
+	pextrd r13d, xmm4, 2
 	cmp r13, 0
 	je .daCero2
 	
 	xor rbx, rbx
 	xor rax, rax
-	pextrd ebx, xmm2, 1	;Obtengo la coordenada vertical
+	pextrd ebx, xmm2, 2	;Obtengo la coordenada vertical
 	imul rbx, r8	;Calculo el offset vertical de la coordenada
-	pextrd eax, xmm8, 1	;Obtengo la coordenada horizontal
+	pextrd eax, xmm8, 2	;Obtengo la coordenada horizontal
 	add rbx, rax	;Calculo el offset final de la coordenada
 	mov cl, [rdi+rbx]	;Obtengo el pixel que quiero mover
 	
@@ -231,15 +231,15 @@ rotar_asm:
 
 .continuo3:
 	xor r13, r13
-	pextrd r13d, xmm4, 0
+	pextrd r13d, xmm4, 3
 	cmp r13, 0
 	je .daCero3
 	
 	xor rbx, rbx
 	xor rax, rax
-	pextrd ebx, xmm2, 0	;Obtengo la coordenada vertical
+	pextrd ebx, xmm2, 3	;Obtengo la coordenada vertical
 	imul rbx, r8	;Calculo el offset vertical de la coordenada
-	pextrd eax, xmm8, 0	;Obtengo la coordenada horizontal
+	pextrd eax, xmm8, 3	;Obtengo la coordenada horizontal
 	add rbx, rax	;Calculo el offset final de la coordenada
 	mov cl, [rdi+rbx]	;Obtengo el pixel que quiero mover
 	
