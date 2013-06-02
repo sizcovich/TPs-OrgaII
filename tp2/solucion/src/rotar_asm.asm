@@ -48,7 +48,7 @@ rotar_asm:
 	;armo x e y
 	mov r15, 0 ;contador x
 	mov r10, 0	;contador y
-	movq xmm1, r10 ;contador y
+	
 	;mov r10, r8
 	;sub r10, r14 ;en r10 tengo lo que tengo que es basura
 	movdqu xmm3, [escalera]
@@ -70,17 +70,17 @@ rotar_asm:
 	
 	pxor xmm7, xmm7
 	
-	punpckhbw xmm12, xmm7	;1 mitad
-	punpcklbw xmm11, xmm7	;2 mitad
+	punpcklbw xmm12, xmm7	;1 mitad
+	punpckhbw xmm11, xmm7	;2 mitad
 	
 	movdqu xmm10, xmm12
 	movdqu xmm13, xmm11
 
 	;desempaqueto la escalera
-	punpckhwd xmm10, xmm7	;1 cuarto
-	punpcklwd xmm11, xmm7	;4 cuarto
-	punpcklwd xmm12, xmm7	;2 cuarto
-	punpckhwd xmm13, xmm7	;3 cuarto
+	punpcklwd xmm10, xmm7	;1 cuarto
+	punpckhwd xmm11, xmm7	;4 cuarto
+	punpckhwd xmm12, xmm7	;2 cuarto
+	punpcklwd xmm13, xmm7	;3 cuarto
 	;xmm3 = xmm10 : xmm12 : xmm13 : xmm11
 	
 	movq xmm7, r15 ;tenemos a x
@@ -94,6 +94,11 @@ rotar_asm:
 
 	mov rax, 4
 .cuarto:
+	;Voy a cargar el indice de fila
+	movq xmm1, r10 ;contador y
+	pshufd xmm1, xmm1, 0
+	cvtdq2ps xmm1, xmm1
+
 	cvtdq2ps xmm10, xmm10	;Convierto a float a los indices
 	
 	movq xmm5, r11 ;tengo Cx
@@ -111,14 +116,14 @@ rotar_asm:
 	mulps xmm10, xmm0 ;multiplico (x-Cx)sqrt(2)/2
 	mulps xmm1, xmm0 ;multiplico (y-Cy)sqrt(2)/2
 	
-	movdqu xmm4, xmm10
-	movdqu xmm6, xmm1
+	movdqu xmm4, xmm10	;(x-Cx)sqrt(2)/2
+	movdqu xmm6, xmm1	;(y-Cy)sqrt(2)/2
 	;sumo Cx y Cy
-	addps xmm4, xmm5
-	addps xmm6, xmm2
+	addps xmm4, xmm5	;(x-Cx)sqrt(2)/2 + Cx
+	addps xmm6, xmm2	;(y-Cy)sqrt(2)/2 + Cy
 	
-	subps xmm4, xmm10 ;u esta en xmm4
-	addps xmm6, xmm1 ;v esta en xmm6
+	subps xmm4, xmm1 ;u esta en xmm4
+	addps xmm6, xmm10 ;v esta en xmm6
 	
 	;u<-XMM4 v<-XMM6
 	pxor xmm7, xmm7
@@ -145,6 +150,7 @@ rotar_asm:
 	pand xmm4, xmm5	;Obtengo cuando se cumplen las dos condiciones
 
 	push rax
+	sub rsp, 8
 .continuo0:
 	xor r13, r13
 	pextrd r13d, xmm4, 3
@@ -250,6 +256,7 @@ rotar_asm:
 	inc r15
 
 .continuo4:
+	add rsp, 8
 	pop rax
 	dec rax
 	movdqu xmm10, xmm12
