@@ -42,7 +42,7 @@ colorizar_asm:
 
 	mov r15, 1
 	movd xmm15, r15d
-	pshufd xmm15, xmm15
+	pshufd xmm15, xmm15, 0
 	cvtdq2ps xmm15, xmm15	;Cargo 1.0, 1.0, 1.0, 1.0 para el phi
 
 	mov r15, 0xFF
@@ -51,7 +51,7 @@ colorizar_asm:
 	pshufb xmm13, xmm14	;Cargo todos 0xFF
 
 	mov r12, 0x0A0704	;Cargar en 0, 1 y 2 los 3 valores del canal que sea
-	movd xmm14, r12	;Me cargo la mascara que voy a usar al comparar canales
+	movd xmm14, r12d	;Me cargo la mascara que voy a usar al comparar canales
 
 	xor r15, r15	;Preparo R15 para usarlo de indice
 	xor r14, r14	;Indice columna media
@@ -118,7 +118,7 @@ colorizar_asm:
 		movq xmm14, r12		;0...0 | 12 | 09 | 06
 		pshufb xmm3, xmm14	;Junto los azules en los bytes 0, 1 y 2
 
-		sub r12, 0x0200000100000000
+		;sub r12, 0x0200000100000000
 		movq xmm14, r12		;0...0 | 02 | ## | ## | 01 | ## | ## | 00 | ##
 		pslldq xmm14, 1		;Para reposicionar los rojos
 

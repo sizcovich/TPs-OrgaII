@@ -44,19 +44,15 @@ rotar_asm:
 	mov r14, rcx ;tengo a w
 	shr rdx, 1 ;Cy en rdx
 	shr rcx, 1 ;Cx en rcx
+	mov r11, rcx
 	;armo x e y
 	mov r15, 0 ;contador x
-	movq xmm1, r15;contador y
-	mov r10, r8
-	sub r10, rcx ;en r10 tengo lo que tengo que es basura
+	mov r10, 0	;contador y
+	movq xmm1, r10 ;contador y
+	;mov r10, r8
+	;sub r10, r14 ;en r10 tengo lo que tengo que es basura
 	movdqu xmm3, [escalera]
 	movups xmm15, [tiraDeDos]
-	
-	;desempaqueto la escalera
-	punpckhwd xmm10, xmm3	;1 cuarto
-	punpcklwd xmm11, xmm3	;4 cuarto
-	punpcklwd xmm12, xmm3	;2 cuarto
-	punpckhwd xmm13, xmm3	;3 cuarto
 	
 	;me genero una copia para calcularle la raiz
 	movdqu xmm0, xmm15	;1 cuarto
@@ -69,8 +65,38 @@ rotar_asm:
 	
 
 .inicioCiclo:
+	movdqu xmm11, xmm3
+	movdqu xmm12, xmm3
+	
+	pxor xmm7, xmm7
+	
+	punpckhbw xmm12, xmm7	;1 mitad
+	punpcklbw xmm11, xmm7	;2 mitad
+	
+	movdqu xmm10, xmm12
+	movdqu xmm13, xmm11
 
-	movq xmm5, rcx ;tengo Cx
+	;desempaqueto la escalera
+	punpckhwd xmm10, xmm7	;1 cuarto
+	punpcklwd xmm11, xmm7	;4 cuarto
+	punpcklwd xmm12, xmm7	;2 cuarto
+	punpckhwd xmm13, xmm7	;3 cuarto
+	;xmm3 = xmm10 : xmm12 : xmm13 : xmm11
+	
+	movq xmm7, r15 ;tenemos a x
+	pshufd xmm7, xmm7, 0
+	
+	;le sumamos el offset
+	paddd xmm10, xmm7	;1 cuarto
+	paddd xmm11, xmm7	;4 cuarto
+	paddd xmm12, xmm7	;2 cuarto
+	paddd xmm13, xmm7	;3 cuarto
+
+	mov rax, 4
+.cuarto:
+	cvtdq2ps xmm10, xmm10	;Convierto a float a los indices
+	
+	movq xmm5, r11 ;tengo Cx
 	movq xmm2, rdx ;tengo Cy
 	pshufd xmm2, xmm2, 0
 	pshufd xmm5, xmm5, 0
@@ -95,32 +121,166 @@ rotar_asm:
 	addps xmm6, xmm1 ;v esta en xmm6
 	
 	;u<-XMM4 v<-XMM6
+	pxor xmm7, xmm7
+	movups xmm14, xmm4
+	movups xmm5, xmm6
+	movups xmm8, xmm4 ;tengo a u
+	movups xmm2, xmm6 ;tengo a v
+	cmpps xmm4, xmm7, 5 ;0≤u 
+	cmpps xmm6, xmm7, 5 ;0≤v 
+	movq xmm7, r12 ;tengo a h
+	movq xmm9, r14;tengo a w
+	pshufd xmm7, xmm7, 0
+	pshufd xmm9, xmm9, 0
+	cvtdq2ps xmm7, xmm7
+	cvtdq2ps xmm9, xmm9
+	cmpps xmm14, xmm9, 1 ;u < w ?
+	cmpps xmm5, xmm7, 1 ;v < h?
 	
-	jl .noEntra
-	cmp r13, r14
-	jge .noEntra
-	;aca veo v
-	cmp r15, 0
-	jl .noEntra
-	cmp rdi, r12
-	jge .noEntra
+	cvtps2dq xmm8, xmm8	;u
+	cvtps2dq xmm2, xmm2	;v
 	
-;no salto entonces hay que operar
-.esMenor:
+	pand xmm4, xmm14
+	pand xmm5, xmm6
+	pand xmm4, xmm5	;Obtengo cuando se cumplen las dos condiciones
 
+	push rax
+.continuo0:
+	xor r13, r13
+	pextrd r13d, xmm4, 3
+	cmp r13, 0
+	je .daCero0
 	
-.noEntra:
-	mov qword rsi, 0
+	xor rbx, rbx
+	xor rax, rax
+	pextrd ebx, xmm2, 3	;Obtengo la coordenada vertical
+	imul rbx, r8	;Calculo el offset vertical de la coordenada
+	pextrd eax, xmm8, 3	;Obtengo la coordenada horizontal
+	add rbx, rax	;Calculo el offset final de la coordenada
+	mov cl, [rdi+rbx]	;Obtengo el pixel que quiero mover
+	
+	mov rbx, r10	;Copio el indice y
+	imul rbx, r9	;Calculo el offset vertical del destino
+	add rbx, r15	;Calculo el oofset final del destino
+	mov [rsi+rbx], cl	;Copio el pixel
+	
+	inc r15
+	
+	jmp .continuo1
+.daCero0:
+	;En caso de que sea falsa la condicion
+	inc r15
 
+.continuo1:
+	xor r13, r13
+	pextrd r13d, xmm4, 2
+	cmp r13, 0
+	je .daCero1
+	
+	xor rbx, rbx
+	xor rax, rax
+	pextrd ebx, xmm2, 2	;Obtengo la coordenada vertical
+	imul rbx, r8	;Calculo el offset vertical de la coordenada
+	pextrd eax, xmm8, 2	;Obtengo la coordenada horizontal
+	add rbx, rax	;Calculo el offset final de la coordenada
+	mov cl, [rdi+rbx]	;Obtengo el pixel que quiero mover
+	
+	mov rbx, r10	;Copio el indice y
+	imul rbx, r9	;Calculo el offset vertical del destino
+	add rbx, r15	;Calculo el oofset final del destino
+	mov [rsi+rbx], cl	;Copio el pixel
+	
+	inc r15
+	
+	jmp .continuo2
+.daCero1:
+	;En caso de que sea falsa la condicion
+	inc r15
+	
+.continuo2:
+	xor r13, r13
+	pextrd r13d, xmm4, 1
+	cmp r13, 0
+	je .daCero2
+	
+	xor rbx, rbx
+	xor rax, rax
+	pextrd ebx, xmm2, 1	;Obtengo la coordenada vertical
+	imul rbx, r8	;Calculo el offset vertical de la coordenada
+	pextrd eax, xmm8, 1	;Obtengo la coordenada horizontal
+	add rbx, rax	;Calculo el offset final de la coordenada
+	mov cl, [rdi+rbx]	;Obtengo el pixel que quiero mover
+	
+	mov rbx, r10	;Copio el indice y
+	imul rbx, r9	;Calculo el offset vertical del destino
+	add rbx, r15	;Calculo el oofset final del destino
+	mov [rsi+rbx], cl	;Copio el pixel
+	
+	inc r15
+	
+	jmp .continuo3
+.daCero2:
+	;En caso de que sea falsa la condicion
+	inc r15
+
+.continuo3:
+	xor r13, r13
+	pextrd r13d, xmm4, 0
+	cmp r13, 0
+	je .daCero3
+	
+	xor rbx, rbx
+	xor rax, rax
+	pextrd ebx, xmm2, 0	;Obtengo la coordenada vertical
+	imul rbx, r8	;Calculo el offset vertical de la coordenada
+	pextrd eax, xmm8, 0	;Obtengo la coordenada horizontal
+	add rbx, rax	;Calculo el offset final de la coordenada
+	mov cl, [rdi+rbx]	;Obtengo el pixel que quiero mover
+	
+	mov rbx, r10	;Copio el indice y
+	imul rbx, r9	;Calculo el offset vertical del destino
+	add rbx, r15	;Calculo el oofset final del destino
+	mov [rsi+rbx], cl	;Copio el pixel
+	
+	inc r15
+	
+	jmp .continuo4
+.daCero3:
+	;En caso de que sea falsa la condicion
+	inc r15
+
+.continuo4:
+	pop rax
+	dec rax
+	movdqu xmm10, xmm12
+	movdqu xmm12, xmm13
+	movdqu xmm13, xmm11
+	cmp rax, 0
+	jg .cuarto
+	cmp r15, r14	;Me fijo si estoy al tamaño de la fila
+	jge .sigFila
 	
 .veoSiLlegoAlFin:	
-	add r15, 16 ;le sumo 16
-	cmp r15, r12
-	jne .inicioCiclo
-	mov r15, 0
-	cmp r13, rcx
+	;add r15, 16 ;le sumo 16
+	;Me quiero fijar si estoy en la franja de los ultimos 16
+	sub r14, 16
+	cmp r15, r14
+	jge .ultimoTramo
+	add r14, 16
+	jmp .inicioCiclo
+	
+.sigFila:
+	cmp r10, r12
 	je .fin
-	add r13, 1
+	mov r15, 0
+	add r10, 1
+	jmp .inicioCiclo
+
+.ultimoTramo:
+	mov rbx, rax
+	sub rbx, r14	;Tengo el offset que volver para atras
+	sub rax, rbx	;Tengo el indice corregido
+	add r14, 16
 	jmp .inicioCiclo
 		
 .fin:
