@@ -52,7 +52,7 @@ fi
 
 # colorizar
 $BINFILE -v -i c colorizar $file 0.5
-$DIFF $DIFFFLAGS $file".colorizar.alpha-0.50.c.bmp" $TESTIMGCATEDRA/"lena.colorizar.catedra.bmp" 5
+$DIFF $DIFFFLAGS $file".colorizar.0.50.c.bmp" $TESTIMGCATEDRA/"lena.colorizar.catedra.bmp" 5
 if [ $? != "0" ]; then
 	OKDIFF=0
 	echo "Diferencias en filtro: colorizar"
