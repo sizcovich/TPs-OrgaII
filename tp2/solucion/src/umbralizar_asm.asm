@@ -156,7 +156,7 @@ umbralizar_asm:
 		add rcx, rax	;Ahora estoy en 0
 		sub rdi, rax	;Retrocedi los pixels que me pase
 		sub rdi, rax	;Retrocedi los pixels que me pase
-		;Me hubico 16 pixels antes del final
+		;Me ubico 16 pixels antes del final
 		add rcx, 16
 		sub rdi, 16
 		sub rsi, 16
