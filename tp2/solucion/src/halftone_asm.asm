@@ -127,21 +127,86 @@ halftone_asm:
 	;combino los datos de la fila de arriba
 	por xmm2, xmm4
 
-	mov r15, rbx
-	add r15, r9
+	mov r12, rbx
+	add r12, r9
 	movdqu [rsi+rbx], xmm0
-	movdqu [rsi+r15], xmm2
+	movdqu [rsi+r12], xmm2
 	add rbx, 16
 
 	cmp rbx, r13
 	jl .ciclo
 
 .ultimaColumna:
-	mov r15, rbx
-	sub r15, r13
-	sub rbx, r15	;Le resto la diferencia para caer en los ultimos 16
-	jmp .ciclo
+	mov r12, rbx
+	sub r12, r13
+	sub rbx, r12	;Le resto la diferencia para caer en los ultimos 16
+	
+	add r15, r8
+	movdqu xmm0, [rdi+rbx]
+	movdqu xmm2, [r15+rbx]
 
+	pxor xmm8, xmm8
+	movdqu xmm1, xmm0
+	movdqu xmm3, xmm2
+	punpckhbw xmm0, xmm8
+	punpcklbw xmm3, xmm8
+	punpckhbw xmm2, xmm8
+	punpcklbw xmm1, xmm8
+
+	;sumamos para obtener los valores de los cuadraditos
+	phaddw xmm0, xmm1
+	phaddw xmm2, xmm3
+	paddw xmm0, xmm2
+
+	movdqu xmm1, xmm0
+	movdqu xmm2, xmm0
+	movdqu xmm3, xmm0
+	movdqu xmm4, xmm0
+	movdqu xmm5, xmm0
+	movdqu xmm6, xmm0
+	movdqu xmm7, xmm0
+
+	pcmpgtw xmm0, xmm15	;obtenemos los valores mayores a 205
+	pcmpeqw xmm1, xmm15	;Obtenemos los valores iguales a 205
+	por xmm0, xmm1
+
+	pcmpgtw xmm2, xmm14	;obtenemos los valores mayores a 410
+	pcmpeqw xmm3, xmm14	;Obtenemos los valores iguales a 410
+	por xmm2, xmm3
+
+	pcmpgtw xmm4, xmm13	;obtenemos los valores mayores a 615
+	pcmpeqw xmm5, xmm13	;Obtenemos los valores iguales a 615
+	por xmm4, xmm5
+
+	pcmpgtw xmm6, xmm12	;obtenemos los valores mayores a 820
+	pcmpeqw xmm7, xmm12	;Obtenemos los valores iguales a 820
+	por xmm6, xmm7
+
+	;En caso de que sea >= 205 solo cambio el valor de arriba
+	;En caso de que sea >= 410 cambio el de abajo con respecto al anterior
+	;En caso de que sea >= 615 cambio el de abajo con respecto al anterior
+	;En caso de que sea >= 820 cambio todo
+	pand xmm0, xmm9	;Fila de arriba filtrada
+	pand xmm2, xmm10	;Fila de abajo filtrada
+	pand xmm4, xmm10	;Fila de abajo filtrada
+	pand xmm6, xmm9	;Fila de arriba filtrada
+
+	;combino los datos de la fila de arriba
+	por xmm0, xmm6
+	;combino los datos de la fila de arriba
+	por xmm2, xmm4
+
+	mov r12, rbx
+	add r12, r9
+	movdqu [rsi+rbx], xmm0
+	movdqu [rsi+r12], xmm2
+	
+.siguienteFila:
+	sub r12, 2 ;veo si tengo mas filas
+	cmp r12, 0
+	je .fin
+	add r
+.fin:
 	add rsp, 8
 	pop rbx
 	pop r15

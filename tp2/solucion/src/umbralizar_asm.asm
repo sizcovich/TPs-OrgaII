@@ -1,4 +1,3 @@
-BITS 64
 ; void umbralizar_c (
 ; 	unsigned char *src,
 ; 	unsigned char *dst,
@@ -55,6 +54,7 @@ umbralizar_asm:
 	;xor rax, rax	;Preparo un indice de columna
 
 .ciclo:
+
 	movdqu xmm2, [rdi]
 	movdqu xmm6, xmm2
 	punpckhbw xmm6, xmm15 ;en xmm6 tengo la parte alta
@@ -164,17 +164,6 @@ umbralizar_asm:
 
 .fin:
 	pop rbp
-;***********************************	
-;	push rbp
-;	mov rbp, rsp
-;
-;	push qword [rbp + 24]
-;	push qword [rbp + 16]
-;	call umbralizar_c
-;	add rsp, 16
-;
-;	pop rbp
-;************************************
 	ret
 
 
