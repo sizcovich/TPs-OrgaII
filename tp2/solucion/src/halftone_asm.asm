@@ -205,7 +205,9 @@ halftone_asm:
 	sub r12, 2 ;veo si tengo mas filas
 	cmp r12, 0
 	je .fin
-	add r
+;	add rbx, r8
+;	add rbx, r8
+	
 .fin:
 	add rsp, 8
 	pop rbx
