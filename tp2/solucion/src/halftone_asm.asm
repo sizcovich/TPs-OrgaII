@@ -46,21 +46,24 @@ halftone_asm:
 	mov r12, rdx ;me guardo el alto
 	mov r13, rcx ;me guardo el ancho
 	;veo si tiene ancho y largo pares
+	xor rdx, rdx
 	mov rbx, 2
 	mov rax, r12
-	div rbx
+	div ebx
 	cmp rdx, 0
 	je .verAncho
 	dec r12
 .verAncho:
+	xor rdx, rdx
 	mov rax, r13
-	div rbx
+	div ebx
 	cmp rdx, 0
 	je .inicio
 	dec r13
 .inicio:
     xor rbx, rbx
 
+	sub r13, 16
 	movdqu xmm15, [dosCientosCinco]
 	movdqu xmm14, [cuatroCientosDiez]
 	movdqu xmm13, [seisCientosQuince]
@@ -73,7 +76,7 @@ halftone_asm:
 	movdqu xmm0, [rdi+rbx]
 	movdqu xmm2, [r15+rbx]
 
-	xor xmm8, xmm8
+	pxor xmm8, xmm8
 	movdqu xmm1, xmm0
 	movdqu xmm3, xmm2
 	punpckhbw xmm0, xmm8
@@ -128,7 +131,16 @@ halftone_asm:
 	add r15, r9
 	movdqu [rsi+rbx], xmm0
 	movdqu [rsi+r15], xmm2
+	add rbx, 16
 
+	cmp rbx, r13
+	jl .ciclo
+
+.ultimaColumna:
+	mov r15, rbx
+	sub r15, r13
+	sub rbx, r15	;Le resto la diferencia para caer en los ultimos 16
+	jmp .ciclo
 
 	add rsp, 8
 	pop rbx
