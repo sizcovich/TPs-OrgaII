@@ -37,8 +37,6 @@ umbralizar_asm:
 	push r15
 	sub rsp, 8
 	;-----voy a calcular el tamanio
-	;mov rcx, r8
-	;imul rcx, rdx ;me guardo el tamanio
 	sub rcx, 16
 	xor r10, r10
 	mov r10b, [rbp+24]
@@ -73,7 +71,7 @@ umbralizar_asm:
 	pcmpgtw xmm4, xmm2 ;max > pixel [Parte baja]
 	pcmpgtw xmm14, xmm6 ;max > pixel [Parte alta]
 
-	;Para que las mascaras me queden bien armadas necesito tambien necesito
+	;Para que las mascaras me queden bien armadas necesito
 	;comparar por igual al maximo
 	movdqu xmm10, xmm1
 	pcmpeqw xmm10, xmm2
@@ -146,10 +144,6 @@ umbralizar_asm:
 
 	.reprocess:
 		mov r15, rcx
-;		mov rax, rcx
-;		add rax, 16
-;		sub rax, r15
-;		sub r15, rax
 
 	.lastCol:
 		movdqu xmm2, [rdi+r15]

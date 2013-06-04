@@ -104,13 +104,21 @@ En el caso de $Assembler$, utilizamos la extensión SSE para procesar varios bit
 Nuestros filtros fueron realizados de la siguiente manera:
 \begin{itemize}
 \item {\textbf{Recortar:}}
-En el caso del filtro recortar, procesamos los 4 cuadrantes de la imagen por separado para no confundir las posiciones de origen y destino de los píxeles por lo que la implementación de cada cuadrante resultó ser la misma a diferencia del offset de destino y origen.\newline
-Dicha implementación consistió, a grandes rasgos, en levantar de a cada 16 bits desde la posición de origen y pegarlos en la posición de destino. Una vez alcanzado el valor de $tam$, la siguiente fila era procesada.	\newline
+En el caso del filtro recortar, procesamos los 4 cuadrantes de la imagen por separado para no confundir las posiciones de origen y destino de los píxeles por lo que la implementación de cada cuadrante resultó ser la misma a diferencia de los offset utilizados.\newline
+Dicha implementación consistió, a grandes rasgos, en levantar de a 16 bits desde la posición de origen y pegarlos en la posición de destino. Una vez alcanzado el valor de $tam$, la siguiente fila era procesada.	\newline
 Para realizar dicha función no resultó necesario desempaquetar y empaquetar los píxeles pues no debían ser utilizados para realizar cuentas. Por lo tanto, a medida que se los levantaba, se los copiaba tal cual a la imagen destino.\newline
 \newline
 La función consistió en una seguidilla de los siguientes pasos:\newline
-En primer lugar, se procesa el cuadrante B. Para ello, se le resta el $tam$ al ancho de la imagen para obtener el offset. Luego, se calcula el offset vertical de destino multiplicando el dst\_row\_size por tam.
+En primer lugar, se procesa el cuadrante B. Para ello, se le resta el $tam$ al ancho de la imagen para obtener el offset. Luego, se calcula el offset vertical de destino multiplicando el dst\_row\_size por tam para continuar ingresando a un ciclo que consiste en mover la porción de memoria del fuente al destino hasta copiar la fila entera del cuadrante. Una vez alcanzado un desplazamiento mayor que el tamaño de la fila, se retrocede la distancia excedida para terminar por procesar el mismo ciclo con los bits que quedaron fuera del pedazo de memoria y debían ser copiados. Dicho procedimiento fue realizado para todas las filas del cuadrante. Para controlar dichos movimientos, fue necesario un contador que nos advirtiera si nos encontrábamos o no en la útlima fila que sería el $tam$.\newline
+La misma manipulación fue realizada para el resto de los cuadrantes de manera tal que la imagen quedara de la siguiente forma:\newline
 
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=300pt]{./recortar.jpg}
+\end{center}
+\end{figure}
+
+Luego, comparamos la cantidad de ciclos producidos por $C$ y por $Assembler$.\newline
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
@@ -146,15 +154,46 @@ Tiempo C:                 70535645\newline
 Tiempo ASM:               1002378\newline
 Tiempo ASM respecto de C: 1.42109425667\% \newline
 
-
 \item {\textbf{Halftone:}}
+Para la realización de Halftone, debimos guardar en memoria valores que serían necesarios durante la implementación en $Assembler$. Éstos resultaron ser los valores con los que se compararía la sumatoria de los 4 bits como también un inversor (formado por 1's) y distinguidores entre la primer fila y la segunda (formados por 00ff y ff00 consecutivamente).\newline 
+Por otro lado, fue necesario que tanto el ancho como el alto de la imagen fueran pares para poder iterar de a dos filas y columnas a la vez. Para ello, dividimos n y m por 2 y comparamos el resto con 0. En caso de serlo, m y n se mantenían. Caso contrario, se le restaba 1 a la variable impar.\newline
+Luego, proseguimos recorriendo las matrices de fuente y destino. Para ello, decidimos desplazarnos a través de los punteros, por lo tanto, mientras estuviéramos en la misma fila, nos encargamos de sumarle 16 a rdi y a rsi en cada iteración. Al final de cada ciclo, el valor alcanzado por rsi y rdi era comparado con el ancho-16 para luego decidir si el ciclo debía continuar normalmente o si se había llegado al final de la fila. Una vez que el valor de rdi y rsi llegaban o superaban el ancho-16, se pasaba al final de la fila, donde rdi y rsi se seteaban en el ancho-16 para terminar procesando los últimos 16 bits.\newline
+Para procesar los bits, desempaquetamos de a dos filas a word *****. Luego, sumamos los píxeles dos a dos en cada fila. Finalmente, realizamos la suma de las posiciones de las filas correspondientes con las columnas correspondientes de la siguiente manera:\newline
+\newline
+Considerando la siguiente imagen,
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=90pt]{./suma.jpg}
+\end{center}
+\end{figure}
+los pasos realizados fueron:\newline
+- A+B\newline
+- C+D\newline
+- (A+B) + (C+D)\newline
+
+Luego, se prosiguió realizando la comparación pcmpgtw entre la suma y los valores seteados para la comparación. Dado que el resultado deseado era el inverso ($\leq$ en vez de $>$), se aplicó un xor con el inversor explicitado anteriormente a cada resultado obtenido por la comparación. Por último, se realizó un and entre lo obtenido de invertir la comparación y los filtrados de primera y segunda fila. Esta suma de operaciones debieron realizarse la cantidad de veces necesaria para cubrir todos los valores con los que comparar la suma de píxeles. Luego, 4 veces. Por último, las máscaras fueron unidas con un 'or' en el que se juntaron la primera con su respectiva segunda fila de cada columna. Los píxeles resultantes fueron, entonces, ubicados en la matriz destino.\newline
+Los píxeles resultantes debían cumplir con la siguiente condición:
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=400pt]{./halftone.jpg}
+\end{center}
+\end{figure}
+Por último, utilizamos un registro que era seteado en 1 una vez que se llegaba a la última columna para dar lugar al pasaje de fila y, recorrer de esta manera, la matriz entera.
 
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo obtenido fue el siguiente:\newline
-\item {\textbf{Umbralizar:}}
 
+
+\item {\textbf{Umbralizar:}}
+En Umbralizar, la imagen destino debía cumplir los siguientes requisitos:
+- Cada píxel menor a $min$ debía valer 0.\newline
+- Cada píxel mayor a $max$ debía valer 255.\newline
+- Caso contrario, el píxel debía valer $\lfloor p/Q \rfloor$.Q\newline
+con $min$, $max$ y $Q$ enteros de 1 byte.\newline
+Para lograr esto, pasamos dichos valores enteros a floats para realizar los cálculos necesarios habiendo desempaquetado y convertido los píxeles al mismo tipo de dato.\newline
+Nuestro ciclo consistió en procesar de a 16 bits comparando los píxeles con $max$ y $min$ con la operación pcmpgtw. Las máscaras resultantes fueron luego invertidas dado que el resultado deseado era la comparación inversa a la facilitada por Intel. Luego, se debieron procesar los píxeles que no fueron menores a $min$ ni mayores a $max$.  
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
@@ -275,12 +314,17 @@ hay que poner el pseudocodigo detallado que utilizamos explicando por que recorr
 que transformaciones podriamos hacer para que sea mejor lo que hacemos, mejor tiempo, que fue lo que probamos, etc. Por ejemplo si paso de float a double. En umbralizar pasamos Q de float a double. Pusimos Q, max y min en double porque para hacer las cuentas con doubles era lo mas conveniente.
 \newline
 \section{Resultados}
-Al observar el código generado por objdump para cada función en c, se pudo observar que su código assembler realizaba múltiples llamados a memoria. Ésto se debía a que todos los datos eran almacenados en la pila por lo que todo debía ser buscado allí, por ejemplo, [rbp-0x28].\newline
-tenemos que ver el codigo en asm creado por el .c para decir por que nuestro asm funciona mas rapido que el generado por el .c, generalmente produce mas ciclos innecesarios o quizas contempla algun caso que no es importante (por ejemplo una altura o un ancho negativo). bueno obviamente hay que concluir que el .asm es mucho mas rapido que el .c.\newline
+
+A partir de los resultados otorgados por un script realizado para calcular el tiempo de ejecución de cada función en $C$ y $Assembler$, decidimos utilizar objdump para lograr dar una explicación a lo obtenido:\newline
+En primera instancia, hallamos que la cantidad de ciclos realizados por $Assembler$ es muy menor a la realizada por $C$. Esto se debe a que el $Assembler$ de $C$ realiza múltiples llamados a memoria en cada ciclo. Por ejemplo, la mayoría de los datos que utiliza son almacenados en la pila por lo que en cada iteración realiza operaciones utilizando, por ejemplo, [rbp-0x28]. Esta es la causa principal del retraso temporal generado por el $C$ respecto del $Assembler$. \newline 
+Por otro lado, nos resultó sorprendente la extensión de los códigos en $Assembler$ generados por los $C$ en comparación con los nuestros. Para hallarle una explicación a dicha consecuencia, pensamos que el causante de esto fue que, al estar todo almacenado en la pila, los desplazamientos requieren de numerosas instrucciones. Contrariamente, al moverse con un puntero, lo único necesario para el desplazamiento no es más que un sumador. \newline
+Por otra parte, hallamos que los códigos en $Assembler$ generados por los $C$ realizan operaciones innecesarias, como por ejemplo multiplicar por 1, dado que se producen de manera automática.\newline
+Por último, encontramos que el ensamblado del $C$ no realiza empaquetamientos por lo que la cantidad de operaciones a realizar está multiplicada por 16.\newline
+
 tenemos que hacer un grafico, creo que podriamos hacer uno que para cada funcion que hicimos ponga el tiempo que tardo en asm y en .c y que una por un lado todos los .c y por el otro todos los .asm cuestion de ver precisamente cual es la relacion entre la velocidad de un asm y de un .c. tambien tenemos que hacer uno que muestre graficamente el contenido de los xmm a medida que avanza la ejecucion del programa\newline
 aca hay que poner tablas y graficos con los resultados. analizar y comparar las implementaciones. podriamos ejecutar el timing en distintas computadoras y ver que cambia respecto del procesador usado.
 \section{Conclusi\'on}
-C usa la FPU que es poco performante y lleva a un aumento del tiempo de ejecución.\newline
-Reflexion final sobre alcance de la programacion vectorial a bajo nivel. 
+Podemos concluir que las causas principales de que el código en $C$ sea mucho más lento que el código $Assembler$ dado que su ensamblado no utiliza empaquetamiento y almacena todos los datos en la pila que son llamados en cada iteración. Esto significa que $C$ usa la FPU que es poco performante causando un aumento del tiempo de ejecución.\newline
+A partir de aquí, podemos concluir que realizar operaciones empaquetando y desempaquetando los datos acelera enormemente la ejecución de una función como también evitar los llamados a memoria dentro de los ciclos.
 
 \end{document}
