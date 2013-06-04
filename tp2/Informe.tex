@@ -105,144 +105,167 @@ Nuestros filtros fueron realizados de la siguiente manera:
 \begin{itemize}
 \item {\textbf{Recortar:}}
 En el caso del filtro recortar, procesamos los 4 cuadrantes de la imagen por separado para no confundir las posiciones de origen y destino de los píxeles por lo que la implementación de cada cuadrante resultó ser la misma a diferencia del offset de destino y origen.\newline
-Dicha implementación consistió, a grandes rasgos, en levantar de a cada 16 bits desde la posición de origen y pegarlos en la posición de destino. Una vez alcanzado el valor de $tam$, se procesaba la siguiente fila.
+Dicha implementación consistió, a grandes rasgos, en levantar de a cada 16 bits desde la posición de origen y pegarlos en la posición de destino. Una vez alcanzado el valor de $tam$, la siguiente fila era procesada.	\newline
+Para realizar dicha función no resultó necesario desempaquetar y empaquetar los píxeles pues no debían ser utilizados para realizar cuentas. Por lo tanto, a medida que se los levantaba, se los copiaba tal cual a la imagen destino.\newline
+\newline
+La función consistió en una seguidilla de los siguientes pasos:\newline
+En primer lugar, se procesa el cuadrante B. Para ello, se le resta el $tam$ al ancho de la imagen para obtener el offset. Luego, se calcula el offset vertical de destino multiplicando el dst\_row\_size por tam.
 
-100 recortar ../data/base/lena.bmp 100
-Implementación C
-----------------
+\begin{itemize}
+\item{Comparación de Tiempo}
+\end{itemize}
+Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo obtenido fue el siguiente:\newline
 
-Tiempo de ejecución:
-  Comienzo                          : 857860615438390
-  Fin                               : 857860685974035
-  # iteraciones                     : 100
-  # de ciclos insumidos totales     : 70535645
-  # de ciclos insumidos por llamada : 705356.500
+Implementación C\newline
+----------------\newline
 
-Implementación ASM
-------------------
+Tiempo de ejecución:\newline
+  Comienzo                          : 857860615438390\newline
+  Fin                               : 857860685974035\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 70535645\newline
+  \# de ciclos insumidos por llamada : 705356.500\newline
+\newline
+Implementación ASM\newline
+------------------\newline
 
-Tiempo de ejecución:
-  Comienzo                          : 857860758957933
-  Fin                               : 857860759960311
-  # iteraciones                     : 100
-  # de ciclos insumidos totales     : 1002378
-  # de ciclos insumidos por llamada : 10023.780
+Tiempo de ejecución:\newline
+  Comienzo                          : 857860758957933\newline
+  Fin                               : 857860759960311\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 1002378\newline
+  \# de ciclos insumidos por llamada : 10023.780\newline
+\newline
+Resultados\newline
+----------\newline
 
-Resultados
-----------
-
-Ciclos C:                 705356.5
-Ciclos ASM:               10023.78
-Ciclos ASM respecto de C: 1.42109415593%
-Tiempo C:                 70535645
-Tiempo ASM:               1002378
-Tiempo ASM respecto de C: 1.42109425667%
+Ciclos C:                 705356.5\newline
+Ciclos ASM:               10023.78\newline
+Ciclos ASM respecto de C: 1.42109415593\% \newline
+Tiempo C:                 70535645\newline
+Tiempo ASM:               1002378\newline
+Tiempo ASM respecto de C: 1.42109425667\% \newline
 
 
 \item {\textbf{Halftone:}}
 
+\begin{itemize}
+\item{Comparación de Tiempo}
+\end{itemize}
+Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo obtenido fue el siguiente:\newline
 \item {\textbf{Umbralizar:}}
-100 umbralizar ../data/base/lena.bmp 64 128 16
 
-Implementación C
-----------------
+\begin{itemize}
+\item{Comparación de Tiempo}
+\end{itemize}
+Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
 
-Tiempo de ejecución:
-  Comienzo                          : 857572172822622
-  Fin                               : 857572676855448
-  # iteraciones                     : 100
-  # de ciclos insumidos totales     : 504032826
-  # de ciclos insumidos por llamada : 5040328.500
+Implementación C\newline
+----------------\newline
 
-Implementación ASM
-------------------
+Tiempo de ejecución:\newline
+  Comienzo                          : 857572172822622\newline
+  Fin                               : 857572676855448\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 504032826\newline
+  \# de ciclos insumidos por llamada : 5040328.500\newline
+\newline
+Implementación ASM\newline
+------------------\newline
 
-Tiempo de ejecución:
-  Comienzo                          : 857572838473791
-  Fin                               : 857572938386751
-  # iteraciones                     : 100
-  # de ciclos insumidos totales     : 99912960
-  # de ciclos insumidos por llamada : 999129.625
+Tiempo de ejecución:\newline
+  Comienzo                          : 857572838473791\newline
+  Fin                               : 857572938386751\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 99912960\newline
+  \# de ciclos insumidos por llamada : 999129.625\newline
+\newline
+Resultados\newline
+----------\newline
 
-Resultados
-----------
-
-Ciclos C:                 5040328.5
-Ciclos ASM:               999129.625
-Ciclos ASM respecto de C: 19.8227084802%
-Tiempo C:                 504032826
-Tiempo ASM:               99912960
-Tiempo ASM respecto de C: 19.8227089281%
+Ciclos C:                 5040328.5\newline
+Ciclos ASM:               999129.625\newline
+Ciclos ASM respecto de C: 19.8227084802\%\newline
+Tiempo C:                 504032826\newline
+Tiempo ASM:               99912960\newline
+Tiempo ASM respecto de C: 19.8227089281\%\newline
 
 \item {\textbf{Colorizar:}} 
+\begin{itemize}
+\item{Comparación de Tiempo}
+\end{itemize}
+Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente:\newline
 \item {\textbf{Waves:}}
 
-100 waves ../data/base/lena.bmp 2.0 4.0 16.0
+\begin{itemize}
+\item{Comparación de Tiempo}
+\end{itemize}
+Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 2.0 4.0 16.0 como parámetros, el tiempo obtenido fue el siguiente:\newline
 
-Implementación C
-----------------
+Implementación C\newline
+----------------\newline
 
-Tiempo de ejecución:
-  Comienzo                          : 858182624211702
-  Fin                               : 858224537429979
-  # iteraciones                     : 100
-  # de ciclos insumidos totales     : 41913218277
-  # de ciclos insumidos por llamada : 419132160.000
+Tiempo de ejecución:\newline
+  Comienzo                          : 858182624211702\newline
+  Fin                               : 858224537429979\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 41913218277\newline
+  \# de ciclos insumidos por llamada : 419132160.000\newline
+\newline
+Implementación ASM\newline
+------------------\newline
 
-Implementación ASM
-------------------
-
-Tiempo de ejecución:
-  Comienzo                          : 858224711685883
-  Fin                               : 858225286387416
-  # iteraciones                     : 100
-  # de ciclos insumidos totales     : 574701533
-  # de ciclos insumidos por llamada : 5747015.000
-
-Resultados
-----------
-
-Ciclos C:                 419132160.0
-Ciclos ASM:               5747015.0
-Ciclos ASM respecto de C: 1.37117013402%
-Tiempo C:                 41913218277
-Tiempo ASM:               574701533
-Tiempo ASM respecto de C: 1.37117013826%
+Tiempo de ejecución:\newline
+  Comienzo                          : 858224711685883\newline
+  Fin                               : 858225286387416\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 574701533\newline
+  \# de ciclos insumidos por llamada : 5747015.000\newline
+\newline
+Resultados\newline
+----------\newline
+Ciclos C:                 419132160.0\newline
+Ciclos ASM:               5747015.0\newline
+Ciclos ASM respecto de C: 1.37117013402\%\newline
+Tiempo C:                 41913218277\newline
+Tiempo ASM:               574701533\newline
+Tiempo ASM respecto de C: 1.37117013826\%\newline
 
 \item {\textbf{Rotar:}} 
 
-100 rotar ../data/base/lena.bmp
-Implementación C
-----------------
+\begin{itemize}
+\item{Comparación de Tiempo}
+\end{itemize}
+Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Implementación C\newline
+----------------\newline
 
-Tiempo de ejecución:
-  Comienzo                          : 858387565588994
-  Fin                               : 858388404276534
-  # iteraciones                     : 100
-  # de ciclos insumidos totales     : 838687540
-  # de ciclos insumidos por llamada : 8386875.500
+Tiempo de ejecución:\newline
+  Comienzo                          : 858387565588994\newline
+  Fin                               : 858388404276534\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 838687540\newline
+  \# de ciclos insumidos por llamada : 8386875.500\newline
+\newline
+Implementación ASM\newline
+------------------\newline
 
-Implementación ASM
-------------------
+Tiempo de ejecución:\newline
+  Comienzo                          : 858388558871397\newline
+  Fin                               : 858388874991387\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 316119990\newline
+  \# de ciclos insumidos por llamada : 3161200.000\newline
+\newline
+Resultados\newline
+----------\newline
 
-Tiempo de ejecución:
-  Comienzo                          : 858388558871397
-  Fin                               : 858388874991387
-  # iteraciones                     : 100
-  # de ciclos insumidos totales     : 316119990
-  # de ciclos insumidos por llamada : 3161200.000
-
-Resultados
-----------
-
-Ciclos C:                 8386875.5
-Ciclos ASM:               3161200.0
-Ciclos ASM respecto de C: 37.6922251916%
-Tiempo C:                 838687540
-Tiempo ASM:               316119990
-Tiempo ASM respecto de C: 37.6922244487%
-
-Comparación usando objdump -d -M intel -S rotar_c.o: call, muchos llamados a memoria. Se guarda todo en la pila y hace los llamados a la pila, ej: [rbp-0x28]
+Ciclos C:                 8386875.5\newline
+Ciclos ASM:               3161200.0\newline
+Ciclos ASM respecto de C: 37.6922251916\%\newline
+Tiempo C:                 838687540\newline
+Tiempo ASM:               316119990\newline
+Tiempo ASM respecto de C: 37.6922244487\%\newline
 
 
 \end{itemize}
@@ -252,6 +275,7 @@ hay que poner el pseudocodigo detallado que utilizamos explicando por que recorr
 que transformaciones podriamos hacer para que sea mejor lo que hacemos, mejor tiempo, que fue lo que probamos, etc. Por ejemplo si paso de float a double. En umbralizar pasamos Q de float a double. Pusimos Q, max y min en double porque para hacer las cuentas con doubles era lo mas conveniente.
 \newline
 \section{Resultados}
+Al observar el código generado por objdump para cada función en c, se pudo observar que su código assembler realizaba múltiples llamados a memoria. Ésto se debía a que todos los datos eran almacenados en la pila por lo que todo debía ser buscado allí, por ejemplo, [rbp-0x28].\newline
 tenemos que ver el codigo en asm creado por el .c para decir por que nuestro asm funciona mas rapido que el generado por el .c, generalmente produce mas ciclos innecesarios o quizas contempla algun caso que no es importante (por ejemplo una altura o un ancho negativo). bueno obviamente hay que concluir que el .asm es mucho mas rapido que el .c.\newline
 tenemos que hacer un grafico, creo que podriamos hacer uno que para cada funcion que hicimos ponga el tiempo que tardo en asm y en .c y que una por un lado todos los .c y por el otro todos los .asm cuestion de ver precisamente cual es la relacion entre la velocidad de un asm y de un .c. tambien tenemos que hacer uno que muestre graficamente el contenido de los xmm a medida que avanza la ejecucion del programa\newline
 aca hay que poner tablas y graficos con los resultados. analizar y comparar las implementaciones. podriamos ejecutar el timing en distintas computadoras y ver que cambia respecto del procesador usado.
