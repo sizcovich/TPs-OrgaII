@@ -105,12 +105,144 @@ Nuestros filtros fueron realizados de la siguiente manera:
 \begin{itemize}
 \item {\textbf{Recortar:}}
 En el caso del filtro recortar, procesamos los 4 cuadrantes de la imagen por separado para no confundir las posiciones de origen y destino de los píxeles por lo que la implementación de cada cuadrante resultó ser la misma a diferencia del offset de destino y origen.\newline
-Dicha implementación consistió, a grandes rasgos, en levantar de a cada 16 bits desde la posición de origen y pegarlos en la posición de destino. Una vez alcanzado el valor de $tam$, se procesaba la siguiente fila.   
+Dicha implementación consistió, a grandes rasgos, en levantar de a cada 16 bits desde la posición de origen y pegarlos en la posición de destino. Una vez alcanzado el valor de $tam$, se procesaba la siguiente fila.
+
+100 recortar ../data/base/lena.bmp 100
+Implementación C
+----------------
+
+Tiempo de ejecución:
+  Comienzo                          : 857860615438390
+  Fin                               : 857860685974035
+  # iteraciones                     : 100
+  # de ciclos insumidos totales     : 70535645
+  # de ciclos insumidos por llamada : 705356.500
+
+Implementación ASM
+------------------
+
+Tiempo de ejecución:
+  Comienzo                          : 857860758957933
+  Fin                               : 857860759960311
+  # iteraciones                     : 100
+  # de ciclos insumidos totales     : 1002378
+  # de ciclos insumidos por llamada : 10023.780
+
+Resultados
+----------
+
+Ciclos C:                 705356.5
+Ciclos ASM:               10023.78
+Ciclos ASM respecto de C: 1.42109415593%
+Tiempo C:                 70535645
+Tiempo ASM:               1002378
+Tiempo ASM respecto de C: 1.42109425667%
+
+
 \item {\textbf{Halftone:}}
 \item {\textbf{Umbralizar:}}
+100 umbralizar ../data/base/lena.bmp 64 128 16
+
+Implementación C
+----------------
+
+Tiempo de ejecución:
+  Comienzo                          : 857572172822622
+  Fin                               : 857572676855448
+  # iteraciones                     : 100
+  # de ciclos insumidos totales     : 504032826
+  # de ciclos insumidos por llamada : 5040328.500
+
+Implementación ASM
+------------------
+
+Tiempo de ejecución:
+  Comienzo                          : 857572838473791
+  Fin                               : 857572938386751
+  # iteraciones                     : 100
+  # de ciclos insumidos totales     : 99912960
+  # de ciclos insumidos por llamada : 999129.625
+
+Resultados
+----------
+
+Ciclos C:                 5040328.5
+Ciclos ASM:               999129.625
+Ciclos ASM respecto de C: 19.8227084802%
+Tiempo C:                 504032826
+Tiempo ASM:               99912960
+Tiempo ASM respecto de C: 19.8227089281%
+
 \item {\textbf{Colorizar:}} 
-\item {\textbf{Waves:}} 
+\item {\textbf{Waves:}}
+
+100 waves ../data/base/lena.bmp 2.0 4.0 16.0
+
+Implementación C
+----------------
+
+Tiempo de ejecución:
+  Comienzo                          : 858182624211702
+  Fin                               : 858224537429979
+  # iteraciones                     : 100
+  # de ciclos insumidos totales     : 41913218277
+  # de ciclos insumidos por llamada : 419132160.000
+
+Implementación ASM
+------------------
+
+Tiempo de ejecución:
+  Comienzo                          : 858224711685883
+  Fin                               : 858225286387416
+  # iteraciones                     : 100
+  # de ciclos insumidos totales     : 574701533
+  # de ciclos insumidos por llamada : 5747015.000
+
+Resultados
+----------
+
+Ciclos C:                 419132160.0
+Ciclos ASM:               5747015.0
+Ciclos ASM respecto de C: 1.37117013402%
+Tiempo C:                 41913218277
+Tiempo ASM:               574701533
+Tiempo ASM respecto de C: 1.37117013826%
+
 \item {\textbf{Rotar:}} 
+
+100 rotar ../data/base/lena.bmp
+Implementación C
+----------------
+
+Tiempo de ejecución:
+  Comienzo                          : 858387565588994
+  Fin                               : 858388404276534
+  # iteraciones                     : 100
+  # de ciclos insumidos totales     : 838687540
+  # de ciclos insumidos por llamada : 8386875.500
+
+Implementación ASM
+------------------
+
+Tiempo de ejecución:
+  Comienzo                          : 858388558871397
+  Fin                               : 858388874991387
+  # iteraciones                     : 100
+  # de ciclos insumidos totales     : 316119990
+  # de ciclos insumidos por llamada : 3161200.000
+
+Resultados
+----------
+
+Ciclos C:                 8386875.5
+Ciclos ASM:               3161200.0
+Ciclos ASM respecto de C: 37.6922251916%
+Tiempo C:                 838687540
+Tiempo ASM:               316119990
+Tiempo ASM respecto de C: 37.6922244487%
+
+Comparación usando objdump -d -M intel -S rotar_c.o: call, muchos llamados a memoria. Se guarda todo en la pila y hace los llamados a la pila, ej: [rbp-0x28]
+
 
 \end{itemize}
 
