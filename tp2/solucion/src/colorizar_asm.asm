@@ -327,12 +327,6 @@ colorizar_asm:
 ;***		sub r12, 0x020202
 ;***		movq xmm14, r12		;0...0 | 10 | 07 | 04
 
-	
-	;**************
-	;sub rsp, 8
-	;call colorizar_c
-	;add rsp, 8
-	;**************
 
 	pop r12
 	pop r13
