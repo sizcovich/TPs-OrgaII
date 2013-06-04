@@ -129,67 +129,20 @@ halftone_asm:
 	add rsi, 16
 	add rdi, 16
 	cmp rbx, r13
-	jl .ciclo
 	je .siguienteFila
+	jl .ciclo
+	
 .ultimaColumna:
 
-	sub rbx, r13
-	sub rdi, rbx
-	sub rsi, rbx
-	movdqu xmm0, [rdi] ;me voy a desplazar con rbx
-	movdqu xmm2, [rdi+r8] ;sumo rdi+r8
-
-	pxor xmm8, xmm8
-	movq xmm1, xmm0 ;fila arriba
-	movq xmm3, xmm2 ;fila de abajo
-	
-	punpckhbw xmm0, xmm8 ;fila 1
-	punpcklbw xmm1, xmm8 ;fila 1
-	punpckhbw xmm2, xmm8 ;fila 2
-	punpcklbw xmm3, xmm8 ;fila 2
-
-	;sumamos para obtener los valores de los cuadraditos
-	paddw xmm0, xmm2
-	paddw xmm1, xmm3
-	phaddw xmm1, xmm0
-
-	;En caso de que sea >= 205 solo cambio el valor de arriba
-	;En caso de que sea >= 410 cambio el de abajo con respecto al anterior
-	;En caso de que sea >= 615 cambio el de abajo con respecto al anterior
-	;En caso de que sea >= 820 cambio todo
-	
-	;t >=205
-	movdqu xmm0, xmm15
-	pcmpgtw xmm0, xmm1
-	pxor xmm0, xmm11
-	pand xmm0, xmm10	;Fila de arriba
-	
-	movdqu xmm2, xmm14
-	pcmpgtw xmm2, xmm1
-	pxor xmm2, xmm11
-	pand xmm2, xmm9	;Fila de abajo filtrada
-	
-	movdqu xmm3, xmm13
-	pcmpgtw xmm3, xmm1
-	pxor xmm3, xmm11 ;invierto
-	pand xmm3, xmm10
-	
-	movdqu xmm4, xmm12
-	pcmpgtw xmm4, xmm1
-	pxor xmm4, xmm11
-	pand xmm4, xmm9
-	
-	;combino los datos de la fila de arriba
-	por xmm0, xmm4
-	por xmm2, xmm3
-	
-	movdqu [rsi],xmm0
-	movdqu [rsi+r9],xmm2
+	sub rbx, r13 ;le resto el ancho al contador 
+	sub rdi, rbx ;les resto lo que me pase
+	sub rsi, rbx ;les resto lo que me pase
+	jmp .ciclo
 	
 .siguienteFila:
 	sub r14, 2 ;veo si tengo mas filas
 	cmp r14, 0
-	jle .fin
+	je .fin
 	add rdi, 16
 	add rsi, 16
 	add rdi, r10
