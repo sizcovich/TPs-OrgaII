@@ -1,4 +1,3 @@
-BITS 64
 ; void waves_c (
 ;	unsigned char *src,
 ;	unsigned char *dst,
@@ -20,7 +19,6 @@ BITS 64
 ; 	xmm1 = y_scale
 ; 	xmm2 = g_scale
 
-;TODO REVISAR BANDAS BLANCAS
 extern waves_c
 
 global waves_asm
@@ -415,13 +413,6 @@ sin_taylor_i:
 	shufps xmm7, xmm7, 0
 	mulps xmm11, xmm7	;Multiplico por el x_scale
 
-;*****************************************
-;	sub rsp, 8
-;
-;	call waves_c
-;
-;	add rsp, 8
-;*****************************************
 
 	ret
 
