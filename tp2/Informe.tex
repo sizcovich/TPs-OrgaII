@@ -104,7 +104,8 @@ En el caso de $Assembler$, utilizamos la extensión SSE para procesar varios bit
 Nuestros filtros fueron realizados de la siguiente manera:
 \begin{itemize}
 \item {\textbf{Recortar:}}
-En el caso del filtro recortar, procesamos los 4 cuadrantes de la imagen por separado para no confundir las posiciones de origen y destino de los píxeles por lo que la implementación de cada cuadrante resultó ser la misma a diferencia de los offset utilizados.\newline
+En este filtro, la idea consistió en recortar las esquinas de la imagen original obteniendo cuatro bloques de tamaño $tam$ para luego unirlas y ubicarlas en las posiciones opuestas.\newline
+Para realizar dicho filtro, procesamos los 4 cuadrantes de la imagen por separado para no confundir las posiciones de origen y destino de los píxeles por lo que la implementación de cada cuadrante resultó ser la misma a diferencia de los offset utilizados.\newline
 Dicha implementación consistió, a grandes rasgos, en levantar de a 16 bits desde la posición de origen y pegarlos en la posición de destino. Una vez alcanzado el valor de $tam$, la siguiente fila era procesada.	\newline
 Para realizar dicha función no resultó necesario desempaquetar y empaquetar los píxeles pues no debían ser utilizados para realizar cuentas. Por lo tanto, a medida que se los levantaba, se los copiaba tal cual a la imagen destino.\newline
 \newline
@@ -155,6 +156,7 @@ Tiempo ASM:               1002378\newline
 Tiempo ASM respecto de C: 1.42109425667\% \newline
 
 \item {\textbf{Halftone:}}
+La idea principal de este filtro consistió en partir la imagen original en bloques de 2x2 píxeles generando en la imagen destino bloques del mismo tamaño. A cada nuevo bloque de la imagen original se le debió asignar el color blanco o negro dependiendo del valor de $t = \sum_{i=0}^{3} {(p_{i}}$ con $p_{i}$ píxeles del bloque de la imagen original de acuerdo a ciertas condiciones requeridas.\newline
 Para la realización de Halftone, debimos guardar en memoria valores que serían necesarios durante la implementación en $Assembler$. Éstos resultaron ser los valores con los que se compararía la sumatoria de los 4 bits como también un inversor (formado por 1's) y distinguidores entre la primer fila y la segunda (formados por 00ff y ff00 consecutivamente).\newline 
 Por otro lado, fue necesario que tanto el ancho como el alto de la imagen fueran pares para poder iterar de a dos filas y columnas a la vez. Para ello, dividimos n y m por 2 y comparamos el resto con 0. En caso de serlo, m y n se mantenían. Caso contrario, se le restaba 1 a la variable impar.\newline
 Luego, proseguimos recorriendo las matrices de fuente y destino. Para ello, decidimos desplazarnos a través de los punteros, por lo tanto, mientras estuviéramos en la misma fila, nos encargamos de sumarle 16 a rdi y a rsi en cada iteración. Al final de cada ciclo, el valor alcanzado por rsi y rdi era comparado con el ancho-16 para luego decidir si el ciclo debía continuar normalmente o si se había llegado al final de la fila. Una vez que el valor de rdi y rsi llegaban o superaban el ancho-16, se pasaba al final de la fila, donde rdi y rsi se seteaban en el ancho-16 para terminar procesando los últimos 16 bits.\newline
@@ -187,13 +189,15 @@ Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo ob
 
 
 \item {\textbf{Umbralizar:}}
-En Umbralizar, la imagen destino debía cumplir los siguientes requisitos:
+En Umbralizar, la imagen destino debía cumplir los siguientes requisitos:\newline
 - Cada píxel menor a $min$ debía valer 0.\newline
 - Cada píxel mayor a $max$ debía valer 255.\newline
 - Caso contrario, el píxel debía valer $\lfloor p/Q \rfloor$.Q\newline
 con $min$, $max$ y $Q$ enteros de 1 byte.\newline
 Para lograr esto, pasamos dichos valores enteros a floats para realizar los cálculos necesarios habiendo desempaquetado y convertido los píxeles al mismo tipo de dato.\newline
-Nuestro ciclo consistió en procesar de a 16 bits comparando los píxeles con $max$ y $min$ con la operación pcmpgtw. Las máscaras resultantes fueron luego invertidas dado que el resultado deseado era la comparación inversa a la facilitada por Intel. Luego, se debieron procesar los píxeles que no fueron menores a $min$ ni mayores a $max$.  
+Nuestro ciclo consistió en procesar de a 16 bits comparando los píxeles con $max$ y $min$ con la operación pcmpgtw. Las máscaras resultantes fueron luego invertidas con 0xff00's dado que el resultado deseado era la comparación inversa a la facilitada por Intel. Luego, se debieron procesar los píxeles que no fueron menores a $min$ ni mayores a $max$. Para ello, se los dividió por $Q$, se los redondeó a parte entera con la función roundps y luego se los multiplicó nuevamente por $Q$. Por último, los convertimos a doubleword para luego empaquetar y terminar por juntar las máscaras con and y or y procesar los píxeles.\newline
+Para recorrer la matriz, ciclamos de la misma manera que para halftone, la única diferencia fue que para procesar la última columna preferimos crear un ciclo nuevo para evitar posibles complicaciones.
+
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
@@ -229,12 +233,36 @@ Tiempo C:                 504032826\newline
 Tiempo ASM:               99912960\newline
 Tiempo ASM respecto de C: 19.8227089281\%\newline
 
-\item {\textbf{Colorizar:}} 
+\item {\textbf{Colorizar:}}
+Para colorizar, la imagen fuente debía ser procesada de acuerdo a las siguientes definiciones: 
+
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=400pt]{./colorizar.jpg}
+\end{center}
+\end{figure}
+
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente:\newline
+
+
+
 \item {\textbf{Waves:}}
+La idea de Waves consistió en combinar la imagen fuente con una imagen de ondas dando tonos más oscuros y más claros en forma de onda. Éstas se generan de manera repetida a lo largo de los ejes x e y. Cada píxel $(i,j)$ de la imagen destino se obtuvo a través del siguiente cálculo:
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=400pt]{./prof.jpg}
+\end{center}
+\end{figure}
+
+La función waves requiere la utilización de $sin\_taylor(x)$ que cumple con el siguiente pseudocódigo:
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=400pt]{./algoritmo_waves.jpg}
+\end{center}
+\end{figure}
 
 \begin{itemize}
 \item{Comparación de Tiempo}
@@ -321,8 +349,8 @@ Por otro lado, nos resultó sorprendente la extensión de los códigos en $Assem
 Por otra parte, hallamos que los códigos en $Assembler$ generados por los $C$ realizan operaciones innecesarias, como por ejemplo multiplicar por 1, dado que se producen de manera automática.\newline
 Por último, encontramos que el ensamblado del $C$ no realiza empaquetamientos por lo que la cantidad de operaciones a realizar está multiplicada por 16.\newline
 
-tenemos que hacer un grafico, creo que podriamos hacer uno que para cada funcion que hicimos ponga el tiempo que tardo en asm y en .c y que una por un lado todos los .c y por el otro todos los .asm cuestion de ver precisamente cual es la relacion entre la velocidad de un asm y de un .c. tambien tenemos que hacer uno que muestre graficamente el contenido de los xmm a medida que avanza la ejecucion del programa\newline
-aca hay que poner tablas y graficos con los resultados. analizar y comparar las implementaciones. podriamos ejecutar el timing en distintas computadoras y ver que cambia respecto del procesador usado.
+%tenemos que hacer un grafico, creo que podriamos hacer uno que para cada funcion que hicimos ponga el tiempo que tardo en asm y en .c y que una por un lado todos los .c y por el otro todos los .asm cuestion de ver precisamente cual es la relacion entre la velocidad de un asm y de un .c. tambien tenemos que hacer uno que muestre graficamente el contenido de los xmm a medida que avanza la ejecucion del programa\newline
+%aca hay que poner tablas y graficos con los resultados. analizar y comparar las implementaciones. podriamos ejecutar el timing en distintas computadoras y ver que cambia respecto del procesador usado.
 \section{Conclusi\'on}
 Podemos concluir que las causas principales de que el código en $C$ sea mucho más lento que el código $Assembler$ dado que su ensamblado no utiliza empaquetamiento y almacena todos los datos en la pila que son llamados en cada iteración. Esto significa que $C$ usa la FPU que es poco performante causando un aumento del tiempo de ejecución.\newline
 A partir de aquí, podemos concluir que realizar operaciones empaquetando y desempaquetando los datos acelera enormemente la ejecución de una función como también evitar los llamados a memoria dentro de los ciclos.
