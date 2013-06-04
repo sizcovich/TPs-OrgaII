@@ -71,8 +71,6 @@ colorizar_asm:
 
 		movdqu xmm2, [rdi+r14]
 		movdqu [rsi+r14], xmm2
-;		add r14, 3
-;		add r13, 3
 
 	.procesarFila:
 		;Levanto un tramo de 3x5 pixels
@@ -80,9 +78,9 @@ colorizar_asm:
 		;(0 1 2)(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15
 		;(0 1 2)(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15
 		;El ultimo byte es descarte
-		movdqu xmm1, [rdi+r15-3]
-		movdqu xmm2, [rdi+r14-3]	;Me voy a quedar con la fila del medio
-		movdqu xmm3, [rdi+r13-3]
+		movdqu xmm1, [rdi+r15]
+		movdqu xmm2, [rdi+r14]	;Me voy a quedar con la fila del medio
+		movdqu xmm3, [rdi+r13]
 
 		;Comparo fila con fila para sacar el máximo de cada canal en la columna
 		pmaxub xmm1, xmm2
@@ -176,7 +174,7 @@ colorizar_asm:
 		packsswb xmm5, xmm3	;B > G Completo
 		packsswb xmm7, xmm4	;B > R Completo
 
-		movdqu xmm4, xmm7	;B > R Completo
+		movdqu xmm4, xmm7	;Quiero B <= R Completo
 		mov r12, 0xFFFFFFFF
 		movd xmm14, r12d
 		pshufd xmm14, xmm14, 0	;Me preparo una mascara para invertir
@@ -205,10 +203,10 @@ colorizar_asm:
 
 		movdqu xmm4, xmm3 ;Copio el filtro de phi para desempaquetar
 		movdqu xmm6, xmm5 ;Copio el filtro de phi para desempaquetar
-		punpckhbw xmm3, xmm3	;Desempaqueto sign_extended
-		punpcklbw xmm4, xmm4	;Desempaqueto sign_extended
-		punpckhbw xmm5, xmm5	;Desempaqueto sign_extended
-		punpcklbw xmm6, xmm6	;Desempaqueto sign_extended
+		punpckhwd xmm3, xmm3	;Desempaqueto sign_extended
+		punpcklwd xmm4, xmm4	;Desempaqueto sign_extended
+		punpckhwd xmm5, xmm5	;Desempaqueto sign_extended
+		punpcklwd xmm6, xmm6	;Desempaqueto sign_extended
 		; xmm3 : xmm4 : xmm5 : xmm6
 
 		;Obtengo donde los alpha suman
@@ -226,8 +224,8 @@ colorizar_asm:
 		pxor xmm14, xmm14
 		movdqu xmm7, xmm2	;Copio los datos originales
 		movdqu xmm9, xmm2	;Copio los datos originales
-		punpckhbw xmm7, xmm14	;Desempaqueto sign_extended
-		punpcklbw xmm9, xmm14	;Desempaqueto sign_extended
+		punpckhbw xmm7, xmm14	;Desempaqueto
+		punpcklbw xmm9, xmm14	;Desempaqueto
 		; xmm7 : xmm9
 
 		movdqu xmm8, xmm7 ;Copio los datos originales
@@ -250,14 +248,14 @@ colorizar_asm:
 		mulps xmm6, xmm10
 
 		;Trunco a int
-		cvttps2dq xmm3, xmm3
-		cvttps2dq xmm4, xmm4
-		cvttps2dq xmm5, xmm5
-		cvttps2dq xmm6, xmm6
+		cvtps2dq xmm3, xmm3
+		cvtps2dq xmm4, xmm4
+		cvtps2dq xmm5, xmm5
+		cvtps2dq xmm6, xmm6
 		
 		;Empaqueto los datos otra vez para escribir
-		packssdw xmm4, xmm3
-		packssdw xmm6, xmm5
+		packusdw xmm4, xmm3
+		packusdw xmm6, xmm5
 		packuswb xmm6, xmm4
 
 		movdqu xmm14, xmm13
@@ -266,7 +264,7 @@ colorizar_asm:
 		por xmm6, xmm14
 
 		psrldq xmm6, 3	;Acomodo para escribir
-		movdqu [rsi+r14], xmm6
+		movdqu [rsi+r14+3], xmm6
 
 		add r15, 9
 		add r14, 9
@@ -281,51 +279,6 @@ colorizar_asm:
 		dec rdx
 		cmp rdx, 0
 		jg .comienzoFila
-
-;***		pshufb xmm4, xmm14	;Junto los rojos en los bytes 0, 1 y 2
-;***		add r12, 0x010101
-;***		movq xmm14, r12		;0...0 | 11 | 08 | 05
-;***		pshufb xmm1, xmm14	;Junto los verdes en los bytes 0, 1 y 2
-;***		add r12, 0x010101
-;***		movq xmm14, r12		;0...0 | 12 | 09 | 06
-;***		pshufb xmm3, xmm14	;Junto los azules en los bytes 0, 1 y 2
-;***
-;***;		mov r12, 0x0200000100000000
-;***;		movq xmm14, r12		;0...0 | 02 | ## | ## | 01 | ## | ## | 00 | ##
-;***;		pslldq xmm14, 1		;Para reposicionar los rojos
-;***
-;***		movdqu xmm5, xmm3
-;***		pcmpgtb xmm5, xmm1	;Si el azul es mas grande que el verde
-;***		pcmpgtb xmm3, xmm4	;Si el azul es mas grande que el rojo
-;***		pcmpgtb xmm1, xmm4	;Si el verde es mas grande que el rojo
-;***
-;***		movdqu xmm4, xmm5		;Voy a usar el 5 con el pandn para tener g >= b
-;***		movdqu xmm6, xmm3		;Lo voy a invertir para tener r >= b
-;***		movdqu xmm7, xmm1		;Lo voy a usar para tener r >= g
-;***
-;***		pxor xmm7, xmm13		;Le hago un not
-;***		
-;***		pand xmm4, xmm3	;phi azul
-;***		pandn xmm5, xmm1	;phi verde
-;***		pandn xmm3, xmm7	;phi rojo
-;***
-;***		pshufb xmm3, xmm14	;Reacomodo las mascaras del rojo
-;***		pslldq xmm14, 1
-;***
-;***		pshufb xmm4, xmm14	;Reacomodo las mascaras del verde
-;***		pslldq xmm14, 1
-;***
-;***		pshufb xmm5, xmm14	;Reacomodo las mascaras del azul
-;***
-;***		;Junto las 3 mascaras para obtener una que me filtre que canal es el
-;***		;maximo del pixel
-;***		por xmm3, xmm4
-;***		por xmm3, xmm5
-;***
-;***		;Desarmo la mascara en 4
-;***
-;***		sub r12, 0x020202
-;***		movq xmm14, r12		;0...0 | 10 | 07 | 04
 
 
 	pop r12
