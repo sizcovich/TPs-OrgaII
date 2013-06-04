@@ -22,6 +22,7 @@ global colorizar_asm
 
 section .rodata
 mascaraCambios: dq 0xFFFFFFFF00000000, 0x000000FFFFFFFFFF
+mascaraCanales: dq 0x0000FF0000000000, 0x00000000FF0000FF
 
 section .text
 
@@ -44,6 +45,7 @@ colorizar_asm:
 	cvtdq2ps xmm15, xmm15	;Cargo 1.0, 1.0, 1.0, 1.0 para el phi
 
 	movdqu xmm13, [mascaraCambios]
+	movdqu xmm12, [mascaraCanales]
 
 	xor r15, r15	;Preparo R15 para usarlo de indice
 	xor r14, r14	;Indice columna media
@@ -62,15 +64,15 @@ colorizar_asm:
 		jl .firstRow
 		
 	.comienzoFila:
-		mov r15, 3
+		mov r15, 0
 		mov r14d, r8d
 		mov r13d, r8d
 		add r13, r13
 
 		movdqu xmm2, [rdi+r14]
 		movdqu [rsi+r14], xmm2
-		add r14, 3
-		add r13, 3
+;		add r14, 3
+;		add r13, 3
 
 	.procesarFila:
 		;Levanto un tramo de 3x5 pixels
@@ -184,6 +186,9 @@ colorizar_asm:
 		pand xmm7, xmm5	;Si es caso phiB
 		pandn xmm5, xmm6	;Si es caso phiG
 		pandn xmm6, xmm4	;Si es caso phiR
+		pand xmm7, xmm12
+		pand xmm6, xmm12
+		pand xmm5, xmm12
 
 		;Acomodo para que queden las mascaras de phi como
 		;0 0 0 B G R B G R B G R 0 0 0 0
@@ -260,7 +265,7 @@ colorizar_asm:
 		pandn xmm14, xmm2	;Me quedo con los bytes de las puntas
 		por xmm6, xmm14
 
-		pslldq xmm6, 3	;Acomodo para escribir
+		psrldq xmm6, 3	;Acomodo para escribir
 		movdqu [rsi+r14], xmm6
 
 		add r15, 9
