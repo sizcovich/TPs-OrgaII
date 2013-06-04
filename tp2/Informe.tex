@@ -93,9 +93,9 @@ Por otro lado, debimos analizar la performance de un procesador al hacer uso de 
 Nuestro trabajo consistió en implementar los filtros mencionados anteriormente. Para el desarrollo del mismo, diversas herramientas fueron necesarias. En esta sección, se explicita la utilización de las mismas aclarando en qué nos ayudaron a lograr una correcta ejecución de nuestra implementación.  
 \subsection{Implementación en C}
 En el caso de $C$, las implementaciones se realizaron siguiendo algoritmos sencillos. Para recorrer las matrices de píxeles utilizamos $for$ pues nos pareció lo más conveniente considerando que nuestros valores estaban pre-establecidos y que al colocar un for dentro de otro (uno para las filas y otro para las columnas) era más simple recorrer todas las posiciones de una matriz.\newline
-Al probar iterar primero las columnas y luego las filas, rotar.c giraba la imagen hacia el otro lado; luego, nos decidimos por iterar primero las filas y luego las columnas. **********esto?
+Al probar iterar primero las columnas y luego las filas, rotar.c giraba la imagen hacia el otro lado; luego, nos decidimos por iterar primero las filas y luego las columnas.
 \newline
-Por otro lado, utilizamos, como tipos de datos, enteros y doubles. Esto se debió a que era lo más conveniente para las operaciones que debía realizar nuestro programa ya que el nivel de precisón alcanzado era mayor y esa cualidad es muy importante para no perder información en cada píxel. Un incoveniente que tuvimos y que nos resultó llamativo fue al implementar rotar.c ya que al definir $\sqrt{2}/2$ como double la imagen obtenida presentaba diferencias con la imagen que debíamos encontrar. Para resolverlo, definimos $\sqrt{2}/2$ como float y dicho problema se solucionó. Lo extraño resultó ser con mayor precisión la diferencia debería ser la misma, pero no fue el caso.\newline
+Por otro lado utilizamos, como tipos de datos, enteros y doubles. Esto se debió a que era lo más conveniente para las operaciones que debía realizar nuestro programa ya que el nivel de precisón alcanzado era mayor y esa cualidad es muy importante para no perder información en cada píxel. Un incoveniente que tuvimos y que nos resultó llamativo fue al implementar rotar.c ya que al definir $\sqrt{2}/2$ como double la imagen obtenida presentaba diferencias con la imagen que debíamos encontrar. Para resolverlo, definimos $\sqrt{2}/2$ como float y dicho problema se solucionó.\newline
 \newline
 Luego, con el fin de disminuir el tiempo de ejecución de los $C$, comprimimos partes del código reduciendo, a su vez, la cantidad de líneas. También, alteramos pequeños detalles que sumados marcarían diferencia. Por ejemplo, cambiamos j++ por ++j.
 
@@ -104,7 +104,8 @@ En el caso de $Assembler$, utilizamos la extensión SSE para procesar varios bit
 Nuestros filtros fueron realizados de la siguiente manera:
 \begin{itemize}
 \item {\textbf{Recortar:}}
-En el caso del filtro recortar, 
+En el caso del filtro recortar, procesamos los 4 cuadrantes de la imagen por separado para no confundir las posiciones de origen y destino de los píxeles por lo que la implementación de cada cuadrante resultó ser la misma a diferencia del offset de destino y origen.\newline
+Dicha implementación consistió, a grandes rasgos, en levantar de a cada 16 bits desde la posición de origen y pegarlos en la posición de destino. Una vez alcanzado el valor de $tam$, se procesaba la siguiente fila.   
 \item {\textbf{Halftone:}}
 \item {\textbf{Umbralizar:}}
 \item {\textbf{Colorizar:}} 
