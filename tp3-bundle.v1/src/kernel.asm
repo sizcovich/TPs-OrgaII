@@ -51,14 +51,19 @@ start:
 	call deshabilitar_A20
 	call checkear_A20 ;muestra por pantalla que esta deshabilitada
 	call habilitar_A20
+	
 	; cargar la GDT
 	lgdt [GDT_DESC]
+	
+	xchg bx, bx
 	; setear el bit PE del registro CR0
 	mov eax, cr0
 	or eax, 1
 	mov cr0, eax
 	; pasar a modo protegido
 	jmp 0x8:modoprotegido
+BITS 32
+
 modoprotegido:
 	; seteo la pila
 	mov ax, 0x10
@@ -69,9 +74,26 @@ modoprotegido:
 
 	mov ebp, 0x20000
 	mov esp, 0x20000
-		
-	; pintar pantalla, todos los colores, que bonito!
 
+
+	; pintar pantalla, todos los colores, que bonito!
+	
+	mov ecx, 4000
+	mov ax, 0x38
+	mov es, ax
+	mov ax, 0x0F00
+limpiarPantalla:
+	mov [es:ecx], ax
+	dec ecx
+	loop limpiarPantalla
+	mov [es:ecx], ax
+
+;para probar la interrupcion
+	xor edx, edx
+	xor eax, eax
+	xor ecx, ecx
+	div ecx
+	
 	; inicializar el manejador de memoria
 
 	; inicializar el directorio de paginas
