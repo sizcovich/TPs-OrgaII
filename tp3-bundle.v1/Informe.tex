@@ -1,0 +1,122 @@
+\documentclass[10pt, a4paper]{article}
+\usepackage[paper=a4paper, left=1.5cm, right=1.5cm, bottom=1.5cm, top=3.5cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{indentfirst}
+\usepackage{fancyhdr}
+\usepackage{a4wide}
+\usepackage[dvipsnames,usenames]{color}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{listingsutf8}
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{verbatim}
+\usepackage{latexsym}
+\usepackage{lastpage}
+\usepackage[colorlinks=true, linkcolor=blue]{hyperref}
+\usepackage{calc}
+
+\newcommand{\f}[1]{\text{#1}}
+\newcommand{\real}{\mathbb{R}}
+\newcommand{\nat}{\mathbb{N}}
+\newcommand{\eme}{\mathcal{M}}
+\newcommand{\emeh}{\widehat{\mathcal{M}}}
+\newcommand{\ere}{\mathcal{R}}
+
+\sloppy
+
+\setlength{\voffset}{-0.5cm}
+\setlength{\hoffset}{0.7cm}
+\setlength{\headsep}{0pt}
+\setlength{\headheight}{0pt}
+\setlength{\oddsidemargin}{-0.7in}
+\setlength{\marginparwidth}{-0.5cm}
+\setlength{\textwidth}{18cm}
+\setlength{\footskip}{2pt}
+\setlength{\topmargin}{0in}
+\setlength{\textheight}{25cm}
+\setlength{\fboxrule}{3pt}
+
+\begin{document}
+\thispagestyle{empty}
+\begin{center}
+
+\Huge{ \bf{UNIVERSIDAD DE BUENOS AIRES}}
+\\
+\LARGE{\bf{Facultad de Ciencias Exactas y Naturales}}
+\\
+\textbf{Departamento de Computaci\'on}
+\\
+\textbf{Organizaci\'on del Computador}
+\vspace{2.0\baselineskip}
+\end{center}
+
+
+\begin{figure}[h] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=100pt]{./image.jpeg}
+\end{center}
+\end{figure}
+\begin{center}
+\vspace*{0.7cm}
+
+\huge{\bf TRABAJO PR\'ACTICO N\'UMERO 3}\\
+\huge{Nombre de Grupo: Napolitana con Jam\'on y Morrones}
+\vspace*{8cm}
+
+\end{center}
+
+\huge{\textbf{Alumnos:}}\\
+\\
+\vspace*{0.3cm}
+\Large{\textsl{Izcovich, Sabrina} $|$ sizcovich@gmail.com $|$ LU 550/11}\\
+\vspace*{0.3cm}
+\Large{\textsl{L\'opez Veluscek, Matías} \hspace{0.1cm}$|$ milopezv@gmail.com $|$ 926/10}\\
+\vspace*{0.3cm}
+\vspace{0.5cm}
+ 
+\newpage
+%Pagina de titulo e indice
+\thispagestyle{empty}
+%\large{
+\tableofcontents
+%}
+\newpage
+\section{Introducci\'on}
+
+
+\section{Desarrollo}
+
+\subsection{Ejercicio 1}
+{\textbf{Pregunta 1:}} ¿Qué ocurre si se intenta escribir en la fila 26, columna 1 de la matriz de video, utilizando el segmento de la GDT que direcciona a la memoria de video? ¿Por qué?\newline
+Depende de cómo fue definido el segmento. Si el tamaño del segmento es igual al tamaño de la pantalla en bytes, entonces va a ocurrir un Segmentation Fault. En el caso en el que el segmento no sea del mismo tamaño de la pantalla, el caracter no va a ser visible.\newline
+
+{\textbf{Pregunta 2:}} ¿Qué ocurre si no se setean todos los registros de segmento al entrar en modo protegido? ¿Es necesario setearlos todos? ¿Por qué?\newline
+
+
+\subsection{Ejercicio 2}
+{\textbf{Pregunta 3:}} ¿Cómo se puede hacer para generar una excepción sin utilizar la instrucción int? Mencionar al menos 3 formas posibles.\newline
+
+{\textbf{Pregunta 4:}} ¿Cuáles son los valores del stack cuando se genera una interrupción? ¿Qué significan? (Indicar para el caso de operar en nivel 3 y nivel 0).\newline
+
+
+\subsection{Ejercicio 3}
+{\textbf{Pregunta 5:}} ¿Puede el directorio de páginas estar en cualquier posición arbitraria de memoria?\newline
+
+{\textbf{Pregunta 6:}} ¿Es posible acceder a una página de nivel de kernel desde usuario?\newline
+
+{\textbf{Pregunta 7:}} ¿Se puede mapear una página física desde dos direcciones virtuales
+distintas, de manera tal que una esté mapeada con nivel de usuario y la otra a nivel de kernel? De ser posible, ¿Qué problemas puede traer?\newline
+
+\subsection{Ejercicio 4}
+\subsection{Ejercicio 5}
+\subsection{Ejercicio 6}
+\subsection{Ejercicio 7}
+
+\section{Conclusi\'on}
+
+
+\end{document}
