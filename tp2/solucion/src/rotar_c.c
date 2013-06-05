@@ -16,7 +16,6 @@ void rotar_c (
 	int cy = floor(h/2.0);
 	for (int i=0; i < w; ++i){
 		for (int j=0; j < h; ++j){
-			
 			double dx = i - cx;
 			double dy = j - cy;
 			
