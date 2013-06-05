@@ -87,30 +87,29 @@
 \newpage
 \section{Introducci\'on}
 El objetivo de este trabajo pr\'actico fue experimentar utilizando el modelo de programaci\'on SIMD. Para ello, fue requerido implementar seis filtros para procesamiento de im\'agenes (Recortar, Halftone, Umbralizar, Colorizar, Efecto Plasma y Rotar) tanto en $C$ como en $Assembler$.\newline
-Por otro lado, debimos analizar la performance de un procesador al hacer uso de las operaciones SIMD. Para ello, realizamos comparaciones de velocidad entre los dos tipos de implementaciones realizados utilizando la herramienta Time Stamp Counter (TSC) del procesador.
+Por otro lado, debimos analizar la performance de un procesador al hacer uso de las operaciones SIMD. Para ello, realizamos comparaciones de velocidad entre los dos tipos de implementaciones realizados utilizando la herramienta Time Stamp Counter (TSC) del procesador y sacamos conclusiones al respecto.
 
 \section{Desarrollo}
 Nuestro trabajo consistió en implementar los filtros mencionados anteriormente. Para el desarrollo del mismo, diversas herramientas fueron necesarias. En esta sección, se explicita la utilización de las mismas aclarando en qué nos ayudaron a lograr una correcta ejecución de nuestra implementación.  
 \subsection{Implementación en C}
-En el caso de $C$, las implementaciones se realizaron siguiendo algoritmos sencillos. Para recorrer las matrices de píxeles utilizamos $for$ pues nos pareció lo más conveniente considerando que nuestros valores estaban pre-establecidos y que al colocar un for dentro de otro (uno para las filas y otro para las columnas) era más simple recorrer todas las posiciones de una matriz.\newline
-Al probar iterar primero las columnas y luego las filas, rotar.c giraba la imagen hacia el otro lado; luego, nos decidimos por iterar primero las filas y luego las columnas.
+En el caso de $C$, las implementaciones se realizaron siguiendo algoritmos sencillos. Para recorrer las matrices de píxeles utilizamos $for$ pues nos pareció lo más conveniente considerando que nuestros valores estaban pre-establecidos y que al colocar un for dentro de otro (uno para las filas y otro para las columnas) era más simple recorrer todas las posiciones de una matriz.
 \newline
-Por otro lado utilizamos, como tipos de datos, enteros y doubles. Esto se debió a que era lo más conveniente para las operaciones que debía realizar nuestro programa ya que el nivel de precisón alcanzado era mayor y esa cualidad es muy importante para no perder información en cada píxel. Un incoveniente que tuvimos y que nos resultó llamativo fue al implementar rotar.c ya que al definir $\sqrt{2}/2$ como double la imagen obtenida presentaba diferencias con la imagen que debíamos encontrar. Para resolverlo, definimos $\sqrt{2}/2$ como float y dicho problema se solucionó.\newline
+Por un lado utilizamos, como tipos de datos, enteros y doubles. Esto se debió a que era lo más conveniente para las operaciones que debía realizar nuestro programa ya que el nivel de precisón alcanzado era mayor y esa cualidad es muy importante para no perder información sobre cada píxel. Un incoveniente que enfrentamos y que nos resultó llamativo fue al implementar rotar.c ya que, al definir $\sqrt{2}/2$ como double, la imagen obtenida presentaba diferencias con la imagen que debíamos encontrar. Si bien éstas no resultaban visibles, decidimos resolverlo definiendo $\sqrt{2}/2$ como float.\newline
 \newline
 Luego, con el fin de disminuir el tiempo de ejecución de los $C$, comprimimos partes del código reduciendo, a su vez, la cantidad de líneas. También, alteramos pequeños detalles que sumados marcarían diferencia. Por ejemplo, cambiamos j++ por ++j.
 
 \subsection{Implementación en Assembler}
-En el caso de $Assembler$, utilizamos la extensión SSE para procesar varios bits a la vez. Esta herramienta nos permitió acelerar la ejecución de nuestro programa dado que en cada ciclo (en la mayoría de los casos) fueron tratados 16 bits a la vez.\newline
+Para la implementación en $Assembler$, utilizamos la extensión SSE para procesar varios bits a la vez. Esta herramienta nos permitió acelerar la ejecución de nuestro programa dado que en cada ciclo (en la mayoría de los casos) se trataban 16 bits a la vez.\newline
 Nuestros filtros fueron realizados de la siguiente manera:
 \begin{itemize}
 \item {\textbf{Recortar:}}
 En este filtro, la idea consistió en recortar las esquinas de la imagen original obteniendo cuatro bloques de tamaño $tam$ para luego unirlas y ubicarlas en las posiciones opuestas.\newline
 Para realizar dicho filtro, procesamos los 4 cuadrantes de la imagen por separado para no confundir las posiciones de origen y destino de los píxeles por lo que la implementación de cada cuadrante resultó ser la misma a diferencia de los offset utilizados.\newline
-Dicha implementación consistió, a grandes rasgos, en levantar de a 16 bits desde la posición de origen y pegarlos en la posición de destino. Una vez alcanzado el valor de $tam$, la siguiente fila era procesada.	\newline
-Para realizar dicha función no resultó necesario desempaquetar y empaquetar los píxeles pues no debían ser utilizados para realizar cuentas. Por lo tanto, a medida que se los levantaba, se los copiaba tal cual a la imagen destino.\newline
+La implementación de este filtro consistió, a grandes rasgos, en levantar de a 16 bits desde la posición de origen y pegarlos en la posición de destino. Una vez alcanzado el valor de $tam$, se procesaba la siguiente fila y así sucesivamente hasta terminar con la columna número $tam$.	\newline
+Para realizar dicha función no resultó necesario desempaquetar y empaquetar los píxeles pues éstos no debían ser utilizados para cálculos como tampoco modificados. Por lo tanto, a medida que se los levantaba, se los copiaba tal cual a la imagen destino.\newline
 \newline
 La función consistió en una seguidilla de los siguientes pasos:\newline
-En primer lugar, se procesa el cuadrante B. Para ello, se le resta el $tam$ al ancho de la imagen para obtener el offset. Luego, se calcula el offset vertical de destino multiplicando el dst\_row\_size por tam para continuar ingresando a un ciclo que consiste en mover la porción de memoria del fuente al destino hasta copiar la fila entera del cuadrante. Una vez alcanzado un desplazamiento mayor que el tamaño de la fila, se retrocede la distancia excedida para terminar por procesar el mismo ciclo con los bits que quedaron fuera del pedazo de memoria y debían ser copiados. Dicho procedimiento fue realizado para todas las filas del cuadrante. Para controlar dichos movimientos, fue necesario un contador que nos advirtiera si nos encontrábamos o no en la útlima fila que sería el $tam$.\newline
+En primer lugar, se procesó el cuadrante B. Para ello, se le restó el $tam$ al ancho de la imagen para obtener el offset. Luego, se calculó el offset vertical de destino multiplicando el dst\_row\_size por $tam$ para continuar ingresando a un ciclo que consistió en mover la porción de memoria del fuente al destino hasta copiar la fila entera del cuadrante. Una vez alcanzado un desplazamiento mayor que el tamaño de la fila, se retrocedió la distancia excedida para terminar por procesar el mismo ciclo con la última columna. Para controlar dichos movimientos, fue necesario un contador que nos advirtiera si nos encontrábamos o no en la última fila que sería el $tam$.\newline
 La misma manipulación fue realizada para el resto de los cuadrantes de manera tal que la imagen quedara de la siguiente forma:\newline
 
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
@@ -126,7 +125,7 @@ Luego, comparamos la cantidad de ciclos producidos por $C$ y por $Assembler$.\ne
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo obtenido fue el siguiente:\newline
 
 Implementación C\newline
-----------------\newline
+----------------
 
 Tiempo de ejecución:\newline
   Comienzo                          : 857860615438390\newline
@@ -136,7 +135,7 @@ Tiempo de ejecución:\newline
   \# de ciclos insumidos por llamada : 705356.500\newline
 \newline
 Implementación ASM\newline
-------------------\newline
+------------------
 
 Tiempo de ejecución:\newline
   Comienzo                          : 857860758957933\newline
@@ -146,7 +145,7 @@ Tiempo de ejecución:\newline
   \# de ciclos insumidos por llamada : 10023.780\newline
 \newline
 Resultados\newline
-----------\newline
+----------
 
 Ciclos C:                 705356.5\newline
 Ciclos ASM:               10023.78\newline
@@ -156,11 +155,17 @@ Tiempo ASM:               1002378\newline
 Tiempo ASM respecto de C: 1.42109425667\% \newline
 
 \item {\textbf{Halftone:}}
-La idea principal de este filtro consistió en partir la imagen original en bloques de 2x2 píxeles generando en la imagen destino bloques del mismo tamaño. A cada nuevo bloque de la imagen original se le debió asignar el color blanco o negro dependiendo del valor de $t = \sum_{i=0}^{3} {(p_{i}}$ con $p_{i}$ píxeles del bloque de la imagen original de acuerdo a ciertas condiciones requeridas.\newline
-Para la realización de Halftone, debimos guardar en memoria valores que serían necesarios durante la implementación en $Assembler$. Éstos resultaron ser los valores con los que se compararía la sumatoria de los 4 bits como también un inversor (formado por 1's) y distinguidores entre la primer fila y la segunda (formados por 00ff y ff00 consecutivamente).\newline 
+La idea principal de este filtro consistió en partir la imagen original en bloques de 2x2 píxeles generando, en la imagen destino, bloques del mismo tamaño. A cada nuevo bloque de la imagen original se le debió asignar el color blanco o negro dependiendo del valor de $t = \sum_{i=0}^{3} {(p_{i}}$, con $p_{i}$ píxeles del bloque de la imagen original de acuerdo a ciertas condiciones requeridas.\newline
+Para la realización de dicho filtro, debimos almacenar en memoria valores que fueron necesarios durante la implementación. Éstos resultaron ser los valores con los que se compararía la sumatoria de los 4 bits como también un inversor (formado por 1's) y distinguidores entre la primer fila y la segunda (formados por 00ff y ff00 consecutivamente).\newline 
 Por otro lado, fue necesario que tanto el ancho como el alto de la imagen fueran pares para poder iterar de a dos filas y columnas a la vez. Para ello, dividimos n y m por 2 y comparamos el resto con 0. En caso de serlo, m y n se mantenían. Caso contrario, se le restaba 1 a la variable impar.\newline
 Luego, proseguimos recorriendo las matrices de fuente y destino. Para ello, decidimos desplazarnos a través de los punteros, por lo tanto, mientras estuviéramos en la misma fila, nos encargamos de sumarle 16 a rdi y a rsi en cada iteración. Al final de cada ciclo, el valor alcanzado por rsi y rdi era comparado con el ancho-16 para luego decidir si el ciclo debía continuar normalmente o si se había llegado al final de la fila. Una vez que el valor de rdi y rsi llegaban o superaban el ancho-16, se pasaba al final de la fila, donde rdi y rsi se seteaban en el ancho-16 para terminar procesando los últimos 16 bits.\newline
-Para procesar los bits, desempaquetamos de a dos filas a word *****. Luego, sumamos los píxeles dos a dos en cada fila. Finalmente, realizamos la suma de las posiciones de las filas correspondientes con las columnas correspondientes de la siguiente manera:\newline
+Luego, dado que procesamos de a dos filas, debíamos desplazar nuestro puntero a rdi+16+row\_size+basura. Ésto se debe a que, en primer lugar, rdi terminaba la columna apuntando a ancho-16, luego era necesario sumar 16 para llegar al ancho. Por otro lado, se suma la basura para llegar al final de la fila de la imagen, por último, se suma el row\_size para saltear la fila siguiente. En el siguiente gráfico puede observarse la manera en la que se conforma una fila:\newline
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=300pt]{./fila.jpg}
+\end{center}
+\end{figure}
+Para procesar los bits, nos encargamos de desempaquetamos de a dos filas. Luego, sumamos los píxeles dos a dos en cada fila. Finalmente, realizamos la suma de las posiciones de las filas correspondientes con las columnas correspondientes de la siguiente manera:\newline
 \newline
 Considerando la siguiente imagen,
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
@@ -173,20 +178,48 @@ los pasos realizados fueron:\newline
 - C+D\newline
 - (A+B) + (C+D)\newline
 
-Luego, se prosiguió realizando la comparación pcmpgtw entre la suma y los valores seteados para la comparación. Dado que el resultado deseado era el inverso ($\leq$ en vez de $>$), se aplicó un xor con el inversor explicitado anteriormente a cada resultado obtenido por la comparación. Por último, se realizó un and entre lo obtenido de invertir la comparación y los filtrados de primera y segunda fila. Esta suma de operaciones debieron realizarse la cantidad de veces necesaria para cubrir todos los valores con los que comparar la suma de píxeles. Luego, 4 veces. Por último, las máscaras fueron unidas con un 'or' en el que se juntaron la primera con su respectiva segunda fila de cada columna. Los píxeles resultantes fueron, entonces, ubicados en la matriz destino.\newline
+Luego, se prosiguió realizando la comparación pcmpgtw entre la suma y los valores seteados para la comparación. Dado que el resultado deseado era el inverso ($\leq$ en vez de $>$), se aplicó un xor con el inversor a cada resultado obtenido por la comparación. Por último, se realizó un and entre lo obtenido de invertir la comparación y los filtrados de primera y segunda fila. Esta suma de operaciones debieron realizarse la cantidad de veces necesaria como para cubrir todos los valores con los que comparar la suma de píxeles. Luego, 4 veces. Por último, las máscaras fueron unidas con un 'or' en el que se juntaron las columnas respectivas de la primera y segunda fila. Los píxeles resultantes fueron, entonces, ubicados en la matriz destino.\newline
 Los píxeles resultantes debían cumplir con la siguiente condición:
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
 \begin{center}
 \includegraphics[width=400pt]{./halftone.jpg}
 \end{center}
 \end{figure}
-Por último, utilizamos un registro que era seteado en 1 una vez que se llegaba a la última columna para dar lugar al pasaje de fila y, recorrer de esta manera, la matriz entera.
 
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo obtenido fue el siguiente:\newline
 
+Implementación C\newline
+----------------
+
+Tiempo de ejecución:\newline
+  Comienzo                          : 259119263552208\newline
+  Fin                               : 259119729516615\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 465964407\newline
+  \# de ciclos insumidos por llamada : 4659644.000\newline
+\newline
+Implementación ASM\newline
+------------------
+
+Tiempo de ejecución:\newline
+  Comienzo                          : 259119877087956\newline
+  Fin                               : 259119888325521\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 11237565\newline
+  \# de ciclos insumidos por llamada : 112375.648\newline
+\newline
+Resultados\newline
+----------
+
+Ciclos C:                 4659644.0\newline
+Ciclos ASM:               112375.648\newline
+Ciclos ASM respecto de C: 2.41167883212\%\newline
+Tiempo C:                 465964407\newline
+Tiempo ASM:               11237565\newline
+Tiempo ASM respecto de C: 2.41167883881\%\newline
 
 \item {\textbf{Umbralizar:}}
 En Umbralizar, la imagen destino debía cumplir los siguientes requisitos:\newline
@@ -204,7 +237,7 @@ Para recorrer la matriz, ciclamos de la misma manera que para halftone, la únic
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
 
 Implementación C\newline
-----------------\newline
+----------------
 
 Tiempo de ejecución:\newline
   Comienzo                          : 857572172822622\newline
@@ -214,7 +247,7 @@ Tiempo de ejecución:\newline
   \# de ciclos insumidos por llamada : 5040328.500\newline
 \newline
 Implementación ASM\newline
-------------------\newline
+------------------
 
 Tiempo de ejecución:\newline
   Comienzo                          : 857572838473791\newline
@@ -224,7 +257,7 @@ Tiempo de ejecución:\newline
   \# de ciclos insumidos por llamada : 999129.625\newline
 \newline
 Resultados\newline
-----------\newline
+----------
 
 Ciclos C:                 5040328.5\newline
 Ciclos ASM:               999129.625\newline
@@ -245,8 +278,37 @@ Para colorizar, la imagen fuente debía ser procesada de acuerdo a las siguiente
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
-Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente:\newline
+Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 0.5 como parámetro, el tiempo obtenido fue el siguiente:\newline
 
+Implementación C\newline
+----------------
+
+Tiempo de ejecución:\newline
+  Comienzo                          : 260663107087014\newline
+  Fin                               : 260675081294295\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 11974207281\newline
+  \# de ciclos insumidos por llamada : 119742072.000\newline
+
+Implementación ASM\newline
+------------------
+
+Tiempo de ejecución:\newline
+  Comienzo                          : 260675487848181\newline
+  Fin                               : 260676113912895\newline
+  \# iteraciones                     : 100\newline
+  \# de ciclos insumidos totales     : 626064714\newline
+  \# de ciclos insumidos por llamada : 6260647.000\newline
+
+Resultados\newline
+----------
+
+Ciclos C:                 119742072.0\newline
+Ciclos ASM:               6260647.0\newline
+Ciclos ASM respecto de C: 5.22844385055\%\newline
+Tiempo C:                 11974207281\newline
+Tiempo ASM:               626064714\newline
+Tiempo ASM respecto de C: 5.2284439321\%\newline
 
 
 \item {\textbf{Waves:}}
@@ -263,14 +325,15 @@ La función waves requiere la utilización de $sin\_taylor(x)$ que cumple con el
 \includegraphics[width=400pt]{./algoritmo_waves.jpg}
 \end{center}
 \end{figure}
-
+Para la implementación de dicho filtro, calculamos la cantidad total de bytes y preparamos un contador para recorrer todos los elementos. Para calcular el $sin\_taylor$, implementamos nuestras operaciones siguiendo los pasos del pseudocódigo.\newline
+Para procesar la imagen, recorrimos los píxeles evaluando con prof habiendo desempaquetado a doubleword y luego los convertimos a float.   
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 2.0 4.0 16.0 como parámetros, el tiempo obtenido fue el siguiente:\newline
 
 Implementación C\newline
-----------------\newline
+----------------
 
 Tiempo de ejecución:\newline
   Comienzo                          : 858182624211702\newline
@@ -280,7 +343,7 @@ Tiempo de ejecución:\newline
   \# de ciclos insumidos por llamada : 419132160.000\newline
 \newline
 Implementación ASM\newline
-------------------\newline
+------------------
 
 Tiempo de ejecución:\newline
   Comienzo                          : 858224711685883\newline
@@ -290,7 +353,7 @@ Tiempo de ejecución:\newline
   \# de ciclos insumidos por llamada : 5747015.000\newline
 \newline
 Resultados\newline
-----------\newline
+----------
 Ciclos C:                 419132160.0\newline
 Ciclos ASM:               5747015.0\newline
 Ciclos ASM respecto de C: 1.37117013402\%\newline
@@ -305,7 +368,7 @@ Tiempo ASM respecto de C: 1.37117013826\%\newline
 \end{itemize}
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo obtenido fue el siguiente:\newline
 Implementación C\newline
-----------------\newline
+----------------
 
 Tiempo de ejecución:\newline
   Comienzo                          : 858387565588994\newline
@@ -315,7 +378,7 @@ Tiempo de ejecución:\newline
   \# de ciclos insumidos por llamada : 8386875.500\newline
 \newline
 Implementación ASM\newline
-------------------\newline
+------------------
 
 Tiempo de ejecución:\newline
   Comienzo                          : 858388558871397\newline
@@ -325,7 +388,7 @@ Tiempo de ejecución:\newline
   \# de ciclos insumidos por llamada : 3161200.000\newline
 \newline
 Resultados\newline
-----------\newline
+----------
 
 Ciclos C:                 8386875.5\newline
 Ciclos ASM:               3161200.0\newline
@@ -348,9 +411,11 @@ En primera instancia, hallamos que la cantidad de ciclos realizados por $Assembl
 Por otro lado, nos resultó sorprendente la extensión de los códigos en $Assembler$ generados por los $C$ en comparación con los nuestros. Para hallarle una explicación a dicha consecuencia, pensamos que el causante de esto fue que, al estar todo almacenado en la pila, los desplazamientos requieren de numerosas instrucciones. Contrariamente, al moverse con un puntero, lo único necesario para el desplazamiento no es más que un sumador. \newline
 Por otra parte, hallamos que los códigos en $Assembler$ generados por los $C$ realizan operaciones innecesarias, como por ejemplo multiplicar por 1, dado que se producen de manera automática.\newline
 Por último, encontramos que el ensamblado del $C$ no realiza empaquetamientos por lo que la cantidad de operaciones a realizar está multiplicada por 16.\newline
-
-%tenemos que hacer un grafico, creo que podriamos hacer uno que para cada funcion que hicimos ponga el tiempo que tardo en asm y en .c y que una por un lado todos los .c y por el otro todos los .asm cuestion de ver precisamente cual es la relacion entre la velocidad de un asm y de un .c. tambien tenemos que hacer uno que muestre graficamente el contenido de los xmm a medida que avanza la ejecucion del programa\newline
-%aca hay que poner tablas y graficos con los resultados. analizar y comparar las implementaciones. podriamos ejecutar el timing en distintas computadoras y ver que cambia respecto del procesador usado.
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=520pt]{./velocidad.jpg}
+\end{center}
+\end{figure}
 \section{Conclusi\'on}
 Podemos concluir que las causas principales de que el código en $C$ sea mucho más lento que el código $Assembler$ dado que su ensamblado no utiliza empaquetamiento y almacena todos los datos en la pila que son llamados en cada iteración. Esto significa que $C$ usa la FPU que es poco performante causando un aumento del tiempo de ejecución.\newline
 A partir de aquí, podemos concluir que realizar operaciones empaquetando y desempaquetando los datos acelera enormemente la ejecución de una función como también evitar los llamados a memoria dentro de los ciclos.
