@@ -21,8 +21,8 @@ extern colorizar_c
 global colorizar_asm
 
 section .rodata
-mascaraCambios: dq 0xFFFFFFFF00000000, 0x000000FFFFFFFFFF
-mascaraCanales: dq 0x0000FF0000000000, 0x00000000FF0000FF
+mascaraCambios: dq 0xFFFFFFFFFF000000, 0x00000000FFFFFFFF
+mascaraCanales: dq 0x00FF0000FF000000, 0x000000000000FF00
 
 section .text
 
@@ -82,7 +82,7 @@ colorizar_asm:
 		movdqu xmm2, [rdi+r14]	;Me voy a quedar con la fila del medio
 		movdqu xmm3, [rdi+r13]
 
-		;Comparo fila con fila para sacar el máximo de cada canal en la columna
+		;Comparo fila con fila para sacar el maximo de cada canal en la columna
 		pmaxub xmm1, xmm2
 		pmaxub xmm1, xmm3	;Acumule los maximos en xmm1
 
@@ -93,8 +93,8 @@ colorizar_asm:
 		;(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15 xx xx)(xx
 		movdqu xmm3, xmm1	;La lina de arriba
 		movdqu xmm4, xmm1	;La linea de abajo
-		psrldq xmm3, 3
-		pslldq xmm4, 3
+		pslldq xmm3, 3
+		psrldq xmm4, 3
 
 		;Calculo los maximos y obtengo 3 pixels solo de maximos valores
 		;(x x x)(3 4 5)(6  7  8)( 9 10 11)(xx xx xx)(xx
@@ -108,9 +108,10 @@ colorizar_asm:
 		;xmm1 tiene el canal verde
 		
 		;Descarto el primer byte para que me quede alineado cuando desempaqueto
-		pslldq xmm1, 1
-		pslldq xmm3, 1
-		pslldq xmm4, 1
+		;x x)(3 4 5)(6  7  8)( 9 10 11)(xx xx xx)(xx xx
+		psrldq xmm1, 1
+		psrldq xmm3, 1
+		psrldq xmm4, 1
 
 		movdqu xmm5, xmm3	;Copio el canal para desempaquetar
 		movdqu xmm6, xmm1	;Copio el canal para desempaquetar
@@ -124,21 +125,21 @@ colorizar_asm:
 		punpcklbw xmm6, xmm10
 		punpcklbw xmm7, xmm10
 
-		mov r12, 0x00000000FF0000FF	;Mascara hw
+		mov r12, 0x0000000000FF0000	;Mascara hw
 		movq xmm14, r12
 		punpcklbw xmm14, xmm14	;Me cargo la mascara de words para la parte alta
 
 		pand xmm4, xmm14	;Me quedo solo con el canal rojo
 
-		pslldq xmm14, 2	;Cambio al canal verde
+		psrldq xmm14, 2	;Cambio al canal verde
 		pand xmm1, xmm14	;Me quedo solo con el canal verde
 
-		pslldq xmm14, 2	;Cambio al canal azul
+		psrldq xmm14, 2	;Cambio al canal azul
 		pand xmm3, xmm14	;Me quedo con el canal azul
 
 		;Hago las comparaciones para el maximo de los canales en la parte alta
-		psrldq xmm1, 2
-		psrldq xmm3, 4
+		pslldq xmm1, 2
+		pslldq xmm3, 4
 		;Ahora los tres canales estan alineados
 
 		movdqu xmm14, xmm3	;Copio el azul
@@ -147,21 +148,21 @@ colorizar_asm:
 		pcmpgtw xmm1, xmm4	;G > R
 		movdqu xmm4, xmm14	;B > R
 		
-		mov r12, 0x0000FF0000000000	;Mascara lw
+		mov r12, 0xFF0000FF00000000	;Mascara lw
 		movq xmm14, r12
 		punpcklbw xmm14, xmm14	;Me cargo la mascara de words para la parte baja
 
 		pand xmm7, xmm14	;Me quedo con el canal rojo
 
-		pslldq xmm14, 2	;Cambio al canal verde
+		psrldq xmm14, 2	;Cambio al canal verde
 		pand xmm6, xmm14	;Me quedo con el canal verde
 
-		pslldq xmm14, 2	;Cambio al canal azul
+		psrldq xmm14, 2	;Cambio al canal azul
 		pand xmm5, xmm14	;Me quedo con el canal azul
 
 		;Hago las comparaciones para el maximo de los canales en la parte baja
-		psrldq xmm6, 2
-		psrldq xmm5, 4
+		pslldq xmm6, 2
+		pslldq xmm5, 4
 		;Ahora los tres canales estan alineados
 
 		movdqu xmm14, xmm5	;Copio el azul
@@ -190,9 +191,10 @@ colorizar_asm:
 
 		;Acomodo para que queden las mascaras de phi como
 		;0 0 0 B G R B G R B G R 0 0 0 0
-		psrldq xmm6, 1
-		;psrldq xmm5, 1	;Este esta donde debe
-		pslldq xmm7, 1
+		;TODO: CHECK HERE
+		pslldq xmm6, 2
+		pslldq xmm5, 1	;Este esta donde debe
+		;pslldq xmm7, 2
 		por xmm5, xmm6
 		por xmm5, xmm7	;Junto todas las mascaras en xmm3 y me quedan los maximos
 
@@ -248,10 +250,10 @@ colorizar_asm:
 		mulps xmm6, xmm10
 
 		;Trunco a int
-		cvtps2dq xmm3, xmm3
-		cvtps2dq xmm4, xmm4
-		cvtps2dq xmm5, xmm5
-		cvtps2dq xmm6, xmm6
+		cvttps2dq xmm3, xmm3
+		cvttps2dq xmm4, xmm4
+		cvttps2dq xmm5, xmm5
+		cvttps2dq xmm6, xmm6
 		
 		;Empaqueto los datos otra vez para escribir
 		packusdw xmm4, xmm3
