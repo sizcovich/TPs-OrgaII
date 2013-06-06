@@ -54,7 +54,7 @@ do
 	$BINFILE -v -i c colorizar $file 0.5
 	$BINFILE -v -i asm colorizar $file 0.5
 
-	$DIFF $DIFFFLAGS $file".colorizar.0.50.c.bmp" $file".colorizar.0.50.asm.bmp" 5
+	$DIFF $DIFFFLAGS $file".colorizar-0.50.c.bmp" $file".colorizar-0.50.asm.bmp" 5
 	if [ $? != "0" ]; then
 		OKDIFF=0
 		echo "diferencias en filtro: colorizar"

@@ -22,7 +22,7 @@ global colorizar_asm
 
 section .rodata
 mascaraCambios: dq 0xFFFFFFFFFF000000, 0x00000000FFFFFFFF
-mascaraCanales: dq 0x00FF0000FF000000, 0x000000000000FF00
+mascaraCanales: dq 0xFF0000FF00000000, 0x0000000000FF0000
 
 section .text
 
@@ -62,6 +62,7 @@ colorizar_asm:
 		add r15, 16
 		cmp r15, rcx	;Me fijo si llegue al ancho de la imagen
 		jl .firstRow
+		sub rcx, 9
 		
 	.comienzoFila:
 		mov r15, 0
@@ -191,12 +192,12 @@ colorizar_asm:
 
 		;Acomodo para que queden las mascaras de phi como
 		;0 0 0 B G R B G R B G R 0 0 0 0
-		;TODO: CHECK HERE
 		pslldq xmm6, 2
 		pslldq xmm5, 1	;Este esta donde debe
 		;pslldq xmm7, 2
 		por xmm5, xmm6
 		por xmm5, xmm7	;Junto todas las mascaras en xmm3 y me quedan los maximos
+		psrldq xmm5, 1
 
 		movdqu xmm3, xmm5	;Copio el filtro de phi para desempaquetar
 		punpckhbw xmm3, xmm3	;Desempaqueto sign_extended
@@ -231,7 +232,7 @@ colorizar_asm:
 		; xmm7 : xmm9
 
 		movdqu xmm8, xmm7 ;Copio los datos originales
-		movdqu xmm10, xmm8 ;Copio los datos originales
+		movdqu xmm10, xmm9 ;Copio los datos originales
 		punpckhbw xmm7, xmm14	;Desempaqueto
 		punpcklbw xmm8, xmm14	;Desempaqueto
 		punpckhbw xmm9, xmm14	;Desempaqueto
@@ -275,12 +276,38 @@ colorizar_asm:
 		jl .procesarFila
 
 	.nextRow:
+		;Copio el ultimo pixel
+		mov al, [rdi+r14+3]
+		mov [rsi+r14+3], al
+		mov al, [rdi+r14+4]
+		mov [rsi+r14+4], al
+		mov al, [rdi+r14+5]
+		mov [rsi+r14+5], al
+		;Avanzo a la siguiente fila
 		add rdi, r8
 		add rsi, r9
 
 		dec rdx
 		cmp rdx, 0
 		jg .comienzoFila
+
+	.lastRowSetup
+		xor r15, r15
+		mov r14d, r8d
+		sub rcx, 7
+	.lastRow:
+		movdqu xmm1, [rdi+r14]	;Levanto los bytes
+		movdqu [rsi+r14], xmm1	;Como solo los quiero copiar los pongo
+		add r15, 16
+		add r14, 16
+		cmp r15, rcx	;Me fijo si llegue al ancho de la imagen
+		jl .lastRow
+
+		;Me paro en los ultimos 16 bytes
+		sub r15, rcx
+		sub r14, r15
+		movdqu xmm1, [rdi+r14]	;Levanto los bytes
+		movdqu [rsi+r14], xmm1	;Como solo los quiero copiar los pongo
 
 
 	pop r12
