@@ -158,7 +158,7 @@ Tiempo ASM respecto de C: 1.42109425667\% \newline
 La idea principal de este filtro consistió en partir la imagen original en bloques de 2x2 píxeles generando, en la imagen destino, bloques del mismo tamaño. A cada nuevo bloque de la imagen original se le debió asignar el color blanco o negro dependiendo del valor de $t = \sum_{i=0}^{3} {(p_{i}}$, con $p_{i}$ píxeles del bloque de la imagen original de acuerdo a ciertas condiciones requeridas.\newline
 Para la realización de dicho filtro, debimos almacenar en memoria valores que fueron necesarios durante la implementación. Éstos resultaron ser los valores con los que se compararía la sumatoria de los 4 bits como también un inversor (formado por 1's) y distinguidores entre la primer fila y la segunda (formados por 00ff y ff00 consecutivamente).\newline 
 Por otro lado, fue necesario que tanto el ancho como el alto de la imagen fueran pares para poder iterar de a dos filas y columnas a la vez. Para ello, dividimos n y m por 2 y comparamos el resto con 0. En caso de serlo, m y n se mantenían. Caso contrario, se le restaba 1 a la variable impar.\newline
-Luego, proseguimos recorriendo las matrices de fuente y destino. Para ello, decidimos desplazarnos a través de los punteros, por lo tanto, mientras estuviéramos en la misma fila, nos encargamos de sumarle 16 a rdi y a rsi en cada iteración. Al final de cada ciclo, el valor alcanzado por rsi y rdi era comparado con el ancho-16 para luego decidir si el ciclo debía continuar normalmente o si se había llegado al final de la fila. Una vez que el valor de rdi y rsi llegaban o superaban el ancho-16, se pasaba al final de la fila, donde rdi y rsi se seteaban en el ancho-16 para terminar procesando los últimos 16 bits.\newline
+Luego, proseguimos recorriendo las matrices de fuente y destino. Para ello, decidimos desplazarnos a través de los punteros, por lo tanto, mientras estuviéramos en la misma fila, nos encargamos de sumarle 16 a rdi y a rsi en cada iteración. Al final de cada ciclo, el valor alcanzado por rsi y rdi era comparado con el ancho-16 para luego decidir si el ciclo debía continuar normalmente o si se había llegado al final de la fila. Una vez que el valor de rdi y rsi llegaban o superaban el ancho-16, se pasaba al final de la fila, donde rdi y rsi se seteaban en el ancho-16 para terminar procesando los últimos 16 bits. Para tratar la última columna, decidimos copiar el ciclo principal de manera tal a no tener que utilizar registros en exceso para determinar cuándo se debía pasar a la siguiente fila dado que no teníamos registros disponibles.\newline
 Luego, dado que procesamos de a dos filas, debíamos desplazar nuestro puntero a rdi+16+row\_size+basura. Ésto se debe a que, en primer lugar, rdi terminaba la columna apuntando a ancho-16, luego era necesario sumar 16 para llegar al ancho. Por otro lado, se suma la basura para llegar al final de la fila de la imagen, por último, se suma el row\_size para saltear la fila siguiente. En el siguiente gráfico puede observarse la manera en la que se conforma una fila:\newline
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
 \begin{center}
@@ -227,10 +227,10 @@ En Umbralizar, la imagen destino debía cumplir los siguientes requisitos:\newli
 - Cada píxel mayor a $max$ debía valer 255.\newline
 - Caso contrario, el píxel debía valer $\lfloor p/Q \rfloor$.Q\newline
 con $min$, $max$ y $Q$ enteros de 1 byte.\newline
-Para lograr esto, pasamos dichos valores enteros a floats para realizar los cálculos necesarios habiendo desempaquetado y convertido los píxeles al mismo tipo de dato.\newline
-Nuestro ciclo consistió en procesar de a 16 bits comparando los píxeles con $max$ y $min$ con la operación pcmpgtw. Las máscaras resultantes fueron luego invertidas con 0xff00's dado que el resultado deseado era la comparación inversa a la facilitada por Intel. Luego, se debieron procesar los píxeles que no fueron menores a $min$ ni mayores a $max$. Para ello, se los dividió por $Q$, se los redondeó a parte entera con la función roundps y luego se los multiplicó nuevamente por $Q$. Por último, los convertimos a doubleword para luego empaquetar y terminar por juntar las máscaras con and y or y procesar los píxeles.\newline
-Para recorrer la matriz, ciclamos de la misma manera que para halftone, la única diferencia fue que para procesar la última columna preferimos crear un ciclo nuevo para evitar posibles complicaciones.
-
+\newline
+Para lograr dicho objetivo, pasamos los valores $max$, $min$ y $Q$ (enteros) a floats para realizar los cálculos necesarios. Para ello, desempaquetamos y convertimos los píxeles a dicho tipo de dato.\newline
+Nuestro ciclo consistió en procesar de a 16 bits comparando los píxeles con $max$ y $min$ con la operación pcmpgtw. Las máscaras resultantes fueron, luego, invertidas con 0xff00's dado que el resultado deseado era la comparación inversa a la facilitada por Intel. Luego, se debieron procesar los píxeles que no fueron menores a $min$ ni mayores a $max$. Para ello, se los dividió por $Q$, se los redondeó a parte entera con la función roundps y luego se los multiplicó nuevamente por $Q$. Por último, los convertimos a doubleword para luego empaquetar y terminar por juntar las máscaras con and y or y procesar los píxeles. Todo lo explicitado anteriormente fue realizado de manera rápida gracias al procedimiento realizado con SSE.\newline
+Para recorrer la matriz, decidimos desplazarnos a través de los punteros, por lo tanto, mientras estuviéramos en la misma fila, nos encargamos de sumarle 16 a rdi y a rsi en cada iteración. Al final de cada ciclo, el valor alcanzado por rsi y rdi era comparado con el ancho-16 para luego decidir si el ciclo debía continuar normalmente o si se había llegado al final de la fila. Una vez que el valor de rdi y rsi llegaban o superaban el ancho-16, se pasaba al final de la fila, donde rdi y rsi se seteaban en el ancho-16 para terminar procesando los últimos 16 bits. Para tratar la última columna, decidimos copiar el ciclo principal de manera tal a no tener que utilizar registros en exceso para determinar cuándo se debía pasar a la siguiente fila dado que no teníamos registros disponibles.\newline
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
@@ -275,6 +275,7 @@ Para colorizar, la imagen fuente debía ser procesada de acuerdo a las siguiente
 \end{center}
 \end{figure}
 
+Para ello, decidimos procesar nuestra matriz de la siguiente forma:\newline
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
@@ -362,7 +363,14 @@ Tiempo ASM:               574701533\newline
 Tiempo ASM respecto de C: 1.37117013826\%\newline
 
 \item {\textbf{Rotar:}} 
-
+El filtro rotar toma la imagen de entrada y escribe en la de salida la imagen rotada 45 grados. Cada píxel de la imagen resultante se forma de la siguiente manera:
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=400pt]{./rotar.jpg}
+\end{center}
+\end{figure}
+Para cumplir con dicho objetivo, procedimos de la siguiente manera:\newline
+En primer lugar, calculamos Cy y Cx con simples shr del ancho y alto de la imagen fuente. Luego, procedimos calculando $\sqrt{2}$/2 habiendo extendido los cálculos a todos los bits del XMM para, luego, realizar los cálculos con todos los píxeles levantados en una iteración.
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
