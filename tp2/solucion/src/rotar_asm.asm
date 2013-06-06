@@ -268,7 +268,6 @@ rotar_asm:
 	jge .sigFila
 	
 .veoSiLlegoAlFin:	
-	;add r15, 16 ;le sumo 16
 	;Me quiero fijar si estoy en la franja de los ultimos 16
 	sub r14, 16
 	cmp r15, r14
