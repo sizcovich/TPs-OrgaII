@@ -62,7 +62,7 @@ colorizar_asm:
 		add r15, 16
 		cmp r15, rcx	;Me fijo si llegue al ancho de la imagen
 		jl .firstRow
-		sub rcx, 9
+		;sub rcx, 9
 		
 	.comienzoFila:
 		mov r15, 0
@@ -276,13 +276,15 @@ colorizar_asm:
 		jl .procesarFila
 
 	.nextRow:
+		sub r15, rcx
+		sub r14, r15
 		;Copio el ultimo pixel
-		mov al, [rdi+r14+3]
-		mov [rsi+r14+3], al
-		mov al, [rdi+r14+4]
-		mov [rsi+r14+4], al
-		mov al, [rdi+r14+5]
-		mov [rsi+r14+5], al
+		mov al, [rdi+r14-1]
+		mov [rsi+r14-1], al
+		mov al, [rdi+r14-2]
+		mov [rsi+r14-2], al
+		mov al, [rdi+r14-3]
+		mov [rsi+r14-3], al
 		;Avanzo a la siguiente fila
 		add rdi, r8
 		add rsi, r9
@@ -294,7 +296,8 @@ colorizar_asm:
 	.lastRowSetup
 		xor r15, r15
 		mov r14d, r8d
-		sub rcx, 7
+		;sub rcx, 7
+		sub rcx, 16
 	.lastRow:
 		movdqu xmm1, [rdi+r14]	;Levanto los bytes
 		movdqu [rsi+r14], xmm1	;Como solo los quiero copiar los pongo
