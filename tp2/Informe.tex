@@ -94,13 +94,13 @@ Nuestro trabajo consistió en implementar los filtros mencionados anteriormente.
 \subsection{Implementación en C}
 En el caso de $C$, las implementaciones se realizaron siguiendo algoritmos sencillos. Para recorrer las matrices de píxeles utilizamos $for$ pues nos pareció lo más conveniente considerando que nuestros valores estaban pre-establecidos y que al colocar un for dentro de otro (uno para las filas y otro para las columnas) era más simple recorrer todas las posiciones de una matriz.
 \newline
-Por un lado utilizamos, como tipos de datos, enteros y doubles. Esto se debió a que era lo más conveniente para las operaciones que debía realizar nuestro programa ya que el nivel de precisón alcanzado era mayor y esa cualidad es muy importante para no perder información sobre cada píxel. Un incoveniente que enfrentamos y que nos resultó llamativo fue al implementar rotar.c ya que, al definir $\sqrt{2}/2$ como double, la imagen obtenida presentaba diferencias con la imagen que debíamos encontrar. Si bien éstas no resultaban visibles, decidimos resolverlo definiendo $\sqrt{2}/2$ como float.\newline
+Por un lado utilizamos, como tipos de datos, enteros y doubles. Debido a que el código no es afectado en su extensión y/o complicación por la utilización de floats o doubles, nos decidimos por los últimos. Esto se debió a que era lo más conveniente para las operaciones que debía realizar nuestro programa ya que el nivel de precisón alcanzado era mayor y nos pareció importante para no perder información sobre cada píxel. Sin embargo, nos encontramos con un incoveniente que nos resultó llamativo. Éste se halló al implementar rotar.c ya que, al definir $\sqrt{2}/2$ como double, la imagen obtenida presentaba diferencias con la imagen que debíamos encontrar. Si bien éstas no resultaban visibles, decidimos resolverlo definiendo $\sqrt{2}/2$ como float.\newline
 \newline
-Luego, con el fin de disminuir el tiempo de ejecución de los $C$, comprimimos partes del código reduciendo, a su vez, la cantidad de líneas. También, alteramos pequeños detalles que sumados marcarían diferencia. Por ejemplo, cambiamos j++ por ++j.
+Luego, con el fin de disminuir el tiempo de ejecución de los $C$, comprimimos partes del código reduciendo, a su vez, la cantidad de líneas. También, alteramos pequeños detalles que sumados marcarían diferencia. Por ejemplo, cambiamos j++ por ++j. De este modo, logramos optimizar (a nuestro alcance) lo máximo posible para hallar una justificación más profunda a la comparación de tiempo con $Assembler$. 
 
 \subsection{Implementación en Assembler}
-Para la implementación en $Assembler$, utilizamos la extensión SSE para procesar varios bits a la vez. Esta herramienta nos permitió acelerar la ejecución de nuestro programa dado que en cada ciclo (en la mayoría de los casos) se trataban 16 bits a la vez.
-Por otro lado, preferimos utilizar floats en vez de doubles pues la imagen obtenida resultaba tan lípida como la obtenida por el tipo de datos de mayor precisión. De esta manera, logramos no utilizar registros innecesariamente y evitar largos ciclos que disminuirían el tiempo de ejecución del programa.  
+Para la implementación en $Assembler$, utilizamos la extensión SSE para procesar varios bits a la vez. Esta herramienta nos permitió acelerar la ejecución de nuestro programa dado que en cada ciclo (en los casos en los que fue utilizado) se trataban 16 bits a la vez.
+Por otro lado, preferimos utilizar floats en vez de doubles pues, si bien la precisión es menor y puede generar pequeñas diferencias, las imágenes obtenidas resultaban tan límpidas como las obtenidas por el tipo de datos de mayor precisión. De esta manera, con el fin de simplificar nuestro código, preferimos no utilizar registros innecesariamente y evitar largos ciclos que disminuirían el tiempo de ejecución del programa.  
 \newline
 Nuestros filtros fueron realizados de la siguiente manera:
 \begin{itemize}
@@ -278,6 +278,27 @@ Para colorizar, la imagen fuente debía ser procesada de acuerdo a las siguiente
 \end{figure}
 
 Para ello, decidimos procesar nuestra matriz de la siguiente forma:\newline
+En primer lugar, pasamos el ancho de píxeles a bytes multiplicándolo por 3. Para iterar las filas, le restamos 2 al ancho pues éstas eran procesadas de a 3. Luego, nos creamos 3 contadores para desplazarnos de manera tal a evitar modificar los punteros rdi y rsi originales en cada columna. Cada contador correspondía a una fila distinta. El resto de la matriz fue recorrida de la misma manera mencionada en los filtros anteriores.\newline
+Para procesar la primera y última fila y columna, nos limitamos a copiar los píxeles de fuente y pegarlos en destino. Para el resto de las filas, optamos por levantar tramos de 3x5 píxeles y quedarnos con la fila del medio (de las 3 procesadas). Luego, comparamos fila con fila para sacar el máximo de cada canal en dicha columna. Continuamos desplazando los registros de modo que quedaran las columnas alineadas con el fin de calcular los máximos de cada grupo de píxeles. Más tarde, calculamos los máximos y obtuvimos 3 píxeles de los máximos valores. El procedimiento sería el siguiente:\newline
+\newline
+Tramo de 3x5 píxeles(el último byte es descarte):\newline
+		(0 1 2)(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15\newline
+		(0 1 2)(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15\newline
+		(0 1 2)(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15\newline
+\newline
+Desplazamiento de los registros de modo para lograr columnas alineadas para calcular los máximos de cada grupo de píxeles:\newline
+		.\hspace{2cm}(0 1 2)(3  4  5)(6  7  8)(9 10 11)(12\newline
+		(0 1 2)(3 4 5)(6  7  8)(9 10 11)(12 13 14)(15\newline
+		(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15 xx xx)(xx\newline
+		
+Obtención luego del cálculo de los máximos: 3 píxeles con los máximos valores:\newline
+		(x x x)(3 4 5)(6  7  8)(9 10 11)(xx xx xx)(xx\newline
+\newline
+Luego, continuamos viendo qué canal era el máximo para duplicar sus píxeles y comparar los 3 canales (por canales nos referimos a R, G y B) de cada uno. Proseguimos descartando el primer byte para que quedara alineado al desempaquetar. Nuestro resultado quedó, entonces de la siguiente manera:\newline
+		x x)(3 4 5)(6  7  8)( 9 10 11)(xx xx xx)(xx xx\newline
+		\newline
+Nuestra implementación continuó con el desempaquetamiento los canales. Luego, proseguimos cargando las máscaras y filtrándos los canales de manera tal a quedar con el rojo por un lado, el verde por otro y por último el azul. A partir de aquí, pudimos realizar las comparaciones necesarias para el máximo de los canales en la parte alta y parte baja. A partir de estas comparaciones, nos generamos las máscaras necesarias que acomodamos para que respetaran el siguiente orden: 0 0 0 B G R B G R B G R 0 0 0 0.\newline
+Por último, desempaquetamos los datos originales y los filtros para realizar los cálculos correspondientes: multiplicación de los phi por el canal correspondiente y terminar por truncar a int y empaquetar nuevamente los datos para escribir.
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
@@ -328,9 +349,10 @@ La función waves requiere la utilización de $sin\_taylor(x)$ que cumple con el
 \includegraphics[width=400pt]{./algoritmo_waves.jpg}
 \end{center}
 \end{figure}
-Para la implementación de dicho filtro, calculamos la cantidad total de bytes y preparamos un contador para recorrer todos los elementos. Para calcular el $sin\_taylor$, implementamos nuestras operaciones siguiendo los pasos del pseudocódigo.\newline
-Para procesar la imagen, recorrimos los píxeles evaluando con prof habiendo desempaquetado a doubleword y luego los convertimos a float.
-para calcular la profundidad en un timepo razonable se preparo un arreglo con cuatro valores del 0 al 3 que se iban a usar como indice de columna para el calculo de profundidad con instrucciones simd, por otra parte se preparo un arreglo lleno de 0's para el calculo del seno de la fila.
+Para la implementación de dicho filtro, calculamos el $sin\_taylor$ siguiendo los pasos del pseudocódigo. Para ello, almacenamos los valores necesarios en memoria en floats, por ejemplo $\pi$ empaquetado, los índices para las columnas y los valores necesarios para operar con el $sin\_taylor$. Para no hacer llamados a memoria dentro del ciclo, nos limitamos a almacenar dichos valores en registros de uso general. De este modo, ahorramos tiempo de ejecución. Por otro lado, para realizar los cálculos, utilizamos las instrucciones de SSE necesarias para manipular enteros (para calcular k) y floats (el resto de las variables). Para realizar la potencia, debimos multiplicar la cantidad de veces necesaria dado que no encontramos una operación que realizara dicho procedimiento. Vale aclarar que, para lograr una mayor claridad, decidimos respetar el orden seguido por el pseudocódigo.\newline
+Para procesar cada fila, realizamos un call a $sin\_taylor$ y, con el fin de calcular la profundidad en un tiempo razonable, se preparó un arreglo con cuatro valores del 0 al 3 que serían usados como índice de columna para dicho cálculo. Por otra parte, se preparó un arreglo de 0's para la realización del cálculo del seno de la fila. Este procedimiento se realizó 4 veces hasta llegar al píxel número 16.\newline
+Luego, proseguimos desempaquetando a doublewords y convirtiendólos a floats para multiplicar a prof por el píxel debido para terminar empaquetando a bytes.\newline
+Para recorrer la matriz, recorrimos las filas hasta el ancho-16. Una vez alcanzado o superado ese valor, restamos el valor del que se pasó de ancho-16 y procesamos la última columna copiando el ciclo anterior. Una vez alcanzada la última columna, la función se dio por terminada.
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
@@ -418,23 +440,20 @@ Tiempo ASM respecto de C: 37.6922244487\%\newline
 
 \end{itemize}
 
- Tambien tenemos que decir que cosas hicimos para facilitar la implementacion en asm, o sea si lo hicimos pensando en como ibamos a resolverlo en asm o si directamente lo hicimos de una manera que fuera rapida. algo que se me ocurre es que preferimos, por ejemplo, usar muchas variables para definir pequeñas operaciones que usaba una sola ecuacion en vez de que fuera todo resuelto de una para poder darles tipos a esas operaciones y que el resultado fuera mas preciso y acertado a lo pedido.\newline
-
-que transformaciones podriamos hacer para que sea mejor lo que hacemos, mejor tiempo, que fue lo que probamos, etc. Por ejemplo si paso de float a double. En umbralizar pasamos Q de float a double. Pusimos Q, max y min en double porque para hacer las cuentas con doubles era lo mas conveniente.
-\newline
 \section{Resultados}
 A partir de los resultados otorgados por un script realizado para calcular el tiempo de ejecución de cada función en $C$ y $Assembler$, decidimos utilizar objdump para lograr dar una explicación a lo obtenido:\newline
-En primera instancia, hallamos que la cantidad de ciclos realizados por $Assembler$ es muy menor a la realizada por $C$. Esto se debe a que el $Assembler$ de $C$ realiza múltiples llamados a memoria en cada ciclo. Por ejemplo, la mayoría de los datos que utiliza son almacenados en la pila por lo que en cada iteración realiza operaciones utilizando, por ejemplo, [rbp-0x28]. Esta es la causa principal del retraso temporal generado por el $C$ respecto del $Assembler$. \newline 
-Por otro lado, nos resultó sorprendente la extensión de los códigos en $Assembler$ generados por los $C$ en comparación con los nuestros. Para hallarle una explicación a dicha consecuencia, pensamos que el causante de esto fue que, al estar todo almacenado en la pila, los desplazamientos requieren de numerosas instrucciones. Contrariamente, al moverse con un puntero, lo único necesario para el desplazamiento no es más que un sumador. \newline
+En primera instancia, hallamos que la cantidad de ciclos realizados por $Assembler$ es muy menor a la realizada por $C$. Esto se debe a que el $Assembler$ de $C$ realiza múltiples llamados a memoria en cada ciclo. Por ejemplo, la mayoría de los datos que utiliza son almacenados en la pila por lo que en cada iteración realiza operaciones utilizando, por ejemplo, [rbp-0x28]. Ésta es la causa principal del retraso temporal generado por el $C$ respecto del $Assembler$. \newline 
+Por otro lado, nos resultó sorprendente la extensión de los códigos en $Assembler$ generados por los $C$ en comparación con los nuestros. Para hallarle una explicación a dicha consecuencia, pensamos que el causante de esto fue que, al estar todo almacenado en la pila, los desplazamientos requieren de numerosas instrucciones. Contrariamente, al moverse con un puntero, lo único necesario para el desplazamiento no es más que un incrementador. \newline
 Por otra parte, hallamos que los códigos en $Assembler$ generados por los $C$ realizan operaciones innecesarias, como por ejemplo multiplicar por 1, dado que se producen de manera automática.\newline
-Por último, encontramos que el ensamblado del $C$ no realiza empaquetamientos por lo que la cantidad de operaciones a realizar está multiplicada por 16.\newline
+Por último, encontramos que el ensamblado del $C$ no utiliza instrucciones SIMD, empaquetando y desempaquetando, por lo que la cantidad de operaciones a realizar está multiplicada por 16.\newline
+En el siguiente gráfico, puede observarse la cantidad de ciclos generada por la función en C y en Assembler, donde se ve claramente que la ejecución en C utiliza una mayor cantidad de ciclos:\newline
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
 \begin{center}
-\includegraphics[width=520pt]{./velocidad.jpg}
+\includegraphics[width=560pt]{./velocidad.jpg}
 \end{center}
 \end{figure}
 \section{Conclusi\'on}
-Podemos concluir que las causas principales de que el código en $C$ sea mucho más lento que el código $Assembler$ dado que su ensamblado no utiliza empaquetamiento y almacena todos los datos en la pila que son llamados en cada iteración. Esto significa que $C$ usa la FPU que es poco performante causando un aumento del tiempo de ejecución.\newline
-A partir de aquí, podemos concluir que realizar operaciones empaquetando y desempaquetando los datos acelera enormemente la ejecución de una función como también evitar los llamados a memoria dentro de los ciclos.
+Podemos concluir que las causas principales de que el código en $C$ sea mucho más lento que el código $Assembler$ dado que su ensamblado no utiliza instrucciones SIMD y almacena todos los datos en la pila que son llamados en cada iteración. Esto significa que $C$ usa la FPU que es poco performante causando un aumento del tiempo de ejecución.\newline
+A partir de aquí, podemos afirmar que realizar operaciones de a muchos bits a la vez, empaquetando y desempaquetando los datos, acelera enormemente la ejecución de una función. Del mismo modo, los llamados a memoria dentro de los ciclos disminuyen la velocidad de ejecución excesivamente.
 
 \end{document}

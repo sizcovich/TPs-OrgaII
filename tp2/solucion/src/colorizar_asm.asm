@@ -60,28 +60,28 @@ colorizar_asm:
 	mov r11, 9 ;voy a dividir por 9
 	div rbx ;divido
 	cmp rdx, 0
-
+	;en rax tengo la cantidad de iteraciones que tengo que hacer sin contar el borde
 .sigo:
 	mov rcx, r10
 	shufps xmm0, xmm0, 0	;Copia en las cuatro
 	subps xmm15, xmm0	;1-alpha
 	addps xmm0, xmm0	;alpha*2
 	xor r11, r11
+	xor r10, r10
 	;Copio la primera fila
 ;	.firstRow:
 ;		movdqu xmm1, [rdi+r15]	;Levanto los bytes
 ;		movdqu [rsi+r15], xmm1	;Como solo los quiero copiar los pongo
-;		add r15, 16
+		add r15, 16
 ;		cmp r15, rcx	;Me fijo si llegue al ancho de la imagen
 ;		jl .firstRow
 		;sub rcx, 9
-		
 	.comienzoFila:
 		mov r15, 0
 		mov r14d, r8d
 		mov r13d, r8d
 		add r13, r13
-
+	
 		movdqu xmm2, [rdi+r14]
 		movdqu [rsi+r14], xmm2
 		
@@ -283,29 +283,35 @@ colorizar_asm:
 		pand xmm6, xmm13	;Me quedo con los 3 pixels del medio
 		pandn xmm14, xmm2	;Me quedo con los bytes de las puntas
 		por xmm6, xmm14
-
+		cmp r11, 0
+		je .continuo
+.vuelvoPorPasarme: ;con este shift lo ue logro es acomodar los datos
+		psrldq xmm4, 1
+		psrldq xmm5, 1
+		psrldq xmm6, 1
+.continuo:
 		psrldq xmm6, 3	;Acomodo para escribir
 		movdqu [rsi+r14+3], xmm6
-
+		add r10, 9
 		add r15, 9
 		add r14, 9
 		add r13, 9
-		sub rbx, 1
-		cmp r15, rcx
+		cmp r10, rcx
 		jl .procesarFila
-		cmp rax, 0
 		je .saltoDeLinea
 	.nextRow:
-		sub r15, rcx
-		sub r14, r15
+		sub r10, rcx
+		sub r15, r10
+		sub r14, r10
+		mov r11, 1
 		;Copio el ultimo pixel
-		mov al, [rdi+r14-1]
-		mov [rsi+r14-1], al
-		mov al, [rdi+r14-2]
-		mov [rsi+r14-2], al
-		mov al, [rdi+r14-3]
-		mov [rsi+r14-3], al
-		
+		;mov al, [rdi+r14-1]
+		;mov [rsi+r14-1], al
+		;mov al, [rdi+r14-2]
+		;mov [rsi+r14-2], al
+		;mov al, [rdi+r14-3]
+		;mov [rsi+r14-3], al
+		jmp .procesarFila
 .saltoDeLinea:
 		;Avanzo a la siguiente fila
 		add rdi, r8
