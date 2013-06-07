@@ -284,7 +284,6 @@ colorizar_asm:
 		pandn xmm14, xmm2	;Me quedo con los bytes de las puntas
 		por xmm6, xmm14
 
-	;mpovr para el otro lado shift
 		psrldq xmm6, 3	;Acomodo para escribir
 		movdqu [rsi+r14+3], xmm6
 
