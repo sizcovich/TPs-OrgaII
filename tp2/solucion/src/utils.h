@@ -9,6 +9,14 @@ void copiar_bordes (
 	int row_size
 );
 
+void copiar_bordes_color (
+	unsigned char *src,
+	unsigned char *dst,
+	int m,
+	int n,
+	int row_size
+);
+
 void voltear_horizontal (
 	unsigned char *src,
 	unsigned char *dst,
