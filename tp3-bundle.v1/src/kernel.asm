@@ -77,23 +77,23 @@ modoprotegido:
 
 
 	; pintar pantalla, todos los colores, que bonito!
+limpiarPantalla:
+	push ebx
+	mov bx, es
 	
 	mov ecx, 4000
 	mov ax, 0x38
 	mov es, ax
 	mov ax, 0x0F00
-limpiarPantalla:
+	.escribeTodo:
+		mov [es:ecx], ax
+		dec ecx
+	loop .escribeTodo
 	mov [es:ecx], ax
-	dec ecx
-	loop limpiarPantalla
-	mov [es:ecx], ax
+	mov es, bx
+	pop ebx
+	xchg bx, bx
 
-;para probar la interrupcion
-	xor edx, edx
-	xor eax, eax
-	xor ecx, ecx
-	div ecx
-	
 	; inicializar el manejador de memoria
 
 	; inicializar el directorio de paginas
@@ -111,6 +111,15 @@ limpiarPantalla:
 	; inicializar el scheduler
 
 	; inicializar la IDT
+	call idt_inicializar
+
+	lidt [IDT_DESC]
+
+;para probar la interrupcion
+	xor edx, edx
+	xor eax, eax
+	xor ecx, ecx
+	div ecx
 
 	; configurar controlador de interrupciones
 
