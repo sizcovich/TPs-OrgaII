@@ -27,7 +27,20 @@ global _isr%1
 
 _isr%1:
 	mov eax, %1
-	;call clearScreen
+	push ebx
+	mov bx, es
+	
+	mov ecx, 4000
+	mov ax, 0x38
+	mov es, ax
+	mov ax, 0x0F00
+	.escribeTodo:
+		mov [es:ecx], ax
+		dec ecx
+	loop .escribeTodo
+	mov [es:ecx], ax
+	mov es, bx
+	pop ebx
 	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
 	jmp $
 ;_isr%1:
