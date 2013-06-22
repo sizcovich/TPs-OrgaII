@@ -9,7 +9,15 @@
 #define __MMU_H__
 
 // inicializa el mmu
+void mmu_inicializar_dir_kernel();
+void mmu_inicializar_tarea_jugador();
+void mmu_inicializar_tarea_arbitro();
+void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica, unsigned int attrs);
 void mmu_inicializar();
+void inicializar_tarea1();
+void inicializar_tarea2();
+void inicializar_tarea3();
+void inicializar_tarea4();
 
 
 #endif	/* !__MMU_H__ */
