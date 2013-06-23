@@ -6,7 +6,7 @@
 %include "imprimir.mac"
 
 global start
-
+global pausa
 
 ;; GDT
 extern GDT_DESC
@@ -16,11 +16,16 @@ extern IDT_DESC
 extern idt_inicializar
 
 ;; PIC
+extern deshabilitar_pic
 extern resetear_pic
 extern habilitar_pic
 
 ;; MMU
 extern mmu_inicializar
+
+;; TSS
+extern inicializar_gdt_tss
+extern tss_inicializar
 
 ;; Saltear seccion de datos
 jmp start
@@ -36,6 +41,8 @@ iniciando_mp_len equ	$ - iniciando_mp_msg
 
 nombre_grupo_msg db 'Grupo: Napolitana con jamon y morrones'
 nombre_grupo_len equ	$ -nombre_grupo_msg
+
+pausa db 0
 
 ;;
 ;; Seccion de código.
@@ -112,7 +119,6 @@ limpiarPantalla:
 		mov eax, cr0				
 		or  eax, 0x80000000		;habilito paginacion
 		mov cr0, eax
-		xchg bx, bx
 		imprimir_texto_mp nombre_grupo_msg, nombre_grupo_len, 0x07, 0, 0
 		
 		;copiar las tareas
@@ -125,11 +131,15 @@ limpiarPantalla:
 		add eax, 4
 		add ebx, 4
 		loop .copiarTarea
+		
 	; inicializar tarea idle
-
 	; inicializar todas las tsss
+	xchg bx, bx
+	call tss_inicializar
 
 	; inicializar entradas de la gdt de tss
+	xchg bx, bx
+	call inicializar_gdt_tss
 
 	; inicializar el scheduler
 
@@ -140,11 +150,12 @@ limpiarPantalla:
 	
 	mov eax, 0x00030000
 	mov cr3, eax
-	imprimir_texto_mp nombre_grupo_msg, nombre_grupo_len, 0x57, 0, 0
+	xchg bx, bx
+	;imprimir_texto_mp nombre_grupo_msg, nombre_grupo_len, 0x57, 0, 0
 	mov eax, 0x00021000
 	mov cr3, eax
 	
-	xchg bx, bx
+	;xchg bx, bx
 
 ;para probar la interrupcion
 	;xor edx, edx
@@ -153,10 +164,19 @@ limpiarPantalla:
 	;div ecx
 
 	; configurar controlador de interrupciones
+	call deshabilitar_pic
+	call resetear_pic
+	call habilitar_pic
+	sti
+
 
 	; cargo la primer tarea null
-
+	xchg bx, bx
+	mov ax, 0x40
+	ltr ax
 	; aca salto a la primer tarea
+	xchg bx, bx
+	jmp 0x48:0
 
 	; Ciclar infinitamente (por si algo sale mal)
 	jmp $

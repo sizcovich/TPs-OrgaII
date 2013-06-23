@@ -31,6 +31,13 @@ NOTA:
 #define GDT_IDX_CODE3_DESC		5
 #define GDT_IDX_DATA3_DESC		6
 #define GDT_IDX_AREA_DESC		7
+#define GDT_TSS_INICIAL			8
+#define GDT_TSS_IDLE			9
+#define GDT_TSS_TAREA1			10
+#define GDT_TSS_TAREA2			11
+#define GDT_TSS_TAREA3			12
+#define GDT_TSS_TAREA4			13
+#define GDT_TSS_ARBITRO			14
 
 /* DIRECCIONES VIRTUALES DE CÓDIGO, PILA y DATOS */
 #define TASK_CODE    			0x003A0000 /* direccion virtual codigo */
