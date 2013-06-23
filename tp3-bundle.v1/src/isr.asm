@@ -10,6 +10,12 @@ BITS 32
 
 %define TAREA_QUANTUM		2
 
+global _isr32
+global _isr33
+global _isr128
+global _isr144
+
+extern pausa
 ;; PIC
 extern fin_intr_pic1
 
@@ -118,20 +124,112 @@ ISR 19
 ;;
 ;; Rutina de atención del RELOJ
 ;; 32
-
+_isr32:
+	cli
+	pushad
+	pushfd
+	call fin_intr_pic1
+	call proximo_reloj	
+	popfd
+	popad
+	sti
+	iret
 ;;
 ;; Rutina de atención del TECLADO
 ;; 33
+_isr33:
+	cli
+	pushad
+	pushfd
+	call fin_intr_pic1
+	in al, 0x60
+	cmp al, 0x99 ;ver si se pulso p
+	je .P
+	
+	cmp al, 0x93 ;ver si se pulso r
+	je .R
+	jmp .fin
+	
+	.R:
+	mov byte[pausa], 0
+	jmp .fin
+	
+	.P:
+	mov byte[pausa], 1
+	jmp .fin
+	
+	.fin:
+	popfd
+	popad
+	sti
+	iret
+
 
 ;;
 ;; Rutinas de atención de las SYSCALLS
 ;;
+_isr128:	;Interrupcion 0x80
+	cli
+	pushad
+	pushfd
+	call fin_intr_pic1
+	
+	cmp eax, 111	;duplicar
+	je .duplicar
+	cmp eax, 222	;migrar
+	je .migrar
+	mov eax, 0
+	jmp .fin
+	
+	.duplicar:
+	push ebx
+	push ecx
+	pop ecx
+	pop ebx
+	
+	.migrar:
+	push ebx
+	push ecx
+	push edx
+	push esi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	
+	.fin:
+	popfd
+	popad
+	sti
+	iret
+	
+_isr144: ;Int 0x90
+	cli
+	pushad
+	pushfd
+	call fin_intr_pic1
+	
+	cmp eax, 300	;iniciar
+	je .iniciar
+	cmp eax, 200	;terminar
+	je .terminar
+	mov eax, 0
+	jmp .fin
+	
+	.iniciar:
+	
+	.terminar:
+	
+	.fin:
+	popfd
+	popad
+	sti
+	iret
 
 proximo_reloj:
 	pushad
-
 	inc DWORD [reloj_numero]
-	mov ebx, [reloj]
+	mov ebx, [reloj_numero]
 	cmp ebx, 0x4
 	jl .ok
 		mov DWORD [reloj_numero], 0x0

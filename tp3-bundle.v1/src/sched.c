@@ -12,6 +12,7 @@ unsigned short tareas[CANT_TAREAS];
 
 
 void sched_inicializar() {
+	
 }
 
 unsigned short sched_proximo_indice() {

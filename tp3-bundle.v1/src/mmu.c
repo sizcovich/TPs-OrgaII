@@ -31,6 +31,7 @@ void mmu_inicializar_dir_kernel() {
 		val = i*0x1000 + 0x3;
 		*((unsigned int*) &(page_tab[i])) = val;
 	}
+	mmu_mapear_pagina(0x3A0000, KERNEL_PAGE_DIR, TASK_IDLE_CODE_SRC_ADDR, 0x003);
 }
 
 void inicializar_tarea1(){
@@ -120,9 +121,9 @@ void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisi
 	int *page_dir = (int *)cr3; //cargo page directory
 	
 	int PDE = virtual >> 22; //busco PDE
-	int *page_tab = (int *)(*((unsigned int*) &(page_dir[PDE]))); //obtengo la direccion del page table
+	int *page_tab = (int *)(*((unsigned int*) &(page_dir[PDE])) & 0xFFFFF000); //obtengo la direccion del page table
 	
-	int PTE = 0x3FF & (virtual >> 12); //obtengo el indice dentro del page table
+	int PTE = (0x003FF000 & virtual) >> 12; //obtengo el indice dentro del page table
 	*((unsigned int*) &(page_tab[PTE])) = (0xFFFFF000 & fisica) | (0xFFF & attrs); //escribo en esa direccion la entrada de la direccion correspondiente
 }
 
