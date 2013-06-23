@@ -47,6 +47,10 @@ unsigned int game_terminar() {
 	return TRUE;
 }
 
+unsigned int juego_finalizo() {
+	return game_finalizado;
+}
+
 unsigned int game_duplicar(int nro_jugador, int fil, int col) {
 	if (!game_posicion_en_rango(fil, col) ||
 		!game_celda_vacia(fil, col) ||
