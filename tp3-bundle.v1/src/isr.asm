@@ -20,6 +20,15 @@ extern pausa
 extern fin_intr_pic1
 
 ;;
+;; SCHEDULER
+extern sched_proximo_indice
+extern get_actual
+
+;;
+;;JUEGO
+extern juego_finalizo
+
+;;
 ;; Definición de MACROS
 ;;
 
@@ -69,6 +78,8 @@ _isr%1:
 ;;
 ;; Datos
 ;;
+offset: dd 0
+selector: dw 0
 ; Scheduler
 reloj_numero:		 	dd 0x00000000
 reloj:  				db '|/-\'
@@ -128,8 +139,31 @@ _isr32:
 	cli
 	pushad
 	pushfd
+	call juego_finalizo
+	cmp eax, 1
+	je .finalizo
+	
 	call fin_intr_pic1
-	call proximo_reloj	
+	call proximo_reloj
+	
+	cmp byte[TAREA_QUANTUM], 0
+	je .siguienteTarea
+	
+	dec byte[TAREA_QUANTUM]
+	jmp .fin
+	
+	.finalizo:
+	mov word[selector], 0x48
+	jmp far [offset]
+	jmp .fin
+	
+	.siguienteTarea:
+	add byte[TAREA_QUANTUM], 2
+	call sched_proximo_indice
+	mov [selector], ax
+	jmp far [offset]
+
+	.fin:
 	popfd
 	popad
 	sti

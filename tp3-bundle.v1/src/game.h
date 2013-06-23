@@ -37,6 +37,7 @@
 
 
 unsigned int game_iniciar();
+unsigned int juego_finalizo();
 unsigned int game_terminar();
 unsigned int game_duplicar(int nro_jugador, int fil, int col);
 unsigned int game_migrar(int nro_jugador, int fil_src, int col_src, int fil_dst, int col_dst);
