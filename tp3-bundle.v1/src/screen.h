@@ -43,6 +43,9 @@
 #define C_BLINK				(0x8 << 4)
 
 void screen_pintar_pantalla();
+void imprimir(unsigned char *, unsigned int, unsigned char, unsigned short, unsigned short);
+void imprimir_char(unsigned char, unsigned char, unsigned short, unsigned short);
+void imprimir_fondo(unsigned char, unsigned short, unsigned short);
 
 
 #endif	/* !__SCREEN_H__ */

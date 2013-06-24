@@ -7,6 +7,8 @@
 
 global start
 global pausa
+global imprimir_fondo
+global imprimir_char
 
 ;; GDT
 extern GDT_DESC
@@ -109,7 +111,6 @@ limpiarPantalla:
 
 	; inicializar el directorio de paginas
 	call mmu_inicializar
-	xchg bx, bx
 
 	; inicializar memoria de tareas
 
@@ -134,11 +135,9 @@ limpiarPantalla:
 		
 	; inicializar tarea idle
 	; inicializar todas las tsss
-	xchg bx, bx
 	call tss_inicializar
 
 	; inicializar entradas de la gdt de tss
-	xchg bx, bx
 	call inicializar_gdt_tss
 
 	; inicializar el scheduler
@@ -171,7 +170,6 @@ limpiarPantalla:
 
 
 	; cargo la primer tarea null
-	xchg bx, bx
 	mov ax, 0x40
 	ltr ax
 	; aca salto a la primer tarea
@@ -180,5 +178,27 @@ limpiarPantalla:
 
 	; Ciclar infinitamente (por si algo sale mal)
 	jmp $
+
+;imprimir_fondo:
+;	mov eax, [ebp-12]
+;	mov [COLORES], ax
+;	mov eax, [ebp-8]
+;	mov [FILA], ax
+;	mov eax, [ebp-4]
+;	mov [COLUMNA], ax
+;	imprimir_texto_mp NULL_CHAR 1 [COLORES] [FILA] [COLUMNA]
+;	ret
+;
+;imprimir_char:
+;	mov eax, [ebp-16]
+;	mov [WRITECHAR], eax
+;	mov eax, [ebp-12]
+;	mov [COLORES], eax
+;	mov eax, [ebp-8]
+;	mov [FILA], eax
+;	mov eax, [ebp-4]
+;	mov [COLUMNA], eax
+;	imprimir_texto_mp WRITECHAR 1 [COLORES] [FILA] [COLUMNA]
+;	ret
 
 %include "a20.asm"

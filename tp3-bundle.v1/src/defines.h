@@ -18,6 +18,12 @@ NOTA:
 	* TASK_5 = Tarea Arbitro
 */
 
+/* VALORES PARA IMPRIMIR */
+//#define NULL_CHAR	0x00
+//#define WRITECHAR	0x00
+//#define COLORES	0x00
+//#define FILA		0x00
+//#define COLUMNA	0x00
 
 /* TAREAS */
 #define CANT_TAREAS   			5
