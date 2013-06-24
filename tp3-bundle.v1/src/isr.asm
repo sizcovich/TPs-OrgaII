@@ -27,7 +27,10 @@ extern get_actual
 ;;
 ;;JUEGO
 extern juego_finalizo
-
+extern game_terminar
+extern game_iniciar
+extern game_migrar
+extern game_duplicar
 ;;
 ;; Definición de MACROS
 ;;
@@ -58,21 +61,6 @@ _isr%1:
 	pop ebx
 	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
 	jmp $
-;_isr%1:
-;
-;	mov al, 10 
-;	add byte [numero], %1
-;	imprimir_texto_mp mensaje, 17, 0x0F, 1, 1
-;	cmp al, %1
-;	jge .ponerDos 
-;	imprimir_texto_mp numero, 1, 0x0F, 1, 18 
-;	jmp .seguir
-;.ponerDos:
-;	imprimir_texto_mp numero, 2, 0x0F, 1, 18
-;.seguir:
-;	sub byte [numero], %1
-;	jmp $
-
 %endmacro
 
 ;;
@@ -90,26 +78,26 @@ numero: db 48, 0
 
 ;; Rutina de atención de las EXCEPCIONES
 ;;
-error 0, "0"
-error 1, "1"
-error 2, "2"
-error 3, "3"
-error 4, "4"
-error 5, "5"
-error 6, "6"
-error 7, "7"
-error 8, "8"
-error 9, "9"
-error 10, "10"
-error 11, "11"
-error 12, "12"
-error 13, "13"
-error 14, "14"
+error 0, "0: Divide error"
+error 1, "1: Reserved"
+error 2, "2: NMI Interrupt"
+error 3, "3: Breakpoint"
+error 4, "4: Overflow"
+error 5, "5: Bound Range Exceeded"
+error 6, "6: Invalid Opcode"
+error 7, "7: Device Not Available"
+error 8, "8: Double Fault"
+error 9, "9: Coprocessor Segment Overrun"
+error 10, "10: Invalid TSS"
+error 11, "11: Segment Not Present"
+error 12, "12: Stack Segment Fault"
+error 13, "13: General Protection"
+error 14, "14: Page Fault"
 error 15, "15"
-error 16, "16"
-error 17, "17"
-error 18, "18"
-error 19, "19"
+error 16, "16: x87 FPU Floating Point Error"
+error 17, "17: Alignment Check"
+error 18, "18: Machine Check"
+error 19, "19: SIMD Floating Point Exception"
 ISR 0
 ISR 1
 ISR 2
@@ -216,20 +204,24 @@ _isr128:	;Interrupcion 0x80
 	jmp .fin
 	
 	.duplicar:
-	push ebx
 	push ecx
-	pop ecx
-	pop ebx
+	push ebx
+	call get_actual
+	push eax
+	call game_duplicar
+	sub esp, 12
+	jmp .fin
 	
 	.migrar:
-	push ebx
-	push ecx
-	push edx
 	push esi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
+	push edx
+	push ecx
+	push ebx
+	call get_actual
+	push eax
+	call game_migrar
+	sub esp, 20
+	jmp .fin
 	
 	.fin:
 	popfd
@@ -251,8 +243,12 @@ _isr144: ;Int 0x90
 	jmp .fin
 	
 	.iniciar:
+	call game_iniciar
+	jmp .fin
 	
 	.terminar:
+	call game_terminar
+	jmp .fin
 	
 	.fin:
 	popfd
