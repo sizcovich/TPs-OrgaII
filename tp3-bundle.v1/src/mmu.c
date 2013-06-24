@@ -24,7 +24,7 @@ void mmu_inicializar_dir_kernel() {
 		*((unsigned int*) &(page_dir[i])) = 0x00000000;
 		*((unsigned int*) &(page_tab[i])) = 0x00000000;
 	}
-	*((unsigned int*) &(page_dir[0])) = 0x00022003;
+	*((unsigned int*) &(page_dir[0])) = 0x00022003; //no va table?
 	
 	unsigned int val = 0x0;
 	for(i = 0; i < 356 ; ++i) {
