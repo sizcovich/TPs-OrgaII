@@ -86,14 +86,18 @@
 %}
 \newpage
 \section{Introducci\'on}
-
+El siguiente trabajo práctico consiste en un conjunto de ejercicios en los que se aplican de forma gradual los conceptos de System Programming vistos a lo largo de la materia. El objetivo de éste consiste en construir un sistema capaz de correr el juego \textit{Infección}. Para la realización del mismo, debimos crear el soporte para que los jugadores (o sea las tareas) puedan ejecutar las reglas del juego. Dado que las tareas eran capaces de hacer cualquier cosa, debimos considerar que el sistema debía tener la capacidad de capturar cualquier problema y poder quitar a la tarea del juego.\newline
+A lo largo del trabajo práctico, se utilizaron los mecanismos que posee el procesador para la programación desde el punto de vista del sistema operativo enfocados sobre el sistema de protección. En lo que sigue, se detallan explícitamente los pasos realizados para lograr el objetivo mencionado.
 
 \section{Desarrollo}
 
 \subsection{Ejercicio 1}
-{\textbf{Pregunta 1:}} ¿Qué ocurre si se intenta escribir en la fila 26, columna 1 de la matriz de video, utilizando el segmento de la GDT que direcciona a la memoria de video? ¿Por qué?\newline
-Depende de cómo fue definido el segmento. Si el tamaño del segmento es igual al tamaño de la pantalla en bytes, entonces va a ocurrir un Segmentation Fault. En el caso en el que el segmento no sea del mismo tamaño de la pantalla, el caracter no va a ser visible.\newline
 
+En el primer ejercicio, nos limitamos a completar la GDT tomando como ejemplo la GDT_NULL provista por la cátedra. Para ello, debimos definir tres segmentos de códigos y de datos. El primero de ellos (el 0) correspondiente al kernel, el segundo (el 2) al árbitro y el tercero (el 3) a los jugadores.\newline
+{\textbf{Pregunta 1:}} ¿Qué ocurre si se intenta escribir en la fila 26, columna 1 de la matriz de video, utilizando el segmento de la GDT que direcciona a la memoria de video? ¿Por qué?\newline
+\newline
+\textit{La consecuencia de intentar escribir en la fila 26, columna 1 de la matriz de video depende de cómo fue definido el segmento. Si el tamaño del segmento es igual al tamaño de la pantalla en bytes, entonces va a ocurrir un Segmentation Fault. En el caso en el que el segmento no sea del mismo tamaño de la pantalla, el caracter no va a ser visible.}\newline
+\newline
 {\textbf{Pregunta 2:}} ¿Qué ocurre si no se setean todos los registros de segmento al entrar en modo protegido? ¿Es necesario setearlos todos? ¿Por qué?\newline
 
 
@@ -116,7 +120,597 @@ distintas, de manera tal que una esté mapeada con nivel de usuario y la otra a 
 \subsection{Ejercicio 6}
 \subsection{Ejercicio 7}
 
+
+\section{Ejercicio 1: Modo Protegido y GDT}
+\subsection{GDT}
+Al declararla completamos los 2 descriptores de cÃ³digo, los 2 de datos, y el de video pedidos. De las 10 posiciones nulas que menciona el enunciado, utilizamos 5 para los descriptores de TSS de las tareas, mÃ¡s los de la tarea inicial y la idle, por lo tanto quedan 3 vacÃ­as (nulas), entre ellas la requerida por Intel.
+
+		\begin{figure}[H]
+	  		\centering
+			\includegraphics[scale=0.7]{./imagenes/descriptorGDTManual.png}
+			\caption{Descriptor de segmento de la GDT}
+			\label{fig:descriptorGDT}
+		\end{figure}
+
+Los 2 descriptores de datos y los 2 de cÃ³digo tienen muchos campos en comÃºn, los Ãºnicos que varÃ­an son DPL y Tipo. Para los descriptores de cÃ³digo utilizamos tipo 0xA (lectura y ejecuciÃ³n), y para los de datos, 0x2 (lectura y escritura). Dentro de los de datos, hay uno con DPL 0, para el kernel, y otro de DPL 3, para las tareas. Ãdem con los de cÃ³digo.
+Utilizamos granularidad y segmentos de 32bits (D/B), L estÃ¡ en 0 ya que es cÃ³digo de 32bits, AVL es a gusto propio, estÃ¡n presentes, y no son de sistema.
+
+Para abarcar los primeros 2GB de la memoria, claramente la base es 0x00000000, y ya que utilizamos granularidad:
+
+\begin{center}
+2GB = 2048MB = 2097152KB = 524288 pÃ¡ginas de 4KB = 0x80000.
+\end{center}
+
+Como el lÃ­mite es la Ãºltima posiciÃ³n accesible, en este caso es 0x7FFFF.
+		\begin{figure}[H]
+	  		\centering
+			\includegraphics[scale=0.7]{./imagenes/descriptorGDTComunes.png}
+			\caption{Campos comunes en nuestros 4 descriptores de segmento}
+			\label{fig:descriptorGDTCamposComunes}
+		\end{figure}
+		
+El descriptor de video es igual al de datos de nivel 0, pero varÃ­an su base y tamaÃ±o, y no hace falta utilizar granularidad, lo que hace el lÃ­mite claro.
+		\begin{figure}[H]
+	  		\centering
+			\includegraphics[scale=0.7]{./imagenes/descriptorGDTVideo.png}
+			\caption{Descriptor del segmento de video}
+			\label{fig:descriptorVideo}
+		\end{figure}
+		
+Los descriptores de TSS son muy parecidos, pero llevan el tipo 0x9 (porque todos comienzan con el bit de busy en 0) y el lÃ­mite 103d (0x67)  ya que tienen un tamaÃ±o de 104 bytes.
+		
+\begin{table}[H]
+\centering
+    \begin{tabular}{|c|l|}
+        \hline
+        Ãndice & Descriptor \\ \hline
+        00 / 0x00 & Nulo \\ 
+        01 / 0x08 & Nulo \\
+        02 / 0x10 & Nulo \\ 
+        03 / 0x18 & TSS Tarea Inicial \\ 
+        04 / 0x20 & TSS Tarea Idle \\ 
+        05 / 0x28 & TSS Tarea 1 \\ 
+        06 / 0x30 & TSS Tarea 2 \\ 
+        07 / 0x38 & TSS Tarea 3  \\ 
+        08 / 0x40 & TSS Tarea 4 \\ 
+        09 / 0x48 & TSS Tarea 5 \\ 
+        10 / 0x50 & CÃ³digo nivel 0 \\ 
+        11 / 0x58 & CÃ³digo nivel 3 \\ 
+        12 / 0x60 & Datos nivel 0 \\ 
+        13 / 0x68 & Datos nivel 3 \\ 
+        14 / 0x70 & Video\\ 
+        \hline
+    \end{tabular}
+    \caption{La GDT resultante}
+\end{table}
+\subsection{Pasaje a Modo Protegido}		
+Antes de cargar la GDT, habilitamos A20, utilizando el cÃ³digo provisto por la cÃ¡tedra, para poder direccionar toda la memoria. Luego, cargamos la GDT con la instrucciÃ³n lgdt, y pasÃ¡ndole base y lÃ­mite de la GDT. Finalmente seteamos el bit PE del registro CR0, y saltamos a 0x50:mp, para asÃ­ setear el CS en 0x50, el selector de nuestro cÃ³digo de nivel 0. Mp es simplemente una etiqueta donde comienza nuestro cÃ³digo para el modo protegido.
+
+Apenas entramos a modo protegido seteamos todos los selectores (menos CS por supuesto), en 0x60, nuestros datos de nivel 0, y seteamos ebp y esp (la base de la pila) a 0x21000, ya que la pila empieza en 0x20000. El cÃ³digo es el siguiente:
+\begin{figure}[!h]
+\begin{center}
+\begin{verbatim}
+BITS 16
+	call habilitar_A20
+	lgdt [GDT_DESC]
+	
+	mov eax, cr0
+	or eax, 1		
+	mov cr0, eax		;PE = 1
+	jmp 0x50:mp		;CS = 0x50
+		
+BITS 32
+    mp:
+	xor eax, eax
+	mov ax, 0x60
+	mov ds, ax
+	mov ss, ax
+	mov es, ax
+	mov fs, ax
+	mov gs, ax
+		
+	mov esp, 0x21000 
+	mov ebp, 0x21000 
+\end{verbatim}
+\caption{CÃ³digo para pasar a Modo Protegido, cargar los segmentos definidos anteriormente e inicializar la pila, tomado de \texttt{kernel.asm}.}
+\end{center}
+\end{figure}
+\newpage
+\subsection{Imprimir en pantalla}
+Una vez completada la GDT y ya en modo protegido, se pide limpiar la pantalla y pintar la primer y Ãºltima lÃ­nea de color de fondo negro y letras blancas, usando
+el segmento de video declarado anteriormente.
+Para esto implementamos una rutina (\texttt{clearScreen} en \texttt{kernel.asm}) que setea FS en \texttt{0x70} (Ã­ndice del segmento de video en la GDT) y recorre
+la matrÃ­z de $80*25$, moviendo el caracter \texttt{0x77} (que corresponde a fondo negro y caracter negro) a la posiciÃ³n de memoria direccionada con el selector de video 
+y el offset correspondiente.
+
+\begin{figure}[!h]
+\begin{center}
+\begin{verbatim}
+clearScreen:		
+		mov ax, 0x70
+		mov fs, ax ;video
+		mov ecx, 80*25*2
+.limpiarPantalla:
+		mov byte [fs:ecx-1], 0x77
+		loop .limpiarPantalla
+\end{verbatim}
+\caption{CÃ³digo de la rutina para limpiar la pantalla, extraÃ­do de \texttt{kernel.asm}.}
+\end{center}
+\end{figure}
+%\newline
+Para pintar la primer y Ãºltima linea, se realiza un procedimiento anÃ¡logo, solo que al caracter se le asigna color blanco (consultar \texttt{kernel.asm}). 
+		
+\subsection{Preguntas}
+\subsubsection*{Pregunta 1}
+ \begin{framed}
+Â¿QuÃ© ocurre si se intenta escribir en la fila 26, columna 1 de la matriz de video, utilizando el usando el segmento de la GDT que direcciona a la memoria de video?
+Â¿Por quÃ©?
+\end{framed}
+Si intentamos escribir la fila 26 de la memoria de video utilizando el descriptor previamente declarado, nos encontramos con un General Protection Fault, ya que esa memoria (fila 26, columna 1), es posterior al lÃ­mite del segmento declarado, que abarca 25 filas.
+\subsubsection*{Pregunta 2}
+ \begin{framed}
+Â¿QuÃ© ocurre si no se setean todos los registros de segmento al entrar en modo protegido?, Â¿Es necesario setearlos todos?, Â¿Por quÃ©?
+\end{framed}
+Los segmentos que son necesarios setear son CS, DS y SS, si no se setean, se produce GPF. Los otros no son necesarios. Por convenciÃ³n de Intel. %DUDA
+
+\section{Ejercicio 2: IDT}
+\subsection{ImplementaciÃ³n}
+En base al modelo provisto por la cÃ¡tedra, se crearon dos macros de trap gates, uno con permiso de nivel 0, para las interrupciones de kernel, y otro con permiso de nivel 3, para las interrupciones de clock, teclado y de servicios. La configuraciÃ³n es la siguiente:
+\begin{table}[h]
+	\begin{subtable}[h]{0.5\textwidth}
+		\begin{minipage}{0.9\textwidth}
+			\resizebox{8cm}{!} {
+				\begin{tabular}{|c|c|}
+					\hline
+					\&\_isr\# bits 0 a 15 & 0x8F00 \\ \hline
+					0x0050 & \&\_isr\# bits 16 a 31 \\
+					\hline
+				\end{tabular}
+			}
+			\caption{Estructura del gate de nivel 0. \&\_isr\# es la direcciÃ³n dentro del segmento en la que esta la rutina que resuelve la interrupciÃ³n.}
+		\end{minipage}
+	\end{subtable}
+~
+	\begin{subtable}[h]{0.5\textwidth}
+		\begin{minipage}{0.9\textwidth}
+			\resizebox{8cm}{!} {
+				\begin{tabular}{|c|c|}
+					\hline
+					\&\_isr\# bits 0 a 15 & 0xEF00 \\ \hline
+					0x0050 & \&\_isr\# bits 16 a 31 \\
+					\hline
+				\end{tabular}
+			}
+			\caption{Estructura del gate de nivel 3. \&\_isr\# es la direcciÃ³n dentro del segmento en la que esta la rutina que resuelve la interrupciÃ³n.}
+		\end{minipage}
+	\end{subtable}
+\end{table}
+\\
+La diferencia en ambos modelos esta en los bits de DPL, el resto se configura de la misma manera.
+Para obtener el offset se hace uso de una etiqueta definida mediante un macro provisto por la cÃ¡tedra en el archivo isr.asm, el cual define un comportamiento bÃ¡sico para el manejo de interrupciones; a ese macro se le agregÃ³ la llamada a IMPRIMIR\_TEXTO, una funciÃ³n provista por la cÃ¡tedra, la cual muestra en pantalla.
+\\
+Una vez definidos los macros, la creaciÃ³n de la IDT es trivial. Para las interrupciones del kernel se invoca al macro IDT\_ENTRY, el cual fabrica un gate con permiso de nivel 0, y para las interrupciones de teclado, clock y servicios se usa IDT\_ENTRY3 que fabrica un gate con permiso de nivel 3.
+\\\\
+Para que esto tenga sentido y funcionen las interrupciones se hace un call en la linea 83 de kernel.asm para generar la tabla y luego se usa la instrucciÃ³n \texttt{lidt} para cargar IDT\_DESC, el descriptor de la idt, al registro IDTR.\\
+AdemÃ¡s fue necesario habilitar las interrupciones que se deshabilitaron en el primer ejercicio para poder entrar a modo protegido, por lo que en la linea 133 de kernel.asm, despuÃ©s de inicializar partes del kernel que necesitan tener las interrupciones deshabilitadas, se usa el comando \texttt{sti} para habilitar las interrupciones y que la idt tenga efecto.
+\subsection{Preguntas}
+\subsubsection*{Pregunta 3}
+ \begin{framed}
+Â¿CÃ³mo se puede hacer para generar una excepciÃ³n sin utilizar la instrucciÃ³n \texttt{int}? Mencionar al menos 3 formas posibles.
+\end{framed}
+Para generar una excepciÃ³n sin utilizar la instrucciÃ³n \texttt{int} se puede hacer uso de los siguientes mÃ©todos:
+\begin{itemize}
+	\item Dividiendo por 0.
+	\item Escribiendo a un sector de memoria que no esta mapeado en la unidad de segmentaciÃ³n y/o paginaciÃ³n.
+	\item Escribiendo a un sector de la memoria para el cual no se tiene suficiente nivel de permiso.
+\end{itemize}
+
+\subsubsection*{Pregunta 4}
+ \begin{framed}
+Â¿CuÃ¡les son los valores del stack cuando se genera una interrupciÃ³n? Â¿QuÃ© significan? Indicar para el caso de operar en nivel 3 y nivel 0.
+\end{framed}
+Cuando se genera una interrupciÃ³n, se debe preservar el estado actual de los flags y todos los registros que son necesarios para retornar a la normal ejecuciÃ³n una vez resuelta la interrupciÃ³n.
+Cuando se produce la interrupciÃ³n puede que sucedan 2 cosas, la interrupciÃ³n tiene el mismo nivel de privilegio que el proceso en el que se generÃ³ o bien tiene un privilegio diferente. Como nuestro kernel opera en nivel de privilegio 3 y solo cambia de privilegio al ejecutar un servicio o al generar una interrupciÃ³n de kernel, siempre que suceda una interrupciÃ³n de nivel 0 se producirÃ¡ un cambio de privilegio con lo que el stack de la interrupciÃ³n para una interrupciÃ³n de nivel 0 siempre es el formato de cambio de privilegio y para una interrupciÃ³n de nivel 3 siempre es el formato de mismo nivel.
+
+\begin{table}[h]
+	\begin{subtable}[h]{0.5\textwidth}
+		\begin{minipage}{0.7\textwidth}
+			\hspace*{0.3\textwidth}
+			\begin{tabular}{|c|}
+				\\ \hline
+				Error Code \\ \hline
+				EIP \\ \hline
+				CS \\ \hline
+				EFLAGS \\ \hline
+				\\
+			\end{tabular}
+			\caption{Stack de interrupciÃ³n de nivel 3}
+		\end{minipage}
+	\end{subtable}
+~
+	\begin{subtable}[h]{0.5\textwidth}
+		\begin{minipage}{0.7\textwidth}
+			\hspace*{0.3\textwidth}
+			\begin{tabular}{|c|}
+				\\ \hline
+				Error Code \\ \hline
+				EIP \\ \hline
+				CS \\ \hline
+				EFLAGS \\ \hline
+				ESP \\ \hline
+				SS \\ \hline
+				\\
+			\end{tabular}
+			\caption{Stack de interrupciÃ³n de nivel 0}
+		\end{minipage}
+	\end{subtable}
+\end{table}
+
+Los datos que se almacenan por automÃ¡tico son entonces:
+\begin{itemize}
+	\item SS: El selector de segmento donde se encuentra el stack del nivel anterior. Esto se debe hacer para no perder el stack anterior ya que se produce un cambio de stack al cambiar el privilegio.
+	\item ESP: El puntero a la posiciÃ³n de memoria donde estaba el ESP antes del cambio de privilegio. Esto se debe hacer para no perder el stack anterior ya que se produce un cambio de stack al cambiar el privilegio.
+	\item EFLAGS: El registro que contiene el estado de los flags del sistema. Como muchas operaciones afectan el estado de este registro, se debe conservar para asegurarse de que el estado del proceso que se interrumpiÃ³ sea el mismo que al salir de la interrupciÃ³n.
+	\item CS: El selector de segmento del proceso interrumpido.
+	\item EIP: El puntero que indica que direcciÃ³n se debe ejecutar al retornar de la interrupciÃ³n.
+	\item Error Code: El cÃ³digo de error codifica informaciÃ³n importante sobre el error.
+\end{itemize}
+
+El Error Code tiene 32 bits, de los cuales los bits 16 a 31 estÃ¡n reservados para mantener el stack alineado. El bit 0(EXT) indica si la interrupciÃ³n es por un evento externo al procesador, el bit 1(IDT) indica si el Ã­ndice, que va de los bits 3 a 15, hace referencia a un elemento de la IDT o a un descriptor en la GDT/LDT y el bit 2(TI) indica, solo en caso de que le bit 1 indique que se trata de un descriptor de GDT/LDT, en que tabla se encuentra el descriptor.
+
+
+\section{Ejercicio 3: PaginaciÃ³n}
+\subsection{ImplementaciÃ³n}
+Para esta parte utilizamos cÃ³digo assembler, ya que era bastante simple. En la direcciÃ³n 0x21000, donde estÃ¡ la base del directorio, marcamos 1024 pÃ¡ginas como no presentes, y luego la primera entrada (posiciÃ³n 0x21000), la reescribimos como presente, con los permisos correspondientes y apuntando a 0x22000, que es donde debÃ­a estar la tabla de pÃ¡ginas. En otras palabras, en la posiciÃ³n 0x21000, se encuentra el valor 0x22003, que es la direcciÃ³n de la base de la tabla de pÃ¡ginas mÃ¡s atributos, que son supervisor, lectura/escritura, y presente.
+
+Luego nos encargamos de la tabla de pÃ¡ginas, en la posiciÃ³n 0x22000 volvemos a marcar 1024 entradas como no presentes, y tenemos que hacer identity mapping para el rango 0x00000000 a 0x1FFFFF, que es el equivalente a los primeros 2MB de memoria. Una tabla nos alcanza para 1024 entradas de 4KB, que son 4MB. Por lo tanto marcamos las primeras 512 entradas de la tabla con identity mapping, que implica poner en la memoria que estoy escribiendo, 0x1000*Ã­ndice*4 (multiplicamos por 4 por el tamaÃ±o de cada entrada de la tabla), mÃ¡s los permisos (3, mismos que antes).
+
+\subsection{Preguntas}
+\subsubsection*{Pregunta 5}
+ \begin{framed}
+Â¿Puede el directorio de pÃ¡gina estar en cualquier posiciÃ³n arbitraria de memoria?
+\end{framed}
+No, debe ser una posiciÃ³n de memoria accesible antes de activar paginaciÃ³n, que es la alcanzada por segmentaciÃ³n. Por lo tanto el directorio de pÃ¡ginas debe estar a lo sumo en la posiciÃ³n 0x7FFFF000, cualquier acceso a una memoria mayor va a resultar en GPF. AdemÃ¡s, la direcciÃ³n base estar alineada a 4KB.
+\subsubsection*{Pregunta 6}
+ \begin{framed}
+Â¿Es posible acceder a una pÃ¡gina de nivel de kernel desde usuario?
+\end{framed}
+No, esto no es posible ya que para hacerlo se requieren por lo menos los mismos permisos, o mayores (menores numÃ©ricamente). Intentar acceder con privilegios menores va a resultar en una GPF.
+\subsubsection*{Pregunta 7}
+ \begin{framed}
+Â¿Se puede mapear una pÃ¡gina fÃ­sica desde dos direcciones virtuales distintas, tal que una estÃ© mapeada con nivel de usuario y la otra a nivel de kernel?
+De ser posible, Â¿quÃ© problemas podrÃ­a traer?
+\end{framed}
+Se puede, pero se corre el riesgo que un usuario (tarea) modifique datos o cÃ³digo que son del kernel.
+\section{Ejercicio 4: MMU}
+
+El presente sistema operativo cuenta con una unidad de manejo de memoria (o MMU), encargado de asignar pÃ¡ginas de memoria a la tareas y al mismo kernel.
+Sus funcionalidades consisten en mapear y desmapear direcciones fÃ­sicas a virtuales e inicializar las estructuras de directorio y tablas de pÃ¡ginas 
+para el kernel y para las tareas.
+Estas implementaciones se encuentran en el archivo \texttt{mmu.c}.
+\subsection{\texttt{mapear\_pagina} y \texttt{unmapear\_pagina}}
+La funciÃ³n \texttt{void mapear\_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica, unsigned int supervisor)} se encarga de mapear una direcciÃ³n fÃ­sica
+de memoria y una pÃ¡gina determinada, para un CR3 particular, y asignarle los permisos deseados. 
+El parÃ¡metro \textbf{supervisor} puede ser 0 o 1. En caso de ser uno, indica que esa pÃ¡gina tendrÃ¡ permisos de supervisor, en caso de ser cero, serÃ¡ de usuario.
+El cÃ³digo es el siguiente:
+\begin{figure}[!h]
+\begin{center}
+\begin{verbatim}
+void mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica, unsigned int sup) {
+	unsigned int indiceDir = virtual >>22; //los primeros 10 bits son el Ã­ndice del directorio
+	unsigned int indiceTabla = (virtual << 10 ) >> 22; //los segundos, el Ã­ndice de la tabla
+	//puntero a la tabla
+	unsigned int* tabla = (unsigned int*)(cr3+indiceDir*4);
+	//puntero a la base de la memoria
+	unsigned int* baseMemoria = (unsigned int*)((*tabla&0xFFFFF000)+indiceTabla*4);
+
+	unsigned int permisos;
+	if (supervisor == 1) permisos = 3;
+	else permisos = 7; 
+	*baseMemoria = (fisica& 0xFFFFF000)+permisos; 
+	tlbflush();
+}
+\end{verbatim}
+\caption{CÃ³digo de mapear\_pagina, extraÃ­do de \texttt{mmu.c}.}
+\end{center}
+\end{figure}
+\newline
+Al final de la funciÃ³n, ejecutamos \texttt{tlbflush()} para resetear el cachÃ© de traducciÃ³n de direcciones, ya que se puede estar remapeando alguna pÃ¡gina que estaba en la TLB.
+La funciÃ³n \texttt{void unmapear\_pagina(unsigned int virtual, unsigned int cr3)}, es igual, pero le asigna ceros a esa direcciÃ³n virtual. TambiÃ©n es importante ejecutar
+\texttt{tlbflush()} en este caso (ver \texttt{mmu.c}).
+\subsection{InicializaciÃ³n de directorios y tablas de pÃ¡gina}
+Implementamos una rutina (\texttt{incializar\_dir\_tarea}) que se encarga de inicializar un directorio de pÃ¡ginas y tablas de pÃ¡gina para una tarea. 
+Recibe como parÃ¡metro el nÃºmero de tarea, y en base a este calcula el CR3 correspondiente.
+Luego genera las 1024 entradas del directorio de pÃ¡ginas con todos descriptores nulos, y apunta el CR3 a este directorio.
+Copia
+el cÃ³digo de la tarea a su Ã¡rea asignada dentro de la \emph{arena} y mapea esta pÃ¡gina a la direcciÃ³n virtual \texttt{0x3A0000} (llamando a \texttt{mapear\_pagina}). AdemÃ¡s mapea la pÃ¡gina correspondiente
+a la pila de la tarea a la direcciÃ³n virtual \texttt{0x3B0000}.
+Finalmente, llama a \texttt{inicializar\_tss\_tarea}, funciÃ³n que se encarga de inicializar la TSS para la tarea y que describiremos en la secciÃ³n TSS.
+\subsection{Preguntas}
+\subsubsection*{Pregunta 8}
+ \begin{framed}
+Â¿QuÃ© permisos pueden tener las tablas y directorios de pÃ¡ginas? Â¿CuÃ¡les son los permisos efectivos de una direcciÃ³n de memoria segÃºn los permisos del directorio
+y tabla de pÃ¡ginas?
+\end{framed}
+Los permisos de las tablas y directorios de pÃ¡ginas se pueden definir como de Usuario o Supervisor. Las distintas combinaciones de esos permisos se definen en la siguiente tabla:
+
+\begin{figure}[!h]
+\begin{center}
+\includegraphics[width=0.6\textwidth]{imagenes/PageTable.png}
+\caption{*: depende del flag \texttt{CR0.WP}. Resultados de la combinaciÃ³n de atributos entre el directorio y la tabla de pÃ¡ginas. Intel(R) 64 and IA-32 Architectures Software Developer's Manual, Volume 3, Chapter 5: Protection, p. 5-42 }
+\end{center}
+\end{figure}
+\subsubsection*{Pregunta 9}
+ \begin{framed}
+Â¿Es posible desde dos directorios de pÃ¡gina, referenciar a una misma tabla de pÃ¡ginas? 
+\end{framed}
+SÃ­, se puede. Se debe escribir en la entrada correspondiente de cada uno de los directorios de tablas de pÃ¡ginas la direcciÃ³n de la misma tabla que se quiere referenciar. Se puede hacer en el caso de que dos tareas
+con directorios propios quieran referenciar las mismas pÃ¡ginas con distintos privilegios en las mismas direcciones fÃ­sicas.
+
+\subsubsection*{Pregunta 10}
+ \begin{framed}
+Â¿QuÃ© es TLB (Translation Lookaside Buffer) y para quÃ© sirve?
+\end{framed}
+Es un buffer especial para guardar las traducciones de direcciones lineales a fÃ­sicas. De esta manera, para un segundo acceso a la pÃ¡gina, se evitan dos accesos a memoria para recorrer el directorio de tablas y la tabla apuntada. Sin embargo, cuando se remapea una pÃ¡gina a una direcciÃ³n virtual diferente (o se desmapea), se debe invalidar este cachÃ© para que sea consistente con el estado de las estructuras en memoria.
+
+\newpage
+\section{Ejercicio 5: Interrupciones (primera parte)}
+En esta parte implementamos la primera parte de las rutinas de atenciÃ³n de interrupciones del reloj, teclado y la \texttt{int 45}. 
+Ã‰stas se encuentran implementadas en assembler en el archivo \texttt{isr.asm}.
+Antes de habilitar las interrupciones, es necesario (ademÃ¡s de tener todas las estructuras definidas anteriormente, paginaciÃ³n habiltiada, etc) configurar controlador de interrupciones,
+o PIC. Para esto contamos con las funciones \texttt{deshabilitar\_pic}, \texttt{resetear\_pic} y \texttt{habilitar\_pic}. Luego de llamar a esas funciones (en \texttt{kernel.asm}), queda la 
+interrupciÃ³n de reloj mapeada a la interrupciÃ³n 32 y la de teclado a la 33.
+\subsection{Reloj}
+Por ahora, la Ãºnica funcionalidad que se debe asociar con la interrupciÃ³n de reloj, es hacer ``girar'' un reloj en la esquina inferior derecha de la pantalla. 
+Para esto, se llama a las funciones provistas por la cÃ¡tedra \texttt{fin\_intr\_pic1} para avisar al pic que atendimos la interrupciÃ³n y \texttt{proximo\_reloj} 
+para mostrar la animaciÃ³n descripta anteriormente.
+
+\subsection{Teclado}
+
+La interrupciÃ³n de teclado por el momento lo que va a hacer es, al leer que se presionÃ³ una tecla correspondiente a un nÃºmero, imprimirlo en la esquina superior 
+derecha de la pantalla. Con la instrucciÃ³n \texttt{in al, 0x60} se lee el scan code de la tecla presionada, y se realizan comparaciones para saber de quÃ© tecla se 
+trata. En primer lugar se compara con 0x0b y si es mayor, se salta al final de la interrupciÃ³n, ya que no corresponde a un nÃºmero. Si es igual, es un cero y es 
+tratado como un caso especial. Luego se compara con 0x2 y si es menor tambiÃ©n se salta a fin, por no tratarse de un nÃºmero. En el caso del cero, se imprime un cero,
+y en otro caso se decrementa el scan code y se le suma 0x30 para obtener el ascii deseado. Finalmente, se imprime.
+
+\subsection{InterrupciÃ³n 0x45 (a.k.a 69)}
+Esta interrupciÃ³n serÃ¡ la encargada de proveerle a las tareas los servicios del sistema operativo de administraciÃ³n de memoria e impresiÃ³n por pantalla. Por el momento, nos limitamos a utilizarla para colocar el valor 42 en \texttt{eax}.
+
+\subsection{Preguntas}
+\subsubsection*{Pregunta 11}
+ \begin{framed}
+Â¿QuÃ© pasa si en la interrupciÃ³n de teclado no se lee la tecla presionada?
+\end{framed}
+Si no se lee la tecla, su valor se encola en un buffer especial que tiene el controlador de teclado, y en la prÃ³xima lectura, se extrae de ahÃ­.
+
+\subsubsection*{Pregunta 12}
+ \begin{framed}
+Â¿QuÃ© pasa si no se resetea el PIC?
+\end{framed}
+Si no se resetea el PIC se produce un conflicto ya que las IRQs de 0 a 7 estÃ¡n mapeadas a las interrupciones 0x8 a 0xF que son los nÃºmeros de interrupciones
+de las excepciones internas del procesador. Por esto, es necesario remepear las IRQs para que correspondan a interrupciones a partir de las 32 (de la 0 a la 31
+estÃ¡n reservadas por el procesador).
+
+\newpage
+
+\section{Ejercicio 6: Tareas}
+Para realizar la conmutaciÃ³n de tareas, debemos agregar nuevas entradas a la \texttt{GDT} y definir un arreglo de \emph{TSS}s, debidamente inicializados. 
+Estos Ãºltimos, decidimos definirlos como \emph{structs} de \texttt{C} en el archivo \texttt{tss.c}.
+\subsection{Descriptores de TSS en la GDT}
+Como dijimos, para conmutar las tareas es necesario definir en la GDT las entradas correspondientes a los descriptores de TSS de la \texttt{tarea\_inicial}
+ (esta en particular estÃ¡ para que cuando se realize la primera conmutaciÃ³n se encuentre en la GDT un descriptor vÃ¡lido), la \texttt{IDLE} y las 5 
+tareas restantes provistas por la cÃ¡tedra.
+En principio, en el archivo \texttt{gdt.c} agregamos las siguientes entradas, que luego vamos a inicializar:
+\begin{table}[!h]
+\begin{center}
+	\begin{tabular}{|c|c|c|c|c|c|c|c|c|}
+	\hline
+	\multicolumn{2}{|c|}{Segmento}	& \multicolumn{7}{|c|}{Atributos}\\ \hline
+	\'Indice &	Offset	& Base 	 & DPL & G & L\'imite & P & S& Tipo  \\ \hline
+	3	& 0x18		& 0	         & 0  & 1 & 0x67    & 1 & 0&0x9 (TSS, available) \\ \hline
+	4	& 0x20		& 0	         & 0  & 1 & 0x67    & 1 & 0&0x9 (TSS, available) \\ \hline
+	5	& 0x28		& 0		 & 0  & 1 & 0x67    & 1 & 0&0x9 (TSS, available) \\ \hline
+	\multicolumn{9}{c}{$\dots$}\\ \hline
+	9	& 0x48		& 0		 & 0  & 1 & 0x67    & 1 & 0&0x9 (TSS, available) \\ \hline
+	\end{tabular}
+	\caption{Descriptores de TSS definidos en GDT.c.}
+\end{center}
+\end{table}
+\newpage
+Como se observa en la tabla, en los descriptores lo Ãºnico que se define es el lÃ­mite (cada TSS va a medir 0x67 bytes), se los pone en presente, el tipo (TSS), se
+prende el bit de granularidad y se le asigna cero a DPL. El resto de los atributos van en principio en cero, para luego definirlos en \texttt{tss.c}.
+\subsection{InicializaciÃ³n de tareas}
+Para la \texttt{tarea\_inicial} definimos la funciÃ³n \texttt{inicializar\_tss\_inicial} que lo Ãºnico que hace es asignarle la base correspondiente (ya que el resto
+de los atributos quedan en cero).
+
+La \texttt{IDLE} la definimos mediante la funciÃ³n \texttt{inicializar\_tss\_idle} que hace lo siguiente:
+\begin{itemize}
+\item Le asigna como base la direcciÃ³n 0x10000.
+\item EIP lo inicializa con la direcciÃ³n 0x3A0000 que es la direcciÃ³n virtual de cÃ³digo, esto vale para todas las demÃ¡s tareas.
+\item Dado que la pila de la \texttt{IDLE} se encuentra en 0x3F000, asigna al ESP y EBP este valor mÃ¡s el tamaÃ±o de la pÃ¡gina.
+\item Setea flags con interrupciones habilitadas.
+\item Dado que esta tarea corre en nivel cero, ESP0 va a ser igual a ESP.
+\item Setea los selectores de segmento (cs = 0x50, el resto en 0x60)
+\item Le asigna el mismo CR3 que el kernel.
+\item Finalmente, mapea la pÃ¡gina de cÃ³digo a la direcciÃ³n virtual 0x3A0000.
+\end{itemize} 
+El resto de las tareas que corren en nivel 3 se van a inicializar a travÃ©s de un arreglo (\texttt{tsss}).
+La funciÃ³n encargada es \texttt{inicializar\_tss\_tarea} que recibe como parÃ¡metro el Ã­ndice que cada tarea 
+y hace lo siguiente:
+\begin{itemize}
+\item Le asigna como base la direcciÃ³n de \texttt{tsss[indice]}.
+\item EIP lo inicializa con la direcciÃ³n 0x3A0000 que es la direcciÃ³n virtual de cÃ³digo, esto vale para todas las tareas.
+\item al EBP y ESP les asigna 0x3B0000, que es la direcciÃ³n virtual de la pila para todas las tareas.
+\item Setea flags con interrupciones habilitadas.
+\item El ESP0 se calcula haciendo \texttt{$0x3A000 + indice*TAMANO\_PAGINA +TAMANO\_PAGINA$} dado que en 0x3A000 comienza la pila de nivel cero para la primer
+tarea, y finalmente se suma TAMANO\_PAGINA porque queremos apuntar al fondo de la pila.
+\item Setea los selectores de segmento (cs = 0x5b, el resto en 0x6b)
+\item Setea el CR3 como \texttt{$0x30000+(0x1000*(indice))$}.
+\end{itemize}
+
+\subsection{ConmutaciÃ³n de tareas}
+Una vez definidas estas estructuras, para cambiar de tarea por primera vez, es decir, saltar de la tarea inicial a la IDLE, basta con hacer un \texttt{jmp 0x20:0}.
+\newpage
+\subsection{Preguntas}
+\subsubsection*{Pregunta 13}
+ \begin{framed}
+Colocando un breakpoint luego de cargar una tarea, Â¿cÃ³mo se puede verificar, utilizando el debugger de Bochs, que la tarea se cargÃ³ correctamente?
+Â¿CÃ³mo se llega a esta conclusiÃ³n?
+\end{framed}
+Si el breakpoint se pone inmediatamente despuÃ©s del salto de tarea, serÃ­a un buen indicio que en principio no se detenga el flujo de ejecuciÃ³n, ya que
+despuÃ©s del jump far se deberÃ­a estar ejecutando el cÃ³digo de la tarea que se acaba de cargar. Esto se puede verificar poniendo un breakpoint antes del salto, y luego 
+haciendo  next mediante el debuguer de Bochs. Luego de ejecutar el salto, se puede observar en la GDT el descriptor de TSS correspondiente a esa tarea, y corroborar
+que el bit de busy estÃ© prendido. TambiÃ©n se puede chequear que los registros TR y CR3 sean los correspondientes a la tarea que debiÃ³ cargarse.
+\subsubsection*{Pregunta 14}
+ \begin{framed}
+Â¿CÃ³mo se puede verificar que la conmutaciÃ³n de tarea fue exitosa?
+\end{framed}
+Esto se puede hacer utilizando lo explicado en el item anterior para ver que se cargÃ³ la nueva tarea correctamente. Para corroborar que el contexto de la anterior se guardÃ³ correctamente, habrÃ­a que volver a saltar a ella.
+
+\subsubsection*{Pregunta 15}
+ \begin{framed}
+Se sabe que las tareas llaman a la interrupciÃ³n \texttt{0x45}. Â¿QuÃ© ocurre si esta no estÃ¡ implementada? Â¿Por quÃ©?
+\end{framed}
+Si no estÃ¡ implementada la interrupciÃ³n, se produce una excepciÃ³n de protecciÃ³n general.
+\section{Ejercicio 7: Scheduler, interrupciones (segunda parte) y backtrace}
+\subsection{Scheduler}
+El funcionamiento del scheduler es muy bÃ¡sico, simplemente debe decirle a la interrupciÃ³n de reloj, quÃ© tarea es la prÃ³xima que debe ejecutar. Inicialmente todas son candidatas, y apenas alguna genera una excepciÃ³n de algÃºn tipo, debe ser desalojada, esto significa que deja de ejecutarse en ese momento, y no vuelve a ser considerada como prÃ³xima a ejecutar.
+
+La idea es manejarnos con los Ã­ndices de las tareas, entonces decidimos implementarlo simplemente como un arreglo de unsigned shorts (que funcionan como bools), llamado $tareas$. El arreglo tiene longitud CANT\_TAREAS, e inicializamos todas las posiciones en 1. Entonces para saber si una tarea $i$ es candidata o no a ejecutarse, hay que ver si $tareas[i]$ es igual a 1\footnote{Indizamos las tareas desde el 0.}. TambiÃ©n tenemos una variable llamada $tareaActal$ para guardar la tarea actual, inicializada en 4 (asÃ­ al ejecutarse por primera vez la funciÃ³n de prÃ³xima tarea a ejecutar, resulta en 0, la primera). De esta forma tenemos la informaciÃ³n de quÃ© tarea se estÃ¡ ejecutando actualmente, y cuÃ¡les son candidatas a ejecutarse (a estas las vamos a llamar "vivas", las que no son candidatas, "muertas"), y la funciÃ³n de proximoIndice, que nos devuelve el Ã­ndice de la prÃ³xima tarea a ejecutar, es directa. La funciÃ³n hace dos cosas: Actualiza el valor de $tareaActal$, y devuelve el Ã­ndice de la prÃ³xima tarea que debe ejecutarse, o un valor especial, que es 6, y nos dice que no debemos saltar de tarea. Â¿CuÃ¡ndo puede suceder esto? En dos casos: Cuando el prÃ³ximo Ã­ndice a ejecutar es una tarea que no estÃ¡ viva (por la implementaciÃ³n de la funciÃ³n, puede suceder, e implica que todas las tareas estÃ¡n muertas), o cuando estoy en la misma tarea que debo ejecutar, sin estar idle, esto implicarÃ­a saltar a la misma tarea, que esta busy, y resultarÃ­a en un GPF.
+
+	\begin{figure}[H]
+  		\centering
+		\includegraphics[scale=1]{./imagenes/proximoIndice.png}
+		\caption{Diagrama de flujo del algoritmo que decide el prÃ³ximo indice de tarea a ejecutar}
+		\label{fig:proximoIndice}
+	\end{figure}
+	
+El cÃ³digo para primero calcular el prÃ³ximo Ã­ndice es simple:
+\begin{figure}[H]
+\begin{center}
+\begin{verbatim}
+unsigned short nuevoIndice=(tareaActual+1) % 5;
+unsigned int i;
+for(i=0;i<5;i++)
+{
+	if(tareas[(nuevoIndice+i) % 5]==1)
+	{
+		nuevoIndice=nuevoIndice+i;
+		break;
+	}
+}
+\end{verbatim}
+\end{center}
+\end{figure}
+Y debido a esta implementaciÃ³n es que esta parte puede devolver el Ã­ndice de una tarea que estÃ¡ muerta.
+Como se ve, en los casos donde no hay que saltar de tarea, se devuelve un Ã­ndice especial, 6, y no se modifica la tareaActual, ya que no va a saltar de tarea. En los casos donde sÃ­ salta, se actualiza tareaActual al valor que se va a saltar, para tenerlo actualizado la prÃ³xima vez que se entre a este cÃ³digo.
+
+Para ver si estamos en el estado idle (por ejemplo si una tarea cede su quantum restante a la tarea idle por pedir una pÃ¡gina, en la prÃ³xima interrupciÃ³n de reloj entramos a esta rutina estando idle), miramos el CR3 actual, que se lo pasamos como parÃ¡metro desde la rutina anterior, y simplemente lo compara con 0x20.
+
+\subsection{Interrupciones (segunda parte)}
+Las interrupciones que faltan terminar son la 0x45, para que las tareas puedan llamar a los servicios set\_page y get\_code\_stack, la de reloj, para que integre el scheduler y efectivamente manejen el intercambio de tareas, y las de las teclas P y R.
+
+\subsubsection*{InterrupciÃ³n 0x45}
+Para esto primero implementamos las funciones set\_page y get\_code\_stack. Para set\_page, como ya tenemos implementada mapear\_pagina, el procedimiento es muy simple:
+
+\begin{figure}[!h]
+\begin{center}
+\begin{verbatim}
+void map_compartida(unsigned short indice)
+{	
+	unsigned int dirFisica = indice*TAMANO_PAGINA+INIT_LUCHA;
+	unsigned int cr3actual = rcr3();
+	mapear_pagina(TASK_SHARE, cr3actual, dirFisica, 0);	
+}
+\end{verbatim}
+\caption{VersiÃ³n reducida del cÃ³digo de set\_page}
+\end{center}
+\end{figure}
+
+Primero se calcula la direcciÃ³n fÃ­sica que queremos mapear, y luego se mapea a TASK\_SHARE (0x3C0000), utilizando el cr3 actual, que es el de la tarea que pidiÃ³ el servicio set\_page.
+
+Como debÃ­amos mostrar la pÃ¡gina compartida en pantalla, y eventualmente sacarla de la pantalla si la tarea muere, decidimos guardar el Ã­ndice de la pÃ¡gina compartida de cada tarea, si la tuviese. Para esto utilizamos un arreglo, donde se guarda el Ã­ndice de la pÃ¡gina compartida para cada tarea. Cada vez que una tarea mapea una pÃ¡gina nueva, nos fijamos si ya tenÃ­a una, si la tiene, cambiamos el Ã­ndice en el arreglo, y cambiamos en la pantalla la pÃ¡gina que se muestra como la compartida de esa tarea\footnote{Este fragmento de cÃ³digo es el que no se muestra en la figura 9, puede verse en sched.c}.
+
+Para get\_code\_stack, simplemente hacemos la cuenta inversa que en set\_page para conseguir los Ã­ndices (la hacemos dos veces, una con la posiciÃ³n de memoria del cÃ³digo y otra con la del stack), y devolvemos el Ã­ndice.
+A continuaciÃ³n puede verse el cÃ³digo para getCode, el de getStack es anÃ¡logo pero utiliza el arreglo que contiene las posiciones de memoria de los stacks en vez del de las de cÃ³digo.
+\begin{figure}[!h]
+\begin{center}
+\begin{verbatim}
+unsigned short getCode()
+{
+	unsigned int memoriaTareaActual = pc[tareaActual];
+	memoriaTareaActual = memoriaTareaActual - INIT_LUCHA;
+	memoriaTareaActual = memoriaTareaActual >> 12
+	return (unsigned short) memoriaTareaActual;
+}
+\end{verbatim}
+\end{center}
+\end{figure}
+
+Las mencionadas previamente son las funciones en C que llama la interrupciÃ³n 0x45, cuyo funcionamiento es el siguiente:
+
+	\begin{figure}[H]
+  		\centering
+		\includegraphics[scale=1]{./imagenes/i45.png}
+		\caption{Diagrama de flujo del handler de la interrupciÃ³n 0x45}
+		\label{fig:i45}
+	\end{figure}
+	
+La funciÃ³n desalojarActual se llama es muy simple en sÃ­, pero tambiÃ©n borra de la pantalla las pÃ¡ginas de la tarea, lo cual alarga el cÃ³digo un poco. La parte pertinente a desalojar la tarea es simplemente poner un cero en el arreglo del scheduler. Antes de desalojarla, desde ASM se llama a la funciÃ³n (tambiÃ©n en ASM), que se encarga de mostrar por pantalla el problema que causÃ³, el backtrace, los registros, etc.
+TambiÃ©n puede apreciarse que luego de llamar a set\_page, se salta a la tarea idle, para cederle el resto del tiempo restante. Esto no pasa luego de llamar a get\_code\_stack, donde se sale de la interrupciÃ³n normalmente y la tarea sigue ejecutÃ¡ndose.
+
+\subsubsection*{InterrupciÃ³n de reloj}
+Una gran parte de la interrupciÃ³n de reloj estÃ¡ explicada en la parte del scheduler, donde se muestra el funcionamiento del procedimiento para elejir el prÃ³ximo Ã­ndice de tarea a ejecutar. Es importante tener en cuenta que esta funciÃ³n puede devolver el Ã­ndice especial 6, que indica que no hay que saltar de tarea, por las razones ya explicadas.
+AcÃ¡ tambiÃ©n puede apreciarse la funcionalidad de pausar y reanudar (las teclas P y R respectivamente), que serÃ¡ explicado en mÃ¡s detalle prÃ³ximamente, pero son las encargadas de ver si hay que pausar o no.
+Entonces, cuando surje la interrupciÃ³n de reloj, el handler realiza lo siguiente:
+
+	\begin{figure}[H]
+  		\centering
+		\includegraphics[scale=0.9]{./imagenes/iReloj.png}
+		\caption{Diagrama de flujo del handler de la interrupciÃ³n de reloj}
+		\label{fig:iReloj}
+	\end{figure}
+Lo que en este caso es llamado proximoIndice, es la funciÃ³n previamente mencionada que o bien devuelve el Ã­ndice de la prÃ³xima tarea a ejecutar, o el Ã­ndice 6.
+Cuando el handler del reloj decide que efectivamente hay que saltar a una tarea determinada, se debe calcular el Ã­ndice de la GDT al cual hay que hacer el jmp far.
+Como vimos en el ejercicio 1, los descriptores de las tareas quedaron de la siguiente forma:
+\begin{table}[H]
+\centering
+    \begin{tabular}{|c|l|}
+        \hline
+        05 / 0x28 & TSS Tarea 1 \\ 
+        06 / 0x30 & TSS Tarea 2 \\ 
+        07 / 0x38 & TSS Tarea 3  \\ 
+        08 / 0x40 & TSS Tarea 4 \\ 
+        09 / 0x48 & TSS Tarea 5 \\ 
+        \hline
+    \end{tabular}
+\end{table}
+Como tenemos en AX el Ã­ndice de la tarea a la cual tenemos que saltar, hacemos lo siguiente:
+\begin{figure}[!h]
+\begin{center}
+\begin{verbatim}
+	inc ax 
+	shl ax, 3
+	add ax, 0x20
+	mov [selector], ax
+	jmp far [offset]
+\end{verbatim}
+\end{center}
+\end{figure}
+Primero incrementamos el valor, ya que lo tenemos como Ã­ndice, y lo vamos a utilizar como si fuese el nÃºmero de la tarea. Luego lo multiplicamos por 8, que nos da el Ã­ndice en la GDT, y le sumamos el offset desde donde empiezan las tareas.
+
+\subsubsection*{InterrupciÃ³n de teclado (letras P y R)}
+Para agregar la funcionalidad de pausar y reanudar, simplemente tuvimos que agregar las teclas a la interrupciÃ³n de teclado, y agregamos una variable al scheduler que dice si en el prÃ³ximo tick de reloj debe ejecutarse la tarea correspondiente o no (pausar). Esta variable es inicializada en falso, y cuando la tecla P es presionada, se cambia a 1, entonces en la prÃ³xima interrupciÃ³n de reloj, el sistema es puesto en pausa. Si en cualquier momento la tecla R es presionada, esta variable es seteada en 0, y en la prÃ³xima interrupciÃ³n de reloj, ''Hay que pausar?" va a dar negativo.
+
+\subsection{Backtrace}
+Justo antes de que una tarea sea desalojada, se llama a la funciÃ³n en ASM que muestra el backtrace, registros, etc.
+Esta funciÃ³n primero revisa el stack (a lo sumo 6 valores o el final de la pila, lo que suceda antes), leyendo valores, convirtiÃ©ndolos a hexa con la funciÃ³n provista por la cÃ¡tedra, y luego los imprime en la pantalla en la posiciÃ³n correspondiente. Luego lee los selectores de segmento y los registros (teniendo cuidado con EBX, ya que es utilizado por la funciÃ³n de la cÃ¡tedra para convertir a hexa), y los convierte a hexa y los imprime, y finalmente hace lo mismo con los EFLAGS, recuperÃ¡ndolos de la pila.
+
+
+
 \section{Conclusi\'on}
+
+
 
 
 \end{document}
