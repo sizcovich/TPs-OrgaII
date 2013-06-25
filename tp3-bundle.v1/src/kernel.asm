@@ -29,6 +29,9 @@ extern mmu_inicializar
 extern inicializar_gdt_tss
 extern tss_inicializar
 
+;; Scheduler
+extern sched_inicializar
+
 ;; Saltear seccion de datos
 jmp start
 
@@ -141,6 +144,7 @@ limpiarPantalla:
 	call inicializar_gdt_tss
 
 	; inicializar el scheduler
+	call sched_inicializar
 
 	; inicializar la IDT
 	call idt_inicializar

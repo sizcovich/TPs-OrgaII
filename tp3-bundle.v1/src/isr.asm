@@ -8,7 +8,7 @@
 
 BITS 32
 
-%define TAREA_QUANTUM		2
+TAREA_QUANTUM: dd 2
 
 global _isr32
 global _isr33
@@ -135,17 +135,17 @@ _isr32:
 	pushad
 	pushfd
 	call juego_finalizo
-	xchg bx, bx
+	;xchg bx, bx
 	cmp eax, 1
 	je .finalizo
 	
 	call fin_intr_pic1
 	call proximo_reloj
 	
-	cmp byte[TAREA_QUANTUM], 0
+	cmp dword[TAREA_QUANTUM], 0
 	je .siguienteTarea
 	
-	dec byte[TAREA_QUANTUM]
+	dec dword[TAREA_QUANTUM]
 	jmp .fin
 	
 	.finalizo:
@@ -154,8 +154,9 @@ _isr32:
 	jmp .fin
 	
 	.siguienteTarea:
-	add byte[TAREA_QUANTUM], 2
+	add dword[TAREA_QUANTUM], 2
 	call sched_proximo_indice
+	xchg bx, bx
 	mov [selector], ax
 	jmp far [offset]
 
