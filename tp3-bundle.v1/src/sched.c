@@ -7,6 +7,7 @@
 #include "defines.h"
 #include "screen.h"
 #include "sched.h"
+#include "i386.h"
 
 unsigned short tareas[CANT_TAREAS];
 char indice_actual;
@@ -21,9 +22,10 @@ void sched_inicializar() {
 }
 
 unsigned short sched_proximo_indice() {
-	unsigned int indice = indice_actual;
-	while (tareas[(indice+1) % 5] == 0) {
-		indice = (indice + 1) % 5;
+	unsigned int indice = (indice_actual + 1) % 5;
+	//breakpoint();
+	while (tareas[indice] == 0x0) {
+		indice = ((indice + 1) % 5);
 	}
 	return tareas[indice];
 }

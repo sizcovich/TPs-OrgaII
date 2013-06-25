@@ -50,7 +50,7 @@ NOTA:
 #define TASK_STACK   			0x003B0000 /* direccion virtual stack  */
 
 #define TABLERO_ADDR 			0x003C0000 /* direccion virtual del tablero */
-#define VIDEO_ADDR 				0x000B8000 /* direccion virtual de la memoria de video */
+#define VIDEO_ADDR 			0x000B8000 /* direccion virtual de la memoria de video */
 
 /* MISC */
 #define TAMANO_PAGINA 			0x00001000
