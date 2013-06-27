@@ -69,7 +69,6 @@ start:
 	call checkear_A20 ;muestra por pantalla que esta deshabilitada
 	call habilitar_A20
 	
-	xchg bx, bx
 	
 	; cargar la GDT
 	lgdt [GDT_DESC]
@@ -124,7 +123,6 @@ limpiarPantalla:
 		or  eax, 0x80000000		;habilito paginacion
 		mov cr0, eax
 		imprimir_texto_mp nombre_grupo_msg, nombre_grupo_len, 0x07, 0, 0
-		
 		;copiar las tareas
 		mov eax, 0x00011000 ;De donde copiar las tareas
 		mov ebx, 0x00101000 ;A donde copiar las tareas
@@ -135,17 +133,16 @@ limpiarPantalla:
 		add eax, 4
 		add ebx, 4
 		loop .copiarTarea
-		
 	; inicializar tarea idle
 	; inicializar todas las tsss
 	call tss_inicializar
-
+	xchg bx, bx
 	; inicializar entradas de la gdt de tss
 	call inicializar_gdt_tss
-
+	xchg bx,bx
 	; inicializar el scheduler
 	call sched_inicializar
-
+	xchg bx,bx
 	; inicializar la IDT
 	call idt_inicializar
 
