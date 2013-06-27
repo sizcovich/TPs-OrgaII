@@ -103,8 +103,8 @@ limpiarPantalla:
 	mov es, ax
 	mov ax, 0x0F00
 	.escribeTodo:
-		mov [es:ecx], ax
-		dec ecx
+	mov [es:ecx], ax
+	dec ecx
 	loop .escribeTodo
 	mov [es:ecx], ax
 	mov es, bx

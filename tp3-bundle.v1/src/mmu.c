@@ -120,10 +120,10 @@ void inicializar_tarea4(){
 void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica, unsigned int attrs){
 	int *page_dir = (int *)cr3; //cargo page directory
 	
-	int PDE = virtual >> 22; //busco PDE
+	int PDE = virtual >> 22; //busco PDE, quiero los 10 primeros bits de la direccion lineal
 	int *page_tab = (int *)(*((unsigned int*) &(page_dir[PDE])) & 0xFFFFF000); //obtengo la direccion del page table
 	
-	int PTE = (0x003FF000 & virtual) >> 12; //obtengo el indice dentro del page table
+	int PTE = (0x003FF000 & virtual) >> 12; //pongo en 0 virtual para obtener el indice dentro del page table
 	*((unsigned int*) &(page_tab[PTE])) = (0xFFFFF000 & fisica) | (0xFFF & attrs); //escribo en esa direccion la entrada de la direccion correspondiente
 }
 
@@ -152,5 +152,6 @@ void mmu_inicializar_tarea_arbitro() {
 	
 	mmu_mapear_pagina(0x3A0000, TASK_5_PAGE_DIR, TASK_5_CODE_PA, 0x001);
 	mmu_mapear_pagina(0x3B0000, TASK_5_PAGE_DIR, TASK_5_STACK_PA, 0x003);
-	mmu_mapear_pagina(0x3C0000, TASK_5_PAGE_DIR, TABLERO_ADDR_PA, 0x003);
+	mmu_mapear_pagina(VIDEO_ADDR, TASK_5_PAGE_DIR, VIDEO_ADDR, 0x003);  //esto no estaba
+	mmu_mapear_pagina(0x3C0000, TASK_5_PAGE_DIR, TABLERO_ADDR_PA, 0x001); //esto tenia un 3 y le puse un 1
 }
