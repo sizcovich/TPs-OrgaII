@@ -60,7 +60,7 @@ _isr%1:
 	;mov [es:ecx], ax
 	;mov es, bx
 	;pop ebx
-
+	xchg bx, bx
 	call get_actual
 	push eax
 	call sched_remover_tarea
@@ -134,7 +134,6 @@ ISR 19
 _isr32:
 	cli
 	pushad
-	pushfd
 	call juego_finalizo
 	;xchg bx, bx
 	cmp eax, 1
@@ -162,7 +161,6 @@ _isr32:
 	jmp far [offset]
 
 	.fin:
-	popfd
 	popad
 	sti
 	iret
@@ -172,7 +170,6 @@ _isr32:
 _isr33:
 	cli
 	pushad
-	pushfd
 	call fin_intr_pic1
 	in al, 0x60
 	cmp al, 0x99 ;ver si se pulso p
@@ -191,7 +188,6 @@ _isr33:
 	jmp .fin
 	
 	.fin:
-	popfd
 	popad
 	sti
 	iret
@@ -203,7 +199,6 @@ _isr33:
 _isr128:	;Interrupcion 0x80
 	cli
 	pushad
-	pushfd
 	call fin_intr_pic1
 	
 	cmp eax, 111	;duplicar
@@ -234,7 +229,6 @@ _isr128:	;Interrupcion 0x80
 	jmp .fin
 	
 	.fin:
-	popfd
 	popad
 	sti
 	iret
@@ -242,7 +236,6 @@ _isr128:	;Interrupcion 0x80
 _isr144: ;Int 0x90
 	cli
 	pushad
-	pushfd
 	call fin_intr_pic1
 	
 	cmp eax, 300	;iniciar
@@ -261,7 +254,6 @@ _isr144: ;Int 0x90
 	jmp .fin
 	
 	.fin:
-	popfd
 	popad
 	sti
 	iret

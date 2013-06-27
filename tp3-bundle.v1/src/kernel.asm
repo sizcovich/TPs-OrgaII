@@ -150,7 +150,6 @@ limpiarPantalla:
 	
 	mov eax, 0x00030000
 	mov cr3, eax
-	xchg bx, bx
 	;imprimir_texto_mp nombre_grupo_msg, nombre_grupo_len, 0x57, 0, 0
 	mov eax, 0x00021000
 	mov cr3, eax
@@ -175,7 +174,7 @@ limpiarPantalla:
 	ltr ax
 	; aca salto a la primer tarea
 	xchg bx, bx
-	jmp 0x48:0
+	jmp 0x58:0
 
 	; Ciclar infinitamente (por si algo sale mal)
 	jmp $
