@@ -83,7 +83,7 @@ NOTA:
 #define TASK_IDLE_CODE_SRC_ADDR 0x00010000 /* direccion fisica del codigo de la tarea idle */
 #define TASK_1_CODE_SRC_ADDR    0x00011000 /* direccion fisica del codigo de la tarea tarea 1 */
 #define TASK_2_CODE_SRC_ADDR    0x00012000 /* direccion fisica del codigo de la tarea tarea 2 */
-#define TAKS_3_CODE_SRC_ADDR    0x00013000 /* direccion fisica del codigo de la tarea tarea 3 */
+#define TASK_3_CODE_SRC_ADDR    0x00013000 /* direccion fisica del codigo de la tarea tarea 3 */
 #define TASK_4_CODE_SRC_ADDR    0x00014000 /* direccion fisica del codigo de la tarea tarea 4 */
 #define TASK_5_CODE_SRC_ADDR 	0x00015000 /* direccion fisica del codigo de la tarea tarea 5 */
 

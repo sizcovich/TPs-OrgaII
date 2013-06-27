@@ -36,13 +36,18 @@ void mmu_inicializar_dir_kernel() {
 
 void inicializar_tarea1(){
 	int i;
+	unsigned char* fuente = (unsigned char*) (TASK_1_CODE_SRC_ADDR);
+	unsigned char* destino = (unsigned char*) (TASK_1_CODE_PA);
+	for(i = 0; i<4096; ++i){
+		destino[i] = fuente[i];
+	}
 	int *page_dir = (int *)TASK_1_PAGE_DIR;
 	int *page_tab = (int *)TASK_1_PAGE_TABLE; 
 	for(i = 0; i<1024; ++i){
 		*((unsigned int*) &(page_dir[i])) = 0x00000000;
 		*((unsigned int*) &(page_tab[i])) = 0x00000000;
 	}
-	*((unsigned int*) &(page_dir[0])) = 0x00035003;
+	*((unsigned int*) &(page_dir[0])) = 0x00035007;
 	
 	unsigned int val = 0x0;
 	for(i = 0; i < 356 ; ++i) {
@@ -56,13 +61,22 @@ void inicializar_tarea1(){
 
 void inicializar_tarea2(){
 	int i;
+	unsigned char* fuente = (unsigned char*) (TASK_2_CODE_SRC_ADDR);
+	unsigned char* destino = (unsigned char*) (TASK_2_CODE_PA);
+	for(i = 0; i<4096; ++i){
+		destino[i] = fuente[i];
+	}
 	int *page_dir = (int *)TASK_2_PAGE_DIR;
 	int *page_tab = (int *)TASK_2_PAGE_TABLE; 
 	for(i = 0; i<1024; ++i){
 		*((unsigned int*) &(page_dir[i])) = 0x00000000;
 		*((unsigned int*) &(page_tab[i])) = 0x00000000;
 	}
-	*((unsigned int*) &(page_dir[0])) = 0x00036003;
+	
+	*((unsigned int*) &(page_dir[0])) = 0x00000000;
+	*((unsigned int*) &(page_tab[0])) = 0x00000000;
+		
+	*((unsigned int*) &(page_dir[0])) = 0x00036007;
 	
 	unsigned int val = 0x0;
 	for(i = 0; i < 356 ; ++i) {
@@ -77,13 +91,18 @@ void inicializar_tarea2(){
 
 void inicializar_tarea3(){
 	int i;
+	unsigned char* fuente = (unsigned char*) (TASK_3_CODE_SRC_ADDR);
+	unsigned char* destino = (unsigned char*) (TASK_3_CODE_PA);
+	for(i = 0; i<4096; ++i){
+		destino[i] = fuente[i];
+	}
 	int *page_dir = (int *)TASK_3_PAGE_DIR;
 	int *page_tab = (int *)TASK_3_PAGE_TABLE; 
 	for(i = 0; i<1024; ++i){
 		*((unsigned int*) &(page_dir[i])) = 0x00000000;
 		*((unsigned int*) &(page_tab[i])) = 0x00000000;
 	}
-	*((unsigned int*) &(page_dir[0])) = 0x00037003;
+	*((unsigned int*) &(page_dir[0])) = 0x00037007;
 	
 	unsigned int val = 0x0;
 	for(i = 0; i < 356 ; ++i) {
@@ -98,13 +117,18 @@ void inicializar_tarea3(){
 
 void inicializar_tarea4(){
 	int i;
+	unsigned char* fuente = (unsigned char*) (TASK_4_CODE_SRC_ADDR);
+	unsigned char* destino = (unsigned char*) (TASK_4_CODE_PA);
+	for(i = 0; i<4096; ++i){
+		destino[i] = fuente[i];
+	}
 	int *page_dir = (int *)TASK_4_PAGE_DIR;
 	int *page_tab = (int *)TASK_4_PAGE_TABLE; 
 	for(i = 0; i<1024; ++i){
 		*((unsigned int*) &(page_dir[i])) = 0x00000000;
 		*((unsigned int*) &(page_tab[i])) = 0x00000000;
 	}
-	*((unsigned int*) &(page_dir[0])) = 0x00038003;
+	*((unsigned int*) &(page_dir[0])) = 0x00038007;
 	
 	unsigned int val = 0x0;
 	for(i = 0; i < 356 ; ++i) {
@@ -136,6 +160,11 @@ void mmu_inicializar_tarea_jugador() {
 
 void mmu_inicializar_tarea_arbitro() {
 	int i;
+	unsigned char* fuente = (unsigned char*) (TASK_5_CODE_SRC_ADDR);
+	unsigned char* destino = (unsigned char*) (TASK_5_CODE_PA);
+	for(i = 0; i<4096; ++i){
+		destino[i] = fuente[i];
+	}
 	int *page_dir = (int *)TASK_5_PAGE_DIR;
 	int *page_tab = (int *)TASK_5_PAGE_TABLE; 
 	for(i = 0; i<1024; ++i){

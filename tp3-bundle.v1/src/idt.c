@@ -67,4 +67,13 @@ void idt_inicializar() {
 	IDT_ENTRY(33); //Teclado
 	IDT_ENTRY(128);	//Servicios Jugadores
 	IDT_ENTRY(144); //Servicios Arbitro
+	idt[128].offset_0_15 = (unsigned short) ((unsigned int)(&_isr128) & (unsigned int) 0xFFFF);        
+	idt[128].segsel = (unsigned short) 0x0008;                                                                  
+	idt[128].attr = (unsigned short) 0xEF0;                                                                  
+	idt[128].offset_16_31 = (unsigned short) ((unsigned int)(&_isr128) >> 16 & (unsigned int) 0xFFFF);
+	
+	idt[144].offset_0_15 = (unsigned short) ((unsigned int)(&_isr144) & (unsigned int) 0xFFFF);        
+	idt[144].segsel = (unsigned short) 0x0008;                                                                  
+	idt[144].attr = (unsigned short) 0xCF0;                                                                  
+	idt[144].offset_16_31 = (unsigned short) ((unsigned int)(&_isr144) >> 16 & (unsigned int) 0xFFFF);
 }

@@ -19,23 +19,23 @@ tss tsss[CANT_TAREAS];
 void tss_inicializar() {
 	//Tarea idle
 	tarea_idle.cr3 = KERNEL_PAGE_DIR;
-	tarea_idle.eip = TASK_CODE;
-	tarea_idle.esp = TASK_IDLE_STACK_RING_0;
-	tarea_idle.ebp = TASK_IDLE_STACK_RING_0;
+	tarea_idle.eip = TASK_IDLE_CODE_SRC_ADDR;
+	tarea_idle.esp = KERNEL_STACK;
+	tarea_idle.ebp = KERNEL_STACK;
 	tarea_idle.iomap = 0xFFFF;
 	tarea_idle.eflags = 0x202;
-	tarea_idle.cs = 0x8;
-	tarea_idle.ds = 0x10;
-	tarea_idle.es = 0x10;
-	tarea_idle.fs = 0x10;
-	tarea_idle.gs = 0x10;
-	tarea_idle.ss = 0x10;
+	tarea_idle.cs = 0xB;
+	tarea_idle.ds = 0x13;
+	tarea_idle.es = 0x13;
+	tarea_idle.fs = 0x13;
+	tarea_idle.gs = 0x13;
+	tarea_idle.ss = 0x13;
 	tarea_idle.esp0 = TASK_IDLE_STACK_RING_0;
 	
 	//Tarea 1
 	tsss[1].cr3 = TASK_1_PAGE_DIR;
 	tsss[1].eip = TASK_CODE;
-	tsss[1].esp = TASK_STACK;
+	tsss[1].esp = TASK_STACK + TAMANO_PAGINA; //se le suma el tamaño de la pagina
 	tsss[1].ebp = TASK_STACK;
 	tsss[1].iomap = 0xFFFF;
 	tsss[1].eflags = 0x202;
@@ -51,7 +51,7 @@ void tss_inicializar() {
 	//Tarea 2
 	tsss[2].cr3 = TASK_2_PAGE_DIR;
 	tsss[2].eip = TASK_CODE;
-	tsss[2].esp = TASK_STACK;
+	tsss[2].esp = TASK_STACK + TAMANO_PAGINA;
 	tsss[2].ebp = TASK_STACK;
 	tsss[2].iomap = 0xFFFF;
 	tsss[2].eflags = 0x202;
@@ -67,7 +67,7 @@ void tss_inicializar() {
 	//Tarea 3
 	tsss[3].cr3 = TASK_3_PAGE_DIR;
 	tsss[3].eip = TASK_CODE;
-	tsss[3].esp = TASK_STACK;
+	tsss[3].esp = TASK_STACK + TAMANO_PAGINA;
 	tsss[3].ebp = TASK_STACK;
 	tsss[3].iomap = 0xFFFF;
 	tsss[3].eflags = 0x202;
@@ -83,7 +83,7 @@ void tss_inicializar() {
 	//Tarea 4
 	tsss[4].cr3 = TASK_4_PAGE_DIR;
 	tsss[4].eip = TASK_CODE;
-	tsss[4].esp = TASK_STACK;
+	tsss[4].esp = TASK_STACK + TAMANO_PAGINA;
 	tsss[4].ebp = TASK_STACK;
 	tsss[4].iomap = 0xFFFF;
 	tsss[4].eflags = 0x202;
@@ -99,7 +99,7 @@ void tss_inicializar() {
 	//Arbitro
 	tsss[5].cr3 = TASK_5_PAGE_DIR;
 	tsss[5].eip = TASK_CODE;
-	tsss[5].esp = TASK_STACK;
+	tsss[5].esp = TASK_STACK + TAMANO_PAGINA;
 	tsss[5].ebp = TASK_STACK;
 	tsss[5].iomap = 0xFFFF;
 	tsss[5].eflags = 0x202;
