@@ -22,12 +22,17 @@ void sched_inicializar() {
 }
 
 unsigned short sched_proximo_indice() {
-	unsigned int indice = (indice_actual + 1) % 5;
-	//breakpoint();
-	while (tareas[indice] == 0x0) {
-		indice = ((indice + 1) % 5);
+	if(rtr() != (GDT_TSS_ARBITRO<<3)){
+		return (GDT_TSS_ARBITRO<<3);
 	}
-	return tareas[indice];
+	else{
+		unsigned int indice = (indice_actual + 1) % 5;
+	//breakpoint();
+		while (tareas[indice] == 0x0) {
+			indice = ((indice + 1) % 5);
+		}
+		return tareas[indice];
+	}
 }
 
 void sched_remover_tarea(unsigned int process_id) {

@@ -60,8 +60,13 @@ _isr%1:
 	;mov [es:ecx], ax
 	;mov es, bx
 	;pop ebx
-	xchg bx, bx
 	call get_actual
+	
+	str eax
+	shr eax, 3
+	sub eax, 10
+	
+	xchg bx, bx
 	push eax
 	call sched_remover_tarea
 	sub esp, 4
