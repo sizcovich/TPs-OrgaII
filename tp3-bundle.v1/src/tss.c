@@ -30,7 +30,7 @@ void tss_inicializar() {
 	tarea_idle.fs = 0x10;
 	tarea_idle.gs = 0x10;
 	tarea_idle.ss = 0x10;
-	tarea_idle.ss0 = 0x10;
+	tarea_idle.esp0 = TASK_IDLE_STACK_RING_0;
 	
 	//Tarea 1
 	tsss[1].cr3 = TASK_1_PAGE_DIR;

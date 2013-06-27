@@ -67,6 +67,7 @@ _isr%1:
 	sub esp, 4
 	
 	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
+	jmp $
 	iret
 %endmacro
 
