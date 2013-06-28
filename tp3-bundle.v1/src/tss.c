@@ -24,12 +24,12 @@ void tss_inicializar() {
 	tarea_idle.ebp = KERNEL_STACK;
 	tarea_idle.iomap = 0xFFFF;
 	tarea_idle.eflags = 0x202;
-	tarea_idle.cs = 0xB;
-	tarea_idle.ds = 0x13;
-	tarea_idle.es = 0x13;
-	tarea_idle.fs = 0x13;
-	tarea_idle.gs = 0x13;
-	tarea_idle.ss = 0x13;
+	tarea_idle.cs = 0x8;
+	tarea_idle.ds = 0x10;
+	tarea_idle.es = 0x10;
+	tarea_idle.fs = 0x10;
+	tarea_idle.gs = 0x10;
+	tarea_idle.ss = 0x10;
 	tarea_idle.esp0 = TASK_IDLE_STACK_RING_0;
 	
 	//Tarea 1
@@ -103,12 +103,12 @@ void tss_inicializar() {
 	tsss[5].ebp = TASK_STACK;
 	tsss[5].iomap = 0xFFFF;
 	tsss[5].eflags = 0x202;
-	tsss[5].cs = 0x1A;
-	tsss[5].ds = 0x22;
-	tsss[5].es = 0x22;
-	tsss[5].fs = 0x22;
-	tsss[5].gs = 0x22;
-	tsss[5].ss = 0x22;
+	tsss[5].cs = 0x19;
+	tsss[5].ds = 0x21;
+	tsss[5].es = 0x21;
+	tsss[5].fs = 0x21;
+	tsss[5].gs = 0x21;
+	tsss[5].ss = 0x21;
 	tsss[5].ss0 = 0x10;
 	tsss[5].esp0 = TASK_5_STACK_RING_0;
 }
