@@ -60,18 +60,19 @@ _isr%1:
 	;mov [es:ecx], ax
 	;mov es, bx
 	;pop ebx
+	
+	xchg bx, bx
+	
 	call get_actual
 	
 	str eax
 	shr eax, 3
 	sub eax, 10
-	
-	xchg bx, bx
 	push eax
 	call sched_remover_tarea
-	sub esp, 4
-	
+	add esp, 4
 	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
+	mov dword[TAREA_QUANTUM], 0
 	jmp $
 	iret
 %endmacro
@@ -140,7 +141,7 @@ _isr32:
 	cli
 	pushad
 	call juego_finalizo
-	;xchg bx, bx
+	xchg bx, bx
 	cmp eax, 1
 	je .finalizo
 	
@@ -202,10 +203,11 @@ _isr33:
 ;; Rutinas de atención de las SYSCALLS
 ;;
 _isr128:	;Interrupcion 0x80
+	xchg bx, bx
 	cli
 	pushad
 	call fin_intr_pic1
-	
+		
 	cmp eax, 111	;duplicar
 	je .duplicar
 	cmp eax, 222	;migrar
