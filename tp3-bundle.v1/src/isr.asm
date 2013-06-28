@@ -45,23 +45,28 @@ error%1_len equ $ - error%1
 global _isr%1
 
 _isr%1:
-	;mov eax, %1
-	;push ebx
-	;mov bx, es
-	;
-	;mov ecx, 4000
-	;mov ax, 0x38
-	;mov es, ax
-	;mov ax, 0x0F00
-	;.escribeTodo:
-	;	mov [es:ecx], ax
-	;	dec ecx
-	;loop .escribeTodo
-	;mov [es:ecx], ax
-	;mov es, bx
-	;pop ebx
-	
 	xchg bx, bx
+	
+	call get_actual
+	
+	str eax
+	shr eax, 3
+	sub eax, 10
+	push eax
+	call sched_remover_tarea
+	add esp, 4
+	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
+	mov dword[TAREA_QUANTUM], 0
+	jmp $
+	iret
+%endmacro
+
+%macro ISR_CODED 1
+global _isr%1
+
+_isr%1:
+	xchg bx, bx
+	add esp, 4
 	
 	call get_actual
 	
@@ -122,11 +127,11 @@ ISR 6
 ISR 7
 ISR 8
 ISR 9
-ISR 10
-ISR 11
-ISR 12
-ISR 13
-ISR 14
+ISR_CODED 10
+ISR_CODED 11
+ISR_CODED 12
+ISR_CODED 13
+ISR_CODED 14
 ISR 15
 ISR 16
 ISR 17
