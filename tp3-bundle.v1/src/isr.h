@@ -4,7 +4,7 @@
 ================================================================================
   definicion de las rutinas de atencion de interrupciones
 */
-
+DPL=0
 #ifndef __ISR_H__
 #define __ISR_H__
 
