@@ -65,8 +65,7 @@ void idt_inicializar() {
 	IDT_ENTRY(19);
 	IDT_ENTRY(32); //Reloj
 	IDT_ENTRY(33); //Teclado
-	IDT_ENTRY(128);	//Servicios Jugadores
-	IDT_ENTRY(144); //Servicios Arbitro
+
 	idt[128].offset_0_15 = (unsigned short) ((unsigned int)(&_isr128) & (unsigned int) 0xFFFF);        
 	idt[128].segsel = (unsigned short) 0x0008;                                                                  
 	idt[128].attr = (unsigned short) 0xEF0;                                                                  
