@@ -8,6 +8,9 @@
 #ifndef __MMU_H__
 #define __MMU_H__
 
+//Lleva el control de cuantas paginas pidio cada tarea
+unsigned char numPags = {0,0,0,0,0};
+
 // inicializa el mmu
 void mmu_inicializar_dir_kernel();
 void mmu_inicializar_tarea_jugador();
