@@ -7,9 +7,15 @@
 #include "defines.h"
 #include "mmu.h"
 #include "i386.h"
-
-
+#include "tss.h"
+extern tss tsss[];
+unsigned char numPags[5] = {0,0,0,0,0};
+unsigned char paginaAccedida[32];
 void mmu_inicializar() {
+	int i;
+	for(i=0; i < 32; ++i){
+		paginaAccedida[i] = 0;
+	}
 	mmu_inicializar_dir_kernel();
 	mmu_inicializar_tarea_jugador();
 	mmu_inicializar_tarea_arbitro();
@@ -183,4 +189,22 @@ void mmu_inicializar_tarea_arbitro() {
 	mmu_mapear_pagina(0x3B0000, TASK_5_PAGE_DIR, TASK_5_STACK_PA, 0x003);
 	mmu_mapear_pagina(VIDEO_ADDR, TASK_5_PAGE_DIR, VIDEO_ADDR, 0x003);  //esto no estaba
 	mmu_mapear_pagina(0x3C0000, TASK_5_PAGE_DIR, TABLERO_ADDR_PA, 0x001); //esto tenia un 3 y le puse un 1
+}
+
+int obtener(unsigned int virtual, unsigned int tarea){ //se fija la primera pagina libre del arreglo y la mapea para el proceso que la pidio
+	int i = 0;
+	int devuelvo = 0;
+	while(i < 32 && paginaAccedida[i] == 1){
+		++i;
+	}
+	if (i < 32 && numPags[tarea] < 5){
+		paginaAccedida[i] = 1;
+		unsigned int fisica = 0x164000 + i*0x1000;
+		unsigned int cr3 = tsss[tarea].cr3;
+		mmu_mapear_pagina(virtual, cr3, fisica, 0x007);
+		++numPags[tarea];
+	}else{
+		devuelvo = 1;
+	}
+	return devuelvo;
 }

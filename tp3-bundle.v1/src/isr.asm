@@ -24,6 +24,7 @@ extern fin_intr_pic1
 extern sched_proximo_indice
 extern sched_remover_tarea
 extern get_actual
+extern obtener
 
 ;;
 ;;JUEGO
@@ -32,6 +33,7 @@ extern game_terminar
 extern game_iniciar
 extern game_migrar
 extern game_duplicar
+extern juego_iniciado
 ;;
 ;; Definición de MACROS
 ;;
@@ -46,9 +48,6 @@ global _isr%1
 
 _isr%1:
 	;xchg bx, bx
-	
-	call get_actual
-	
 	str eax
 	shr eax, 3
 	sub eax, 10
@@ -57,7 +56,6 @@ _isr%1:
 	add esp, 4
 	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
 	mov dword[TAREA_QUANTUM], 0
-	;jmp $
 	iret
 %endmacro
 
@@ -67,9 +65,6 @@ global _isr%1
 _isr%1:
 	;xchg bx, bx
 	add esp, 4
-	
-	call get_actual
-	
 	str eax
 	shr eax, 3
 	sub eax, 10
@@ -78,7 +73,6 @@ _isr%1:
 	add esp, 4
 	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
 	mov dword[TAREA_QUANTUM], 0
-	;jmp $
 	iret
 %endmacro
 
@@ -131,7 +125,6 @@ ISR_CODED 10
 ISR_CODED 11
 ISR_CODED 12
 ISR_CODED 13
-;ISR_CODED 14
 ISR 15
 ISR 16
 ISR 17
@@ -145,21 +138,29 @@ ISR 19
 global _isr14
 
 _isr14:
-	xchg bx, bx
+	;xchg bx, bx
 	;#PF
-	add esp, 4
-	
+	add esp, 4 ;descarto el error code
 	call get_actual
+	push eax
 	
+	mov eax, cr2 ;tengo la direccion lineal en cr2
+	push eax
+	call obtener
+	add esp, 8
+	cmp eax, 0 ; significa que mapeo bien
+	je .fin
+	;CASO EN EL QUE FALLA
+.falla:
 	str eax
-	shr eax, 3
-	sub eax, 10
+	shr eax, 3 
+	sub eax, 10 ;calculo indice a remover
 	push eax
 	call sched_remover_tarea
 	add esp, 4
 	imprimir_texto_mp	error14, error14_len, 0xF, 0, 0
 	mov dword[TAREA_QUANTUM], 0
-	jmp $
+.fin:	
 	iret
 
 ;;
@@ -169,7 +170,7 @@ _isr32:
 	cli
 	pushad
 	call juego_finalizo
-	;xchg bx, bx
+	xchg bx, bx
 	cmp eax, 1
 	je .finalizo
 	
@@ -189,9 +190,19 @@ _isr32:
 	
 	.siguienteTarea:
 	add dword[TAREA_QUANTUM], 2
+	call juego_iniciado
+	cmp eax, 0
+	je .arbitro
+	
 	call sched_proximo_indice
 	;xchg bx, bx
 	mov [selector], ax
+	jmp far [offset]
+	jmp .fin
+	
+.arbitro:
+	mov word[selector], 0x70
+	xchg bx, bx
 	jmp far [offset]
 
 	.fin:
@@ -231,10 +242,9 @@ _isr33:
 ;; Rutinas de atención de las SYSCALLS
 ;;
 _isr128:	;Interrupcion 0x80
-	xchg bx, bx
+	;xchg bx, bx
 	cli
 	pushad
-	call fin_intr_pic1
 		
 	cmp eax, 111	;duplicar
 	je .duplicar
@@ -249,8 +259,10 @@ _isr128:	;Interrupcion 0x80
 	call get_actual
 	push eax
 	call game_duplicar
-	sub esp, 12
-	jmp .fin
+	add esp, 12
+	cmp eax, 0 ;pregunto si salio bien
+	je .fin
+	jmp .llamoArbitro
 	
 	.migrar:
 	push esi
@@ -260,18 +272,26 @@ _isr128:	;Interrupcion 0x80
 	call get_actual
 	push eax
 	call game_migrar
-	sub esp, 20
-	jmp .fin
+	add esp, 20
+	cmp eax, 0
+	je .fin
+
+.llamoArbitro:
+	mov word[selector], 0x70
+	jmp far [offset]
 	
-	.fin:
+	
+.fin:
+	call fin_intr_pic1
 	popad
 	sti
 	iret
+
 	
 _isr144: ;Int 0x90
+	xchg bx, bx
 	cli
 	pushad
-	call fin_intr_pic1
 	
 	cmp eax, 300	;iniciar
 	je .iniciar
@@ -289,6 +309,7 @@ _isr144: ;Int 0x90
 	jmp .fin
 	
 	.fin:
+	call fin_intr_pic1
 	popad
 	sti
 	iret
