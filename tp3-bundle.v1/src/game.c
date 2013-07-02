@@ -9,7 +9,7 @@
 unsigned char (*tablero)[TABLERO_COLS] = (unsigned char (*)[TABLERO_COLS]) (TABLERO_ADDR);
 
 unsigned int game_finalizado;
-
+unsigned int game_iniciado = FALSE;
 int abs(int n);
 
 unsigned int game_salto_en_rango(int nro_jugador, int fil_src, int col_src, int fil_dst, int col_dst);
@@ -37,18 +37,22 @@ unsigned int game_iniciar() {
 
 	// Inicializar estado del juego
 	game_finalizado = FALSE;
-
+	game_iniciado = TRUE;
 	return TRUE;
 }
 
 unsigned int game_terminar() {
 	game_finalizado = TRUE;
-
 	return TRUE;
 }
 
+
 unsigned int juego_finalizo() {
 	return game_finalizado;
+}
+
+unsigned int juego_iniciado(){
+	return game_iniciado;
 }
 
 unsigned int game_duplicar(int nro_jugador, int fil, int col) {

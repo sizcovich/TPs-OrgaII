@@ -174,7 +174,7 @@ limpiarPantalla:
 	ltr ax
 	; aca salto a la primer tarea
 	xchg bx, bx
-	jmp 0x58:0
+	jmp 0x48:0
 
 	; Ciclar infinitamente (por si algo sale mal)
 	jmp $

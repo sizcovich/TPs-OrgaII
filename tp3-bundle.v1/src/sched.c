@@ -18,7 +18,7 @@ void sched_inicializar() {
 	tareas[2] = 0x60;
 	tareas[3] = 0x68;
 	tareas[4] = 0x70;
-	indice_actual = 0;
+	indice_actual = 3;
 }
 
 unsigned short sched_proximo_indice() {
@@ -26,10 +26,10 @@ unsigned short sched_proximo_indice() {
 		return (GDT_TSS_ARBITRO<<3);
 	}
 	else{
-		unsigned int indice = (indice_actual + 1) % 5;
+		unsigned int indice = (indice_actual + 1) % 4;
 	//breakpoint();
 		while (tareas[indice] == 0x0) {
-			indice = ((indice + 1) % 5);
+			indice = ((indice + 1) % 4);
 		}
 		return tareas[indice];
 	}

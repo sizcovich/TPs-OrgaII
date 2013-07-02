@@ -33,9 +33,25 @@ void tss_inicializar() {
 	tarea_idle.esp0 = TASK_IDLE_STACK_RING_0;
 	
 	//Tarea 1
-	tsss[1].cr3 = TASK_1_PAGE_DIR;
+	tsss[0].cr3 = TASK_1_PAGE_DIR;
+	tsss[0].eip = TASK_CODE;
+	tsss[0].esp = TASK_STACK + TAMANO_PAGINA; //se le suma el tamaño de la pagina
+	tsss[0].ebp = TASK_STACK;
+	tsss[0].iomap = 0xFFFF;
+	tsss[0].eflags = 0x202;
+	tsss[0].cs = 0x2B;
+	tsss[0].ds = 0x33;
+	tsss[0].es = 0x33;
+	tsss[0].fs = 0x33;
+	tsss[0].gs = 0x33;
+	tsss[0].ss = 0x33;
+	tsss[0].ss0 = 0x10;
+	tsss[0].esp0 = TASK_1_STACK_RING_0;
+	
+	//Tarea 2
+	tsss[1].cr3 = TASK_2_PAGE_DIR;
 	tsss[1].eip = TASK_CODE;
-	tsss[1].esp = TASK_STACK + TAMANO_PAGINA; //se le suma el tamaño de la pagina
+	tsss[1].esp = TASK_STACK + TAMANO_PAGINA;
 	tsss[1].ebp = TASK_STACK;
 	tsss[1].iomap = 0xFFFF;
 	tsss[1].eflags = 0x202;
@@ -46,10 +62,10 @@ void tss_inicializar() {
 	tsss[1].gs = 0x33;
 	tsss[1].ss = 0x33;
 	tsss[1].ss0 = 0x10;
-	tsss[1].esp0 = TASK_1_STACK_RING_0;
+	tsss[1].esp0 = TASK_2_STACK_RING_0;
 	
-	//Tarea 2
-	tsss[2].cr3 = TASK_2_PAGE_DIR;
+	//Tarea 3
+	tsss[2].cr3 = TASK_3_PAGE_DIR;
 	tsss[2].eip = TASK_CODE;
 	tsss[2].esp = TASK_STACK + TAMANO_PAGINA;
 	tsss[2].ebp = TASK_STACK;
@@ -62,10 +78,10 @@ void tss_inicializar() {
 	tsss[2].gs = 0x33;
 	tsss[2].ss = 0x33;
 	tsss[2].ss0 = 0x10;
-	tsss[2].esp0 = TASK_2_STACK_RING_0;
+	tsss[2].esp0 = TASK_3_STACK_RING_0;
 	
-	//Tarea 3
-	tsss[3].cr3 = TASK_3_PAGE_DIR;
+	//Tarea 4
+	tsss[3].cr3 = TASK_4_PAGE_DIR;
 	tsss[3].eip = TASK_CODE;
 	tsss[3].esp = TASK_STACK + TAMANO_PAGINA;
 	tsss[3].ebp = TASK_STACK;
@@ -78,37 +94,21 @@ void tss_inicializar() {
 	tsss[3].gs = 0x33;
 	tsss[3].ss = 0x33;
 	tsss[3].ss0 = 0x10;
-	tsss[3].esp0 = TASK_3_STACK_RING_0;
+	tsss[3].esp0 = TASK_4_STACK_RING_0;
 	
-	//Tarea 4
-	tsss[4].cr3 = TASK_4_PAGE_DIR;
+	//Arbitro
+	tsss[4].cr3 = TASK_5_PAGE_DIR;
 	tsss[4].eip = TASK_CODE;
 	tsss[4].esp = TASK_STACK + TAMANO_PAGINA;
 	tsss[4].ebp = TASK_STACK;
 	tsss[4].iomap = 0xFFFF;
 	tsss[4].eflags = 0x202;
-	tsss[4].cs = 0x2B;
-	tsss[4].ds = 0x33;
-	tsss[4].es = 0x33;
-	tsss[4].fs = 0x33;
-	tsss[4].gs = 0x33;
-	tsss[4].ss = 0x33;
+	tsss[4].cs = 0x1A;
+	tsss[4].ds = 0x22;
+	tsss[4].es = 0x22;
+	tsss[4].fs = 0x22;
+	tsss[4].gs = 0x22;
+	tsss[4].ss = 0x22;
 	tsss[4].ss0 = 0x10;
-	tsss[4].esp0 = TASK_4_STACK_RING_0;
-	
-	//Arbitro
-	tsss[5].cr3 = TASK_5_PAGE_DIR;
-	tsss[5].eip = TASK_CODE;
-	tsss[5].esp = TASK_STACK + TAMANO_PAGINA;
-	tsss[5].ebp = TASK_STACK;
-	tsss[5].iomap = 0xFFFF;
-	tsss[5].eflags = 0x202;
-	tsss[5].cs = 0x1A;
-	tsss[5].ds = 0x22;
-	tsss[5].es = 0x22;
-	tsss[5].fs = 0x22;
-	tsss[5].gs = 0x22;
-	tsss[5].ss = 0x22;
-	tsss[5].ss0 = 0x10;
-	tsss[5].esp0 = TASK_5_STACK_RING_0;
+	tsss[4].esp0 = TASK_5_STACK_RING_0;
 }
