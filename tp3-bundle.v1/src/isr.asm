@@ -45,7 +45,7 @@ error%1_len equ $ - error%1
 global _isr%1
 
 _isr%1:
-	xchg bx, bx
+	;xchg bx, bx
 	
 	call get_actual
 	
@@ -57,7 +57,7 @@ _isr%1:
 	add esp, 4
 	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
 	mov dword[TAREA_QUANTUM], 0
-	jmp $
+	;jmp $
 	iret
 %endmacro
 
@@ -65,7 +65,7 @@ _isr%1:
 global _isr%1
 
 _isr%1:
-	xchg bx, bx
+	;xchg bx, bx
 	add esp, 4
 	
 	call get_actual
@@ -78,7 +78,7 @@ _isr%1:
 	add esp, 4
 	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
 	mov dword[TAREA_QUANTUM], 0
-	jmp $
+	;jmp $
 	iret
 %endmacro
 
@@ -131,7 +131,7 @@ ISR_CODED 10
 ISR_CODED 11
 ISR_CODED 12
 ISR_CODED 13
-ISR_CODED 14
+;ISR_CODED 14
 ISR 15
 ISR 16
 ISR 17
@@ -140,13 +140,36 @@ ISR 19
 
 
 ;;
+;; Rutina de atencion del PF
+;;
+global _isr14
+
+_isr14:
+	xchg bx, bx
+	;#PF
+	add esp, 4
+	
+	call get_actual
+	
+	str eax
+	shr eax, 3
+	sub eax, 10
+	push eax
+	call sched_remover_tarea
+	add esp, 4
+	imprimir_texto_mp	error14, error14_len, 0xF, 0, 0
+	mov dword[TAREA_QUANTUM], 0
+	jmp $
+	iret
+
+;;
 ;; Rutina de atención del RELOJ
 ;; 32
 _isr32:
 	cli
 	pushad
 	call juego_finalizo
-	xchg bx, bx
+	;xchg bx, bx
 	cmp eax, 1
 	je .finalizo
 	
@@ -167,7 +190,7 @@ _isr32:
 	.siguienteTarea:
 	add dword[TAREA_QUANTUM], 2
 	call sched_proximo_indice
-	xchg bx, bx
+	;xchg bx, bx
 	mov [selector], ax
 	jmp far [offset]
 

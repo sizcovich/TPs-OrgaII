@@ -136,13 +136,13 @@ limpiarPantalla:
 	; inicializar tarea idle
 	; inicializar todas las tsss
 	call tss_inicializar
-	xchg bx, bx
+	;xchg bx, bx
 	; inicializar entradas de la gdt de tss
 	call inicializar_gdt_tss
-	xchg bx,bx
+	;xchg bx,bx
 	; inicializar el scheduler
 	call sched_inicializar
-	xchg bx,bx
+	;xchg bx,bx
 	; inicializar la IDT
 	call idt_inicializar
 
