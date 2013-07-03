@@ -54,7 +54,35 @@ _isr%1:
 	push eax
 	call sched_remover_tarea
 	add esp, 4
-	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
+	call get_actual
+	cmp eax, 0
+	jne .tarea2
+	imprimir_texto_mp	error%1, error%1_len, 0x0F, 19, 4
+	jmp .fin
+	
+	.tarea2:
+	cmp eax, 0
+	jne .tarea3
+	imprimir_texto_mp	error%1, error%1_len, 0x0F, 20, 4
+	jmp .fin
+	
+	.tarea3:
+	cmp eax, 0
+	jne .tarea4
+	imprimir_texto_mp	error%1, error%1_len, 0x0F, 21, 4
+	jmp .fin
+	
+	.tarea4:
+	cmp eax, 0
+	jne .arbitro
+	imprimir_texto_mp	error%1, error%1_len, 0x0F, 22, 4
+	jmp .fin
+	
+	.arbitro:
+	imprimir_texto_mp	error%1, error%1_len, 0x0F, 23, 4
+	jmp .fin
+	
+	.fin:
 	mov dword[TAREA_QUANTUM], 0
 	iret
 %endmacro
@@ -71,7 +99,35 @@ _isr%1:
 	push eax
 	call sched_remover_tarea
 	add esp, 4
-	imprimir_texto_mp	error%1, error%1_len, 0xF, 0, 0
+	call get_actual
+	cmp eax, 0
+	jne .tarea2
+	imprimir_texto_mp	error%1, error%1_len, 0x0F, 19, 4
+	jmp .fin
+	
+	.tarea2:
+	cmp eax, 0
+	jne .tarea3
+	imprimir_texto_mp	error%1, error%1_len, 0x0F, 20, 4
+	jmp .fin
+	
+	.tarea3:
+	cmp eax, 0
+	jne .tarea4
+	imprimir_texto_mp	error%1, error%1_len, 0x0F, 21, 4
+	jmp .fin
+	
+	.tarea4:
+	cmp eax, 0
+	jne .arbitro
+	imprimir_texto_mp	error%1, error%1_len, 0x0F, 22, 4
+	jmp .fin
+	
+	.arbitro:
+	imprimir_texto_mp	error%1, error%1_len, 0x0F, 23, 4
+	jmp .fin
+	
+	.fin:
 	mov dword[TAREA_QUANTUM], 0
 	iret
 %endmacro
@@ -158,8 +214,37 @@ _isr14:
 	push eax
 	call sched_remover_tarea
 	add esp, 4
-	imprimir_texto_mp	error14, error14_len, 0xF, 0, 0
+	call get_actual
+	cmp eax, 0
+	jne .tarea2
+	imprimir_texto_mp	error14, error14_len, 0x0F, 19, 4
+	jmp .borrar
+	
+	.tarea2:
+	cmp eax, 0
+	jne .tarea3
+	imprimir_texto_mp	error14, error14_len, 0x0F, 20, 4
+	jmp .borrar
+	
+	.tarea3:
+	cmp eax, 0
+	jne .tarea4
+	imprimir_texto_mp	error14, error14_len, 0x0F, 21, 4
+	jmp .borrar
+	
+	.tarea4:
+	cmp eax, 0
+	jne .arbitro
+	imprimir_texto_mp	error14, error14_len, 0x0F, 22, 4
+	jmp .borrar
+	
+	.arbitro:
+	imprimir_texto_mp	error14, error14_len, 0x0F, 23, 4
+	jmp .borrar
+	
+	.borrar:
 	mov dword[TAREA_QUANTUM], 0
+	
 .fin:	
 	iret
 
