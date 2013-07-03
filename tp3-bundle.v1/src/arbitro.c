@@ -11,11 +11,12 @@
 #include "i386.h"
 
 char init = 0;
+int puntJugadores[4] = {0,0,0,0};
 
 void print(const char* str, unsigned int fil, unsigned int col, unsigned short attr);
 
 void imprimir_tablero(unsigned char * tablero);
-void imprimir_puntaje();//int * puntajes
+void imprimir_puntaje(int * puntajes);
 void imprimir_ganador(int * puntajes);
 int  juego_terminado(unsigned char * tablero);
 void actualizar_pantalla(unsigned char * tablero, int * puntajes);
@@ -31,18 +32,41 @@ void task() {
 	breakpoint();
 	syscall_iniciar();
 
+	calcular_puntajes((unsigned char *)TABLERO_ADDR, puntJugadores);
 	screen_pintar_pantalla();
 	imprimir_tablero((unsigned char *)TABLERO_ADDR);
-	imprimir_puntaje();
+	imprimir_puntaje(puntJugadores);
 
 	while(1) { }
 }
 
 void calcular_puntajes(unsigned char * tablero, int * puntajes) {
-	
+	int i, j;
+	int celda = 0;
+	for (i = 0; i < 16; ++i) {
+		for (j = 0; j < 40; ++j) {
+			celda = tablero[j + i*40];
+			switch (celda) {
+				case 1:
+					++puntajes[0];
+					break;
+				case 2:
+					++puntajes[1];
+					break;
+				case 3:
+					++puntajes[2];
+					break;
+				case 4:
+					++puntajes[3];
+					break;
+			}
+		}
+	}
 }
 
 void actualizar_pantalla(unsigned char * tablero, int * puntajes) {	
+	imprimir_tablero(tablero);
+	imprimir_puntaje(puntajes);
 }
 
 int juego_terminado(unsigned char * tablero) {
@@ -52,7 +76,7 @@ int juego_terminado(unsigned char * tablero) {
 void imprimir_ganador(int * puntajes) {
 }
 
-void imprimir_puntaje() { //int * puntajes
+void imprimir_puntaje(int * puntajes) {
 	unsigned char msgPuntaje[7] = "Puntaje";
 	imprimir(msgPuntaje, 7, C_BG_BROWN + C_FG_WHITE, 2, 46);
 }
