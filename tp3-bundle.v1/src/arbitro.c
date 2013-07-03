@@ -29,6 +29,8 @@ void imprimir_fondo(unsigned char, unsigned short, unsigned short);
 void task() {
 	/* Task 5 : Tarea arbitro */
 	breakpoint();
+	syscall_iniciar();
+
 	screen_pintar_pantalla();
 	imprimir_tablero((unsigned char *)TABLERO_ADDR);
 	imprimir_puntaje();
@@ -57,9 +59,29 @@ void imprimir_puntaje() { //int * puntajes
 
 void imprimir_tablero(unsigned char * tablero) {
 	int i, j;
+	int celda = 0;
+	unsigned short color = 0;
 	for (i = 0; i < 16; ++i) {
 		for (j = 0; j < 40; ++j) {
-			imprimir_fondo(C_FG_BLACK + C_FG_WHITE, i+2, j+2);
+			celda = tablero[j + i*40];
+			switch (celda) {
+				case 1:
+					color = C_BG_RED + C_FG_WHITE;
+					break;
+				case 2:
+					color = C_BG_CYAN + C_FG_WHITE;
+					break;
+				case 3:
+					color = C_BG_GREEN + C_FG_WHITE;
+					break;
+				case 4:
+					color = C_BG_BLUE + C_FG_WHITE;
+					break;
+				default:
+					color = C_BG_BLACK + C_FG_WHITE;
+					break;
+			}
+			imprimir_fondo(color, i+2, j+2);
 		}
 	}
 }

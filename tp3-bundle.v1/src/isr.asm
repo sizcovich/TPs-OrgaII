@@ -61,19 +61,19 @@ _isr%1:
 	jmp .fin
 	
 	.tarea2:
-	cmp eax, 0
+	cmp eax, 1
 	jne .tarea3
 	imprimir_texto_mp	error%1, error%1_len, 0x0F, 20, 4
 	jmp .fin
 	
 	.tarea3:
-	cmp eax, 0
+	cmp eax, 2
 	jne .tarea4
 	imprimir_texto_mp	error%1, error%1_len, 0x0F, 21, 4
 	jmp .fin
 	
 	.tarea4:
-	cmp eax, 0
+	cmp eax, 3
 	jne .arbitro
 	imprimir_texto_mp	error%1, error%1_len, 0x0F, 22, 4
 	jmp .fin
@@ -106,19 +106,19 @@ _isr%1:
 	jmp .fin
 	
 	.tarea2:
-	cmp eax, 0
+	cmp eax, 1
 	jne .tarea3
 	imprimir_texto_mp	error%1, error%1_len, 0x0F, 20, 4
 	jmp .fin
 	
 	.tarea3:
-	cmp eax, 0
+	cmp eax, 2
 	jne .tarea4
 	imprimir_texto_mp	error%1, error%1_len, 0x0F, 21, 4
 	jmp .fin
 	
 	.tarea4:
-	cmp eax, 0
+	cmp eax, 3
 	jne .arbitro
 	imprimir_texto_mp	error%1, error%1_len, 0x0F, 22, 4
 	jmp .fin
@@ -280,14 +280,13 @@ _isr32:
 	je .arbitro
 	
 	call sched_proximo_indice
-	xchg bx, bx
 	mov [selector], ax
+	xchg bx, bx
 	jmp far [offset]
 	jmp .fin
 	
 .arbitro:
 	mov word[selector], 0x70
-	xchg bx, bx
 	jmp far [offset]
 
 	.fin:
@@ -378,9 +377,9 @@ _isr144: ;Int 0x90
 	cli
 	pushad
 	
-	cmp eax, 300	;iniciar
+	cmp eax, 200	;iniciar
 	je .iniciar
-	cmp eax, 200	;terminar
+	cmp eax, 300	;terminar
 	je .terminar
 	mov eax, 0
 	jmp .fin
