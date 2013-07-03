@@ -111,7 +111,7 @@ NOTA:
 #define TASK_2_PAGE_TABLE		0x00036000 /* direccion fisica para la tabla de paginas de la tarea 2 */
 #define TASK_3_PAGE_TABLE		0x00037000 /* direccion fisica para la tabla de paginas de la tarea 3 */
 #define TASK_4_PAGE_TABLE		0x00038000 /* direccion fisica para la tabla de paginas de la tarea 4 */
-#define TASK_5_PAGE_TABLE		0x00049000 /* direccion fisica para la tabla de paginas de la tarea 5 */
+#define TASK_5_PAGE_TABLE		0x00039000 /* direccion fisica para la tabla de paginas de la tarea 5 */
 
 
 /* BOOL */
