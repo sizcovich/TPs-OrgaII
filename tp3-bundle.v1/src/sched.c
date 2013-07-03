@@ -18,7 +18,7 @@ void sched_inicializar() {
 	tareas[2] = 0x60;
 	tareas[3] = 0x68;
 	tareas[4] = 0x70;
-	indice_actual = 3;
+	indice_actual = 4;
 }
 
 unsigned short sched_proximo_indice() {
@@ -27,10 +27,16 @@ unsigned short sched_proximo_indice() {
 	}
 	else{
 		unsigned int indice = (indice_actual + 1) % 4;
-	//breakpoint();
-		while (tareas[indice] == 0x0) {
+		unsigned int j = 0;
+		while (tareas[indice] == 0x0 && j < 4) {
 			indice = ((indice + 1) % 4);
+			++j;
 		}
+		if (j >= 4) {
+			indice_actual = 4;
+			return 5;
+		}
+		indice_actual = indice;
 		return tareas[indice];
 	}
 }
