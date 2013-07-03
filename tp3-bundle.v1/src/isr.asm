@@ -170,7 +170,7 @@ _isr32:
 	cli
 	pushad
 	call juego_finalizo
-	xchg bx, bx
+	;xchg bx, bx
 	cmp eax, 1
 	je .finalizo
 	
@@ -195,7 +195,7 @@ _isr32:
 	je .arbitro
 	
 	call sched_proximo_indice
-	;xchg bx, bx
+	xchg bx, bx
 	mov [selector], ax
 	jmp far [offset]
 	jmp .fin

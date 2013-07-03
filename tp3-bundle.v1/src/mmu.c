@@ -188,7 +188,7 @@ void mmu_inicializar_tarea_arbitro() {
 	mmu_mapear_pagina(0x3A0000, TASK_5_PAGE_DIR, TASK_5_CODE_PA, 0x001);
 	mmu_mapear_pagina(0x3B0000, TASK_5_PAGE_DIR, TASK_5_STACK_PA, 0x003);
 	mmu_mapear_pagina(VIDEO_ADDR, TASK_5_PAGE_DIR, VIDEO_ADDR, 0x003);  //esto no estaba
-	mmu_mapear_pagina(0x3C0000, TASK_5_PAGE_DIR, TABLERO_ADDR_PA, 0x001); //esto tenia un 3 y le puse un 1
+	mmu_mapear_pagina(0x3C0000, TASK_5_PAGE_DIR, TABLERO_ADDR_PA, 0x003);
 }
 
 int obtener(unsigned int virtual, unsigned int tarea){ //se fija la primera pagina libre del arreglo y la mapea para el proceso que la pidio
