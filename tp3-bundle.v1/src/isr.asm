@@ -315,11 +315,13 @@ _isr33:
 	cmp al, 0x99 ;ver si se pulso p
 	je .P
 	
+	xchg bx, bx
 	cmp al, 0x93 ;ver si se pulso r
 	je .R
 	jmp .fin
 	
 	.R:
+	xchg bx, bx
 	mov byte[pausa], 0
 	jmp .fin
 	
