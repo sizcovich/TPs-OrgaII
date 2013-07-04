@@ -27,58 +27,107 @@ void imprimir(unsigned char *, unsigned int, unsigned char, unsigned short, unsi
 void imprimir_char(unsigned char, unsigned char, unsigned short, unsigned short);
 void imprimir_fondo(unsigned char, unsigned short, unsigned short);
 
+void int2str(int, int, int);
+int length(int);
+
 void task() {
 	/* Task 5 : Tarea arbitro */
 	breakpoint();
 	syscall_iniciar();
 
-	calcular_puntajes((unsigned char *)TABLERO_ADDR, puntJugadores);
 	screen_pintar_pantalla();
+	calcular_puntajes((unsigned char *)TABLERO_ADDR, puntJugadores);
 	imprimir_tablero((unsigned char *)TABLERO_ADDR);
 	imprimir_puntaje(puntJugadores);
 
-	while(1) { }
+	while(1) {
+		if (juego_terminado((unsigned char *)TABLERO_ADDR) != TRUE) {
+			actualizar_pantalla((unsigned char *)TABLERO_ADDR, puntJugadores);
+		} else {
+			syscall_terminar();
+			actualizar_pantalla((unsigned char *)TABLERO_ADDR, puntJugadores);
+			imprimir_ganador(puntJugadores);
+			while(1) { }
+		}
+	}
 }
 
 void calcular_puntajes(unsigned char * tablero, int * puntajes) {
 	int i, j;
 	int celda = 0;
+	int puntos[4] = {0,0,0,0};
 	for (i = 0; i < 16; ++i) {
 		for (j = 0; j < 40; ++j) {
 			celda = tablero[j + i*40];
 			switch (celda) {
-				case 1:
-					++puntajes[0];
+				case JUG_1:
+					++puntos[0];
 					break;
-				case 2:
-					++puntajes[1];
+				case JUG_2:
+					++puntos[1];
 					break;
-				case 3:
-					++puntajes[2];
+				case JUG_3:
+					++puntos[2];
 					break;
-				case 4:
-					++puntajes[3];
+				case JUG_4:
+					++puntos[3];
 					break;
 			}
 		}
 	}
+	puntJugadores[0] = puntos[0];
+	puntJugadores[1] = puntos[1];
+	puntJugadores[2] = puntos[2];
+	puntJugadores[3] = puntos[3];
 }
 
-void actualizar_pantalla(unsigned char * tablero, int * puntajes) {	
+void actualizar_pantalla(unsigned char * tablero, int * puntajes) {
+	calcular_puntajes(tablero, puntajes);	
 	imprimir_tablero(tablero);
 	imprimir_puntaje(puntajes);
 }
 
 int juego_terminado(unsigned char * tablero) {
-	return FALSE;
+	int i, j;
+	int termino = TRUE;
+	for (i = 0; i < 16; ++i) {
+		for (j = 0; j < 40; ++j) {
+			if (tablero[j + i*40] == 0xff) {
+				termino = FALSE;
+			}
+		}
+	}
+	return termino;
 }
 
 void imprimir_ganador(int * puntajes) {
+	unsigned char outStr[8] = "Ganador!";
+	
+	int ganador = 0;
+	if (puntajes[ganador] <= puntajes[0]) {
+		ganador = 0;
+	}
+	if (puntajes[ganador] <= puntajes[1]) {
+		ganador = 1;
+	}
+	if (puntajes[ganador] <= puntajes[2]) {
+		ganador = 2;
+	}
+	if (puntajes[ganador] <= puntajes[3]) {
+		ganador = 3;
+	}
+	imprimir(outStr, 8, (C_BLINK + C_BG_RED + C_FG_WHITE - ganador*0x10), (4 + ganador), 57);
 }
 
 void imprimir_puntaje(int * puntajes) {
 	unsigned char msgPuntaje[7] = "Puntaje";
 	imprimir(msgPuntaje, 7, C_BG_BROWN + C_FG_WHITE, 2, 46);
+	
+	int i, size;
+	for (i = 0; i < 4; ++i) {
+		size = length(puntJugadores[i]);
+		int2str(puntJugadores[i], size, i);
+	}
 }
 
 void imprimir_tablero(unsigned char * tablero) {
@@ -157,4 +206,70 @@ void imprimir_char(unsigned char msg, unsigned char colores, unsigned short fila
 
 void imprimir_fondo(unsigned char colores, unsigned short fila, unsigned short columna) {
 	imprimir_char(0x0, colores, fila, columna);
+}
+
+int length(int num) {
+	int count = 0;
+	while (num > 0) {
+		++count;
+		num /= 10;
+	}
+	return count;
+}
+
+void int2str(int inInt, int size, int jugador) {
+	unsigned char outStr[size];
+	int i, val;
+	char elChar;
+	if (size == 0) {
+		imprimir_char('0', (C_BG_RED + C_FG_WHITE - jugador*0x10), (4 + jugador), 47);
+	} else {
+		for (i = size-1; i >= 0; --i) {
+			val = inInt % 10;
+			switch (val) {
+				case 0:
+				elChar = '0';
+				break;
+				
+				case 1:
+				elChar = '1';
+				break;
+				
+				case 2:
+				elChar = '2';
+				break;
+				
+				case 3:
+				elChar = '3';
+				break;
+				
+				case 4:
+				elChar = '4';
+				break;
+				
+				case 5:
+				elChar = '5';
+				break;
+				
+				case 6:
+				elChar = '6';
+				break;
+				
+				case 7:
+				elChar = '7';
+				break;
+				
+				case 8:
+				elChar = '8';
+				break;
+				
+				case 9:
+				elChar = '9';
+				break;
+			}
+			outStr[i] = elChar;
+			inInt /= 10;
+		}
+		imprimir(outStr, size, (C_BG_RED + C_FG_WHITE - jugador*0x10), (4 + jugador), 47);
+	}
 }

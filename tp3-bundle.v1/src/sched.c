@@ -48,3 +48,7 @@ void sched_remover_tarea(unsigned int process_id) {
 char get_actual() {
 	return indice_actual;
 }
+
+void avanzar_tarea() {
+	indice_actual = sched_proximo_indice();
+}

@@ -20,5 +20,6 @@ void sched_inicializar();
 unsigned short sched_proximo_indice();
 void sched_remover_tarea(unsigned int process_id);
 char get_actual();
+void avanzar_tarea();
 
 #endif	/* !__SCHED_H__ */

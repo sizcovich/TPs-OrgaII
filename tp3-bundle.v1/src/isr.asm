@@ -259,6 +259,9 @@ _isr32:
 	cmp eax, 1
 	je .finalizo
 	
+	cmp byte [pausa], 1
+	je .pausado
+	
 	call fin_intr_pic1
 	call proximo_reloj
 	
@@ -269,25 +272,33 @@ _isr32:
 	jmp .fin
 	
 	.finalizo:
-	mov word[selector], 0x48
-	jmp far [offset]
-	jmp .fin
+		mov word[selector], 0x48
+		jmp far [offset]
+		jmp .fin
 	
 	.siguienteTarea:
-	add dword[TAREA_QUANTUM], 2
-	call juego_iniciado
-	cmp eax, 0
-	je .arbitro
-	
-	call sched_proximo_indice
-	mov [selector], ax
-	xchg bx, bx
-	jmp far [offset]
-	jmp .fin
-	
-.arbitro:
-	mov word[selector], 0x70
-	jmp far [offset]
+		add dword[TAREA_QUANTUM], 2
+		call juego_iniciado
+		cmp eax, 0
+		je .arbitro
+
+		call sched_proximo_indice
+		mov [selector], ax
+		jmp far [offset]
+		jmp .fin
+
+	.pausado:
+		str eax
+		cmp ax, 0x48
+		je .fin
+		
+		mov word [selector], 0x48
+		jmp far [offset]
+		jmp .fin
+
+	.arbitro:
+		mov word[selector], 0x70
+		jmp far [offset]
 
 	.fin:
 	popad
@@ -326,7 +337,6 @@ _isr33:
 ;; Rutinas de atención de las SYSCALLS
 ;;
 _isr128:	;Interrupcion 0x80
-	;xchg bx, bx
 	cli
 	pushad
 		
@@ -341,6 +351,7 @@ _isr128:	;Interrupcion 0x80
 	push ecx
 	push ebx
 	call get_actual
+	inc eax
 	push eax
 	call game_duplicar
 	add esp, 12
@@ -354,6 +365,7 @@ _isr128:	;Interrupcion 0x80
 	push ecx
 	push ebx
 	call get_actual
+	inc eax
 	push eax
 	call game_migrar
 	add esp, 20
@@ -373,7 +385,6 @@ _isr128:	;Interrupcion 0x80
 
 	
 _isr144: ;Int 0x90
-	xchg bx, bx
 	cli
 	pushad
 	

@@ -133,34 +133,21 @@ limpiarPantalla:
 		add eax, 4
 		add ebx, 4
 		loop .copiarTarea
+		
 	; inicializar tarea idle
 	; inicializar todas las tsss
 	call tss_inicializar
-	;xchg bx, bx
+	
 	; inicializar entradas de la gdt de tss
 	call inicializar_gdt_tss
-	;xchg bx,bx
+	
 	; inicializar el scheduler
 	call sched_inicializar
-	;xchg bx,bx
+	
 	; inicializar la IDT
 	call idt_inicializar
 
 	lidt [IDT_DESC]
-	
-	mov eax, 0x00030000
-	mov cr3, eax
-	;imprimir_texto_mp nombre_grupo_msg, nombre_grupo_len, 0x57, 0, 0
-	mov eax, 0x00021000
-	mov cr3, eax
-	
-	;xchg bx, bx
-
-;para probar la interrupcion
-	;xor edx, edx
-	;xor eax, eax
-	;xor ecx, ecx
-	;div ecx
 
 	; configurar controlador de interrupciones
 	call deshabilitar_pic
@@ -178,27 +165,5 @@ limpiarPantalla:
 
 	; Ciclar infinitamente (por si algo sale mal)
 	jmp $
-
-;imprimir_fondo:
-;	mov eax, [ebp-12]
-;	mov [COLORES], ax
-;	mov eax, [ebp-8]
-;	mov [FILA], ax
-;	mov eax, [ebp-4]
-;	mov [COLUMNA], ax
-;	imprimir_texto_mp NULL_CHAR 1 [COLORES] [FILA] [COLUMNA]
-;	ret
-;
-;imprimir_char:
-;	mov eax, [ebp-16]
-;	mov [WRITECHAR], eax
-;	mov eax, [ebp-12]
-;	mov [COLORES], eax
-;	mov eax, [ebp-8]
-;	mov [FILA], eax
-;	mov eax, [ebp-4]
-;	mov [COLUMNA], eax
-;	imprimir_texto_mp WRITECHAR 1 [COLORES] [FILA] [COLUMNA]
-;	ret
 
 %include "a20.asm"
