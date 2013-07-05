@@ -26,8 +26,7 @@ void sched_inicializar() {
 
 unsigned short sched_proximo_indice() {
 	if(rtr() != (GDT_TSS_ARBITRO<<3)){
-		breakpoint();
-		return (GDT_TSS_ARBITRO<<3);
+		return 0x70;
 	}
 	else{
 		unsigned int indice = (indice_actual + 1) % 4;
@@ -38,7 +37,7 @@ unsigned short sched_proximo_indice() {
 		}
 		if (j >= 4) {
 			indice_actual = 4;
-			return 5;
+			return 0x70;
 		}
 		indice_actual = indice;
 		return tareas[indice];
@@ -50,11 +49,29 @@ void sched_remover_tarea(unsigned int process_id) {
 }
 
 char get_actual() {
-	return indice_actual;
-}
-
-void avanzar_tarea() {
-	indice_actual = sched_proximo_indice();
+	unsigned short segSel = rtr();
+	char res;
+	switch (segSel) {
+		case 0x50:
+			res = 0;
+			break;
+		case 0x58:
+			res = 1;
+			break;
+		case 0x60:
+			res = 2;
+			break;
+		case 0x68:
+			res = 3;
+			break;
+		case 0x70:
+			res = 4;
+			break;
+		default:
+			res = 5;
+			break;
+	}
+	return res;
 }
 
 void reloj_tarea() {
@@ -64,24 +81,27 @@ void reloj_tarea() {
 	
 	switch (actual) {
 		case 0:
-			video[19*80] = reloj[relojes[actual]];
-			relojes[actual] = (++relojes[actual]) % 4;
+			video[19*80] = reloj[relojes[actual]] + 0x0F00;
+			++relojes[actual];
 			break;
 		case 1:
-			video[20*80] = reloj[relojes[actual]];
-			relojes[actual] = (++relojes[actual]) % 4;
+			video[20*80] = reloj[relojes[actual]] + 0x0F00;
+			++relojes[actual];
 			break;
 		case 2:
-			video[21*80] = reloj[relojes[actual]];
-			relojes[actual] = (++relojes[actual]) % 4;
+			video[21*80] = reloj[relojes[actual]] + 0x0F00;
+			++relojes[actual];
 			break;
 		case 3:
-			video[22*80] = reloj[relojes[actual]];
-			relojes[actual] = (++relojes[actual]) % 4;
+			video[22*80] = reloj[relojes[actual]] + 0x0F00;
+			++relojes[actual];
 			break;
 		case 4:
-			video[23*80] = reloj[relojes[actual]];
-			relojes[actual] = (++relojes[actual]) % 4;
+			video[23*80] = reloj[relojes[actual]] + 0x0F00;
+			++relojes[actual];
 			break;
+	}
+	if (relojes[actual] == 4) {
+		relojes[actual] = 0;
 	}
 }

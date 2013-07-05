@@ -55,30 +55,30 @@ void task() {
 void calcular_puntajes(unsigned char * tablero, int * puntajes) {
 	int i, j;
 	int celda = 0;
-	int puntos[4] = {0,0,0,0};
+	puntJugadores[0] = 0;
+	puntJugadores[1] = 0;
+	puntJugadores[2] = 0;
+	puntJugadores[3] = 0;
+
 	for (i = 0; i < 16; ++i) {
 		for (j = 0; j < 40; ++j) {
 			celda = tablero[j + i*40];
 			switch (celda) {
 				case JUG_1:
-					++puntos[0];
+					++puntJugadores[0];
 					break;
 				case JUG_2:
-					++puntos[1];
+					++puntJugadores[1];
 					break;
 				case JUG_3:
-					++puntos[2];
+					++puntJugadores[2];
 					break;
 				case JUG_4:
-					++puntos[3];
+					++puntJugadores[3];
 					break;
 			}
 		}
 	}
-	puntJugadores[0] = puntos[0];
-	puntJugadores[1] = puntos[1];
-	puntJugadores[2] = puntos[2];
-	puntJugadores[3] = puntos[3];
 }
 
 void actualizar_pantalla(unsigned char * tablero, int * puntajes) {
@@ -94,6 +94,7 @@ int juego_terminado(unsigned char * tablero) {
 		for (j = 0; j < 40; ++j) {
 			if (tablero[j + i*40] == 0xff) {
 				termino = FALSE;
+				break;
 			}
 		}
 	}
