@@ -272,6 +272,10 @@ _isr32:
 	jmp .fin
 	
 	.finalizo:
+		str eax
+		cmp ax, 0x48
+		je .fin
+
 		mov word[selector], 0x48
 		jmp far [offset]
 		jmp .fin
