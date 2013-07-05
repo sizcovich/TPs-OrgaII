@@ -26,6 +26,7 @@ extern sched_remover_tarea
 extern get_actual
 extern obtener
 extern reloj_tarea
+extern avanzar_tarea
 
 ;;
 ;;JUEGO
@@ -48,7 +49,6 @@ error%1_len equ $ - error%1
 global _isr%1
 
 _isr%1:
-	;xchg bx, bx
 	str eax
 	shr eax, 3
 	sub eax, 10
@@ -92,7 +92,6 @@ _isr%1:
 global _isr%1
 
 _isr%1:
-	;xchg bx, bx
 	add esp, 4
 	str eax
 	shr eax, 3
@@ -195,7 +194,6 @@ ISR 19
 global _isr14
 
 _isr14:
-	;xchg bx, bx
 	;#PF
 	add esp, 4 ;descarto el error code
 	call get_actual
@@ -258,7 +256,6 @@ _isr32:
 	call fin_intr_pic1
 	
 	call juego_finalizo
-	;xchg bx, bx
 	cmp eax, 1
 	je .finalizo
 	
@@ -311,7 +308,6 @@ _isr32:
 ;; Rutina de atención del TECLADO
 ;; 33
 _isr33:
-xchg bx, bx
 	cli
 	pushad
 	call fin_intr_pic1
@@ -324,7 +320,6 @@ xchg bx, bx
 	jmp .fin
 	
 	.R:
-	xchg bx, bx
 	mov byte[pausa], 0
 	jmp .fin
 	
@@ -360,9 +355,10 @@ _isr128:	;Interrupcion 0x80
 	push eax
 	call game_duplicar
 	add esp, 12
-	cmp eax, 0 ;pregunto si salio bien
-	je .fin
 	jmp .llamoArbitro
+	;cmp eax, 0 ;pregunto si salio bien
+	;je .fin
+	;jmp .llamoArbitro
 	
 	.migrar:
 	push esi
@@ -374,10 +370,12 @@ _isr128:	;Interrupcion 0x80
 	push eax
 	call game_migrar
 	add esp, 20
-	cmp eax, 0
-	je .fin
+	;cmp eax, 0
+	;je .fin
 
 .llamoArbitro:
+	call reloj_tarea
+	mov dword[TAREA_QUANTUM], 2
 	mov word[selector], 0x70
 	jmp far [offset]
 	
