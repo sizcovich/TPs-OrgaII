@@ -25,6 +25,7 @@ extern sched_proximo_indice
 extern sched_remover_tarea
 extern get_actual
 extern obtener
+extern reloj_tarea
 
 ;;
 ;;JUEGO
@@ -254,6 +255,8 @@ _isr14:
 _isr32:
 	cli
 	pushad
+	call fin_intr_pic1
+	
 	call juego_finalizo
 	;xchg bx, bx
 	cmp eax, 1
@@ -261,9 +264,9 @@ _isr32:
 	
 	cmp byte [pausa], 1
 	je .pausado
-	
-	call fin_intr_pic1
+
 	call proximo_reloj
+	call reloj_tarea
 	
 	cmp dword[TAREA_QUANTUM], 0
 	je .siguienteTarea
@@ -308,6 +311,7 @@ _isr32:
 ;; Rutina de atención del TECLADO
 ;; 33
 _isr33:
+xchg bx, bx
 	cli
 	pushad
 	call fin_intr_pic1
@@ -315,7 +319,6 @@ _isr33:
 	cmp al, 0x99 ;ver si se pulso p
 	je .P
 	
-	xchg bx, bx
 	cmp al, 0x93 ;ver si se pulso r
 	je .R
 	jmp .fin
