@@ -32,7 +32,6 @@ int length(int);
 
 void task() {
 	/* Task 5 : Tarea arbitro */
-	breakpoint();
 	syscall_iniciar();
 
 	screen_pintar_pantalla();
