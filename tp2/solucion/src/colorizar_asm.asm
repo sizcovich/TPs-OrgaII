@@ -1,502 +1,416 @@
 ; void colorizar_asm (
-;       unsigned char *src,
-;       unsigned char *dst,
-;       int h,
-;       int w,
-;       int src_row_size,
-;       int dst_row_size,
+; 	unsigned char *src,
+; 	unsigned char *dst,
+; 	int m,
+; 	int n,
+; 	int src_row_size,
+; 	int dst_row_size,
 ;   float alpha
 ; );
- 
+
 ; Parámetros:
-;       rdi = src
-;       rsi = dst
-;       rdx = h
-;       rcx = w
-;       r8 = src_row_size
-;       r9 = dst_row_size
+; 	rdi = src
+; 	rsi = dst
+; 	rdx = m //altura
+; 	rcx = n //fila
+; 	r8 = src_row_size
+; 	r9 = dst_row_size
 ;   xmm0 = alpha
-extern colorizar_c
- 
+
+%define cant_de_datos 9
+
 global colorizar_asm
- 
-section .rodata
-mascaraCambios: dq 0xFFFFFFFFFF000000, 0x00000000FFFFFFFF
-mascaraCanales: dq 0xFF0000FF00000000, 0x0000000000FF0000
-casoBorde: dw 0xFFFF, 0xFFFF, 0x0000, 0x0000, 0x0000, 0x0000, 0xFF00, 0xFFFF
-inversor: dw 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF
+
+section .rodata:
+align 16
+;Para invertir las mascaras
+negador: dw 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF
+;1415	1213	1011	89	67	45	23	01
+datos_que_me_interesan: dw 0x0000, 0x00FF, 0xFF00, 0x0000, 0x00FF, 0x0000, 0x0000, 0x0000
+;Lo uso para acomodar r3, g3, b3
+datos_que_me_interesan2: dw 0x00FF, 0x00FF, 0x0000, 0x00FF, 0x0000, 0x0000, 0x0000, 0x0000
+;lo uso para quitar el segundo float en q
+datos_que_me_interesan3: dw 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0x0000
+
+rearmo_fila_r: dw 0xFFFF, 0xFFFF, 0x00FF, 0xFFFF, 0xFF01, 0x02FF, 0xFFFF, 0xFFFF
+;10     32       54      76      98    1110    1312    1514
+rearmo_fila_g: dw 0xFFFF, 0xFFFF, 0xFF00, 0x01FF, 0xFFFF, 0xFF02, 0xFFFF, 0xFFFF
+;10     32       54      76      98    1110    1312    1514
+rearmo_fila_b: dw 0xFFFF, 0x00FF, 0xFFFF, 0xFF01, 0x02FF, 0xFFFF, 0xFFFF, 0xFFFF
+
+limpio_el_medio_y_comienzo: dw 0xFFFF, 0x00FF, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000
+
+limpio_el_medio_y_fin: dw 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0xFFFF, 0xFFFF
+
+acomodo_r: dw 0xFF06, 0xFFFF, 0xFF09, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF0C, 0xFFFF
+			   ;1415	1213	1011	  89	  67	  45	 23	     01
+acomodo_g: dw 0xFF05, 0xFFFF, 0xFF08, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF0B, 0xFFFF
+
+acomodo_b: dw 0xFF04, 0xFFFF, 0xFF07, 0xFFFF, 0xFFFF, 0xFFFF, 0xFF0A, 0xFFFF
+;10     32       54      76      98    1110    1312    1514
+acomodo_r_g_b: dw 0xFF02, 0xFFFF, 0xFF05, 0xFFFF, 0xFF08, 0xFFFF, 0xFFFF, 0xFFFF
+
+mascara_caso_borde: dw 0xFFFF, 0xFFFF, 0x0000, 0x0000, 0x0000, 0x0000, 0xFF00, 0xFFFF
+
 section .text
- 
+
 colorizar_asm:
-.setup:
-push rbp
-mov rbp, rsp
-push r15
-push r14
-push r13
-push r12
-push rbx
-sub rsp, 8
- 
-imul ecx, 3     ;Ahora el ancho esta en bytes y no en pixels
-;El row_size ya viene en bytes
-sub rdx, 2      ;Me voy a detener en altura menos 2
-mov rbx, r8
-sub rbx, rcx ;tengo la basura
-mov r15, 1
-sub rcx, 16
-movd xmm15, r15d
-pshufd xmm15, xmm15, 0
-cvtdq2ps xmm15, xmm15   ;Cargo 1.0, 1.0, 1.0, 1.0 para el phi
- 
-movdqu xmm13, [mascaraCambios]
-movdqu xmm12, [mascaraCanales]
- 
-xor r15, r15    ;Preparo R15 para usarlo de indice
-xor r14, r14    ;Indice columna media
-xor r13, r13    ;Indice columna baja
-;voy a ver cuantas iteraciones hacer y setear en 0 si tengo que volver para atras o no
- 
- 
-shufps xmm0, xmm0, 0    ;Copia en las cuatro
-subps xmm15, xmm0       ;1-alpha
-addps xmm0, xmm0        ;alpha*2
+ 	push rbp
+	mov rbp, rsp
+	push rbx
+	push r15
+	push r14
+	push r13
+	push r12
+	add rsp, 8
+		
+	;r12d es puntero a la fuente y r13d puntero al destino y 
+	;los coloco en la segunda fila
+	mov r12, rdi
+	mov r13, rsi
+	add r12, r8
+	add r13, r9
+		
+	;me guardo un -9 para hacer una comparacion
+	xor r10, r10
+	sub r10, 9
+	
+	;r14 me dice en que lugar de la fila estoy
+	imul rcx, 3
+	mov r14, rcx ;rcx = w
+	sub r14, 16
+	
+	;como miro de a 3 filas resta la ultima y la primera
+	sub rdx, 2
+	
+	;todos 0's para desempaquetar
+	pxor xmm8, xmm8
+	
+	;me guardo la mascara del negador para no hacer tantos accesos a memoria
+	movdqu xmm15, [negador]
+	
+	;me guardo la mascara para seleccionar los datos que me interesan 
+	movdqu xmm12, [datos_que_me_interesan]
+	movdqu xmm13, [datos_que_me_interesan2]
+	
+	;coloco a q en todo el xmm0
+	shufps xmm0, xmm0, 0
+	movdqu xmm11, xmm0
+	
+	;en xmm11 tengo 1 + alpha
+	mov ebx, 1
+	movq xmm1, rbx
+	shufps xmm1, xmm1, 0
+	cvtdq2ps xmm1, xmm1
+	addps xmm1, xmm0
+	movdqu xmm11, xmm1
+	;en xmm0 tengo 1 - alpha
+	mov ebx, 1
+	movq xmm1, rbx
+	shufps xmm1, xmm1, 0
+	cvtdq2ps xmm1, xmm1
+	subps xmm1, xmm0
+	movdqu xmm0, xmm1
+	
+	;limpio el 1º float
+	movdqu xmm2, [datos_que_me_interesan3]
+	pand xmm0, xmm2
+	pand xmm11, xmm2
+	
+	;rdi es unflag que cuando esta en 1 estoy procesando el fin de la linea 
+	;cuando me pase
+	xor rdi, rdi
+	
+.bloque:
+	;muevo 16 bytes
+	xor r15, r15
+	sub r15, r8
+	
+.cargo_datos:
+	movdqu xmm1, [r12 + r15] ;xmm1 b6|r5|g5|b5|r4|g4|b4|r3|g3|b3|r2|g2|b2|r1|g1|b1
+	movdqu xmm2, [r12]
+	movdqu xmm3, [r12 + r8]
+	cmp rdi, 0
+	je .proceso_datos
 
-xor r10, r10
- 
-.comienzoFila:
-mov r15, 0
-mov r14d, r8d
-mov r13d, r8d
-add r13, r13
- 
-movdqu xmm2, [rdi+r14]
-movdqu [rsi+r14], xmm2
+.cargo_datos_si_me_pase: ;con este shift lo ue logro es acomodar los datos
+	psrldq xmm1, 1
+	psrldq xmm2, 1
+	psrldq xmm3, 1
+	
+.proceso_datos:
 
-.procesarFila:
-;Levanto un tramo de 3x5 pixels
-;(0 1 2)(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15
-;(0 1 2)(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15
-;(0 1 2)(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15
-;El ultimo byte es descarte
-movdqu xmm1, [rdi+r15]
-movdqu xmm2, [rdi+r14]  ;Me voy a quedar con la fila del medio
-movdqu xmm3, [rdi+r13]
+	;calculo el maximo entre los que estan en la misma columna
+	pmaxub xmm2, xmm1 
+	pmaxub xmm2, xmm3 ;xmm2 b6|r5|g5|b5|r4|g4|b4|r3|g3|b3|r2|g2|b2|r1|g1|b1
+		
+	;calculo el maximo entre los que estan en la misma fila
+	movdqu xmm1, xmm2
+	movdqu xmm3, xmm2
+				   ;xmm2 b6|r5|g5|b5|r4|g4|b4|r3|g3|b3|r2|g2|b2|r1|g1|b1
+	psrldq xmm1, 3 ;xmm1  0| 0| 0|b6|r5|g5|b5|r4|g4|b4|r3|g3|b3|r2|g2|b2
+	psrldq xmm3, 6 ;xmm3  0| 0| 0| 0| 0| 0|b6|r5|g5|b5|r4|g4|b4|r3|g3|b3
+	
+	pmaxub xmm2, xmm1
+	pmaxub xmm2, xmm3 ;xmm2 X|X|X|X|X|X|X|r4|g4|b4|r3|g3|b3|r2|g2|b2
+	
+	;separo los datos segun si son R G o B 
+	movdqu xmm1, xmm2
+	movdqu xmm3, xmm2 ;xmm1 X|X|X|X|X| X| X|r4|g4|b4|r3|g3|b3|r2|g2|b2
+	pslldq xmm2, 1    ;xmm2 X|X|X|X|X| X|r4|g4|b4|r3|g3|b3|r2|g2|b2| 0
+	pslldq xmm3, 2 	  ;xmm3 X|X|X|X|X|r4|g4|b4|r3|g3|b3|r2|g2|b2| 0| 0
+	;me interesan estos datos               ^^       ^^       ^^
+	
+	;limpio los valores que no me interesan
+	pand xmm1, xmm12 ;xmm1 0|0|0|0|0|0|0|r4|0|0|r3|0|0|r2|0|0
+	pand xmm2, xmm12 ;xmm2 0|0|0|0|0|0|0|g4|0|0|g3|0|0|g2|0|0
+	pand xmm3, xmm12 ;xmm3 0|0|0|0|0|0|0|b4|0|0|b3|0|0|b2|0|0
+	
+	;los acomodo para q puedan ser usados como floats
+	movdqu xmm7, [acomodo_r_g_b]
+	pshufb xmm1, xmm7
+	;xmm1 0|0|0|0|0|0|0|r4|0|0|0|r3|0|0|0|r2
+	pshufb xmm2, xmm7
+	;xmm2 0|0|0|0|0|0|0|g4|0|0|0|g3|0|0|0|g2
+	pshufb xmm3, xmm7
+	;xmm3 0|0|0|0|0|0|0|b4|0|0|0|b3|0|0|0|b2
+	
+	;creo las mascaras para φR, φG, φB
+	movdqu xmm4, xmm1
+	movdqu xmm5, xmm2
+	movdqu xmm6, xmm3
+	;φR (i, j) 
+	;si maxR (i, j) ≥ maxG (i, j) y maxR (i, j) ≥ maxB (i, j)
+	pcmpgtd xmm4, xmm5 ;maxR (i, j) > maxG (i, j) para los 3
+	movdqu xmm7, xmm1
+	pcmpeqd xmm7, xmm5 ;maxR (i, j) = maxG (i, j) para los 3
+	por xmm4, xmm7    ;si maxR (i, j) ≥ maxG (i, j)
+	movdqu xmm9, xmm4  ;me lo guardo para usarlo en φG (i, j) 
+	
+	movdqu xmm7, xmm1
+	
+	pcmpgtd xmm7, xmm6 ;maxR (i, j) > maxB (i, j)para los 3
+	movdqu xmm10, xmm1
+	pcmpeqd xmm10, xmm6 ;maxR (i, j) = maxB (i, j) para los 3
+	por xmm7, xmm10   ;si maxR (i, j) ≥ maxB (i, j)
+	movdqu xmm14, xmm7  ;me lo guardo para usarlo en φB (i, j)
+	
+	pand xmm4, xmm7    ;si maxR (i, j) ≥ maxG (i, j) y 
+					   ;maxR (i, j) ≥ maxB (i, j)
+					   
+	;φG (i, j) 
+	;si maxR (i, j) < maxG (i, j) y maxG (i, j) ≥ maxB (i, j)
+	pxor xmm9, xmm15 ;si maxR (i, j) < maxG (i, j) para los 3
+	
+	pcmpgtd xmm5, xmm6 ;maxG (i, j) > maxB (i, j) para los 3
+	movdqu xmm7, xmm2
+	pcmpeqd xmm7, xmm6 ;maxG (i, j) = maxB (i, j) para los 3
+	por xmm5, xmm7    ;maxG (i, j) ≥ maxB (i, j)
+	movdqu xmm6, xmm5  ;me lo guardo para usarlo en φB (i, j)
+	
+	pand xmm5, xmm9    ;si maxR (i, j) < maxG (i, j) y 
+					   ;maxG (i, j) ≥ maxB (i, j)
+					   
+	;φB (i, j)
+	;si maxR (i, j) < maxB (i, j) y maxG (i, j) < maxB (i, j)
+	pxor xmm14, xmm15 ;si maxR (i, j) < maxB (i, j) para los 3
+	pxor xmm6, xmm15 ;si maxG (i, j) < maxB (i, j)para los 3
+	
+	pand xmm6, xmm14    ;si maxR (i, j) < maxB (i, j) y 
+					    ;maxG (i, j) < maxB (i, j)
+					    
+	;Agrego el 1+alpha o el 1-alpha
+	movdqu xmm1, xmm4
+	movdqu xmm2, xmm5
+	movdqu xmm3, xmm6
+	
+	pxor xmm1, xmm15
+	pxor xmm2, xmm15
+	pxor xmm3, xmm15
+	
+	pand xmm4, xmm11;1+alpha
+	pand xmm5, xmm11;1+alpha
+	pand xmm6, xmm11;1+alpha
+	
+	pand xmm1, xmm0;1-alpha
+	pand xmm2, xmm0;1-alpha
+	pand xmm3, xmm0;1-alpha
+	
+	por xmm1, xmm4 ;xmm1 = φR 0|1+-alpha 4|1+-alpha 3|1+-alpha 2
+	por xmm2, xmm5 ;xmm2 = φG 0|1+-alpha 4|1+-alpha 3|1+-alpha 2
+	por xmm3, xmm6 ;xmm3 = φB 0|1+-alpha 4|1+-alpha 3|1+-alpha 2
+			
+	;ya tengo los 1 +- alpha, ahora busco los datos para multiplicarlos
+	movdqu xmm4, [r12]
+	movdqu xmm5, xmm4
+	movdqu xmm6, xmm4
+	movdqu xmm9, xmm4
+	;xmm4 b6|r5|g5|b5|r4|g4|b4|r3|g3|b3|r2|g2|b2|r1|g1|b1
+	
+	cmp rdi, 0
+	je .sigo_procesando
 
-;Comparo fila con fila para sacar el maximo de cada canal en la columna
-pmaxub xmm1, xmm2
-pmaxub xmm1, xmm3       ;Acumule los maximos en xmm1
- 
-;Desplazo los registros de modo que me quedan las columnas alineadas para
-;calcular los maximos de cada grupo de pixels
-;       (0 1 2)(3  4  5)( 6  7  8)( 9 10 11)(12
-;(0 1 2)(3 4 5)(6  7  8)( 9 10 11)(12 13 14)(15
-;(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15 xx xx)(xx
-movdqu xmm3, xmm1       ;La lina de arriba
-movdqu xmm4, xmm1       ;La linea de abajo
-pslldq xmm3, 3
-psrldq xmm4, 3
- 
-;Calculo los maximos y obtengo 3 pixels solo de maximos valores
-;(x x x)(3 4 5)(6  7  8)( 9 10 11)(xx xx xx)(xx
-pmaxub xmm1, xmm3
-pmaxub xmm1, xmm4
- 
-;Me fijo cual de los tres canales es el maximo
-;Duplico los pixels maximos y comparo los 3 canales de cada uno
-movdqu xmm3, xmm1       ;Canal azul
-movdqu xmm4, xmm1       ;Canal rojo
-;xmm1 tiene el canal verde
- 
-;Descarto el primer byte para que me quede alineado cuando desempaqueto
-;x x)(3 4 5)(6  7  8)( 9 10 11)(xx xx xx)(xx xx
-psrldq xmm1, 1
-psrldq xmm3, 1
-psrldq xmm4, 1
- 
-movdqu xmm5, xmm3       ;Copio el canal para desempaquetar
-movdqu xmm6, xmm1       ;Copio el canal para desempaquetar
-movdqu xmm7, xmm4       ;Copio el canal para desempaquetar
- 
-pxor xmm10, xmm10
-punpckhbw xmm3, xmm10
-punpckhbw xmm1, xmm10
-punpckhbw xmm4, xmm10
-punpcklbw xmm5, xmm10
-punpcklbw xmm6, xmm10
-punpcklbw xmm7, xmm10
- 
-mov r12, 0x0000000000FF0000     ;Mascara hw
-movq xmm14, r12
-punpcklbw xmm14, xmm14  ;Me cargo la mascara de words para la parte alta
- 
-pand xmm4, xmm14        ;Me quedo solo con el canal rojo
- 
-psrldq xmm14, 2 ;Cambio al canal verde
-pand xmm1, xmm14        ;Me quedo solo con el canal verde
- 
-psrldq xmm14, 2 ;Cambio al canal azul
-pand xmm3, xmm14        ;Me quedo con el canal azul
- 
-;Hago las comparaciones para el maximo de los canales en la parte alta
-pslldq xmm1, 2
-pslldq xmm3, 4
-;Ahora los tres canales estan alineados
- 
-movdqu xmm14, xmm3      ;Copio el azul
-pcmpgtw xmm3, xmm1      ;B > G
-pcmpgtw xmm14, xmm4     ;B > R
-pcmpgtw xmm1, xmm4      ;G > R
-movdqu xmm4, xmm14      ;B > R
- 
-mov r12, 0xFF0000FF00000000     ;Mascara lw
-movq xmm14, r12
-punpcklbw xmm14, xmm14  ;Me cargo la mascara de words para la parte baja
- 
-pand xmm7, xmm14        ;Me quedo con el canal rojo
- 
-psrldq xmm14, 2 ;Cambio al canal verde
-pand xmm6, xmm14        ;Me quedo con el canal verde
- 
-psrldq xmm14, 2 ;Cambio al canal azul
-pand xmm5, xmm14        ;Me quedo con el canal azul
- 
-;Hago las comparaciones para el maximo de los canales en la parte baja
-pslldq xmm6, 2
-pslldq xmm5, 4
-;Ahora los tres canales estan alineados
- 
-movdqu xmm14, xmm5      ;Copio el azul
-pcmpgtw xmm5, xmm6      ;B > G
-pcmpgtw xmm14, xmm7     ;B > R
-pcmpgtw xmm6, xmm7      ;G > R
-movdqu xmm7, xmm14      ;B > R
- 
-packsswb xmm6, xmm1     ;G > R Completo
-packsswb xmm5, xmm3     ;B > G Completo
-packsswb xmm7, xmm4     ;B > R Completo
- 
-movdqu xmm4, xmm7       ;Quiero B <= R Completo
-mov r12, 0xFFFFFFFF
-movd xmm14, r12d
-pshufd xmm14, xmm14, 0  ;Me preparo una mascara para invertir
-pxor xmm4, xmm14
- 
-;Evaluo los casos de phi
-pand xmm7, xmm5 ;Si es caso phiB
-pandn xmm5, xmm6        ;Si es caso phiG
-pandn xmm6, xmm4        ;Si es caso phiR
-pand xmm7, xmm12
-pand xmm6, xmm12
-pand xmm5, xmm12
- 
-;Acomodo para que queden las mascaras de phi como
-;0 0 0 B G R B G R B G R 0 0 0 0
-pslldq xmm6, 2
-pslldq xmm5, 1  ;Este esta donde debe
-;pslldq xmm7, 2
-por xmm5, xmm6
-por xmm5, xmm7  ;Junto todas las mascaras en xmm3 y me quedan los maximos
-psrldq xmm5, 1
- 
-movdqu xmm3, xmm5       ;Copio el filtro de phi para desempaquetar
-punpckhbw xmm3, xmm3    ;Desempaqueto sign_extended
-punpcklbw xmm5, xmm5    ;Desempaqueto sign_extended
-; xmm3 : xmm5
- 
-movdqu xmm4, xmm3 ;Copio el filtro de phi para desempaquetar
-movdqu xmm6, xmm5 ;Copio el filtro de phi para desempaquetar
-punpckhwd xmm3, xmm3    ;Desempaqueto sign_extended
-punpcklwd xmm4, xmm4    ;Desempaqueto sign_extended
-punpckhwd xmm5, xmm5    ;Desempaqueto sign_extended
-punpcklwd xmm6, xmm6    ;Desempaqueto sign_extended
-; xmm3 : xmm4 : xmm5 : xmm6
- 
-;Obtengo donde los alpha suman
-pand xmm3, xmm0 ;Filtro los phi
-pand xmm4, xmm0 ;Filtro los phi
-pand xmm5, xmm0 ;Filtro los phi
-pand xmm6, xmm0 ;Filtro los phi
-;Sumo los alphas
-addps xmm3, xmm15
-addps xmm4, xmm15
-addps xmm5, xmm15
-addps xmm6, xmm15
- 
-;Desempaqueto los datos originales
-pxor xmm14, xmm14
-movdqu xmm7, xmm2       ;Copio los datos originales
-movdqu xmm9, xmm2       ;Copio los datos originales
-punpckhbw xmm7, xmm14   ;Desempaqueto
-punpcklbw xmm9, xmm14   ;Desempaqueto
-; xmm7 : xmm9
- 
-movdqu xmm8, xmm7 ;Copio los datos originales
-movdqu xmm10, xmm9 ;Copio los datos originales
-punpckhbw xmm7, xmm14   ;Desempaqueto
-punpcklbw xmm8, xmm14   ;Desempaqueto
-punpckhbw xmm9, xmm14   ;Desempaqueto
-punpcklbw xmm10, xmm14  ;Desempaqueto
-; xmm7 : xmm8 : xmm9 : xmm10
- 
-cvtdq2ps xmm7, xmm7
-cvtdq2ps xmm8, xmm8
-cvtdq2ps xmm9, xmm9
-cvtdq2ps xmm10, xmm10
- 
-;Multiplico los phi por el canal que corresponde
-mulps xmm3, xmm7
-mulps xmm4, xmm8
-mulps xmm5, xmm9
-mulps xmm6, xmm10
- 
-;Trunco a int
-cvttps2dq xmm3, xmm3
-cvttps2dq xmm4, xmm4
-cvttps2dq xmm5, xmm5
-cvttps2dq xmm6, xmm6
- 
-;Empaqueto los datos otra vez para escribir
-packusdw xmm4, xmm3
-packusdw xmm6, xmm5
-packuswb xmm6, xmm4
- 
-movdqu xmm14, xmm13
-pand xmm6, xmm13        ;Me quedo con los 3 pixels del medio
-pandn xmm14, xmm2       ;Me quedo con los bytes de las puntas
-por xmm6, xmm14
- 
-psrldq xmm6, 3  ;Acomodo para escribir
-movdqu [rsi+r14+3], xmm6
-add r10, 9 ;este es mi contador
-add r15, 9
-add r14, 9
-add r13, 9
-cmp r10, rcx
-jl .procesarFila
- 
-.nextRow:
-sub r10, rcx
-sub r15, r10
-sub r14, r10
-sub r13, r10
- 
-movdqu xmm1, [rdi+r15]
-movdqu xmm2, [rdi+r14]  ;Me voy a quedar con la fila del medio
-movdqu xmm3, [rdi+r13]
+.cargo_la_fila_si_me_pase: ;con este shift lo ue logro es acomodar los datos
+	psrldq xmm4, 1
+	psrldq xmm5, 1
+	psrldq xmm6, 1
+	
+.sigo_procesando:
+	psrldq xmm4, 3 ;xmm4  0| 0| 0|b6|r5|g5|b5|r4|g4|b4|r3|g3|b3|r2|g2|b2
+	psrldq xmm5, 2 ;xmm5  0| 0|b6|r5|g5|b5|r4|g4|b4|r3|g3|b3|r2|g2|b2|r1
+	psrldq xmm6, 1 ;xmm6  0|b6|r5|g5|b5|r4|g4|b4|r3|g3|b3|r2|g2|b2|r1|g1
+	;me interesan estos datos                 ^^       ^^       ^^
+	
+	;limpio los valores que no me interesan
+	pand xmm4, xmm12 ;xmm4 0|0|0|0|0|0|0|r4|0|0|r3|0|0|r2|0|0
+	pand xmm5, xmm12 ;xmm5 0|0|0|0|0|0|0|g4|0|0|g3|0|0|g2|0|0
+	pand xmm6, xmm12 ;xmm6 0|0|0|0|0|0|0|b4|0|0|b3|0|0|b2|0|0
+	
+	;los acomodo para q puedan ser usados como floats
+	movdqu xmm7, [acomodo_r_g_b]
+	pshufb xmm4, xmm7
+	;xmm4 0|0|0|0|0|0|0|r4|0|0|0|r3|0|0|0|r2
+	pshufb xmm5, xmm7
+	;xmm5 0|0|0|0|0|0|0|g4|0|0|0|g3|0|0|0|g2
+	pshufb xmm6, xmm7
+	;xmm6 0|0|0|0|0|0|0|b4|0|0|0|b3|0|0|0|b2
+ 	
+	;los paso a float
+	cvtdq2ps xmm4, xmm4
+	cvtdq2ps xmm5, xmm5
+	cvtdq2ps xmm6, xmm6
+	
+	;multiplico los 1 +- alpha por los datos
+	mulps xmm1, xmm4
+	mulps xmm2, xmm5
+	mulps xmm3, xmm6
+	
+	;los paso a int
+	cvtps2dq xmm1, xmm1
+	cvtps2dq xmm2, xmm2
+	cvtps2dq xmm3, xmm3
+	
+	;empaqueto saturando
+	packusdw xmm1, xmm8 ;xmm1 0 0|0 0|0 0|0 0|0 0|0 r4|0 r3|0 r2                       
+	packuswb xmm1, xmm8 ;xmm1 0|0|0|0|0|0|0|0|0|0|0|0|0|r4|r3|r2
+	packusdw xmm2, xmm8 ;xmm2 0 0|0 0|0 0|0 0|0 0|0 g4|0 g3|0 g2         
+	packuswb xmm2, xmm8 ;xmm2 0|0|0|0|0|0|0|0|0|0|0|0|0|g4|g3|g2
+	packusdw xmm3, xmm8 ;xmm3 0 0|0 0|0 0|0 0|0 0|0 b4|0 b3|0 b2                    
+	packuswb xmm3, xmm8 ;xmm3 0|0|0|0|0|0|0|0|0|0|0|0|0|b4|b3|b2
+	
+	;rearmo la fila
+	;xmm1 0|0|0|0|0|0|0|0|0|0|0|0|0|r4|r3|r2
+	movdqu xmm7, [rearmo_fila_r]
+	pshufb xmm1, xmm7
+	;xmm1 0|0|0|0|r4|0|0|r3|0|0|r2|0|0|0|0|0
+	
+	;xmm2 0|0|0|0|0|0|0|0|0|0|0|0|0|g4|g3|g2
+	movdqu xmm7, [rearmo_fila_g]
+	pshufb xmm2, xmm7
+	;xmm2 0|0|0|0|0|g4|0|0|g3|0|0|g2|0|0|0|0
+	
+	;xmm3 0|0|0|0|0|0|0|0|0|0|0|0|0|b4|b3|b2
+	movdqu xmm7, [rearmo_fila_b]
+	pshufb xmm3, xmm7
+	;xmm3 0|0|0|0|0|0|b4|0|0|b3|0|0|b2|0|0|0
+	
+	por xmm1, xmm2
+	por xmm1, xmm3
+	;xmm1 0|0|0|0|r4|g4|b4|r3|g3|b3|r2|g2|b2|0|0|0
 
-psrldq xmm1, 1
-psrldq xmm2, 1
-psrldq xmm3, 1
+	cmp rdi, 0
+	je .guardo_los_datos
 
-;Comparo fila con fila para sacar el maximo de cada canal en la columna
-pmaxub xmm1, xmm2
-pmaxub xmm1, xmm3       ;Acumule los maximos en xmm1
- 
-;Desplazo los registros de modo que me quedan las columnas alineadas para
-;calcular los maximos de cada grupo de pixels
-;       (0 1 2)(3  4  5)( 6  7  8)( 9 10 11)(12
-;(0 1 2)(3 4 5)(6  7  8)( 9 10 11)(12 13 14)(15
-;(3 4 5)(6 7 8)(9 10 11)(12 13 14)(15 xx xx)(xx
-movdqu xmm3, xmm1       ;La lina de arriba
-movdqu xmm4, xmm1       ;La linea de abajo
-pslldq xmm3, 3
-psrldq xmm4, 3
- 
-;Calculo los maximos y obtengo 3 pixels solo de maximos valores
-;(x x x)(3 4 5)(6  7  8)( 9 10 11)(xx xx xx)(xx
-pmaxub xmm1, xmm3
-pmaxub xmm1, xmm4
- 
-;Me fijo cual de los tres canales es el maximo
-;Duplico los pixels maximos y comparo los 3 canales de cada uno
-movdqu xmm3, xmm1       ;Canal azul
-movdqu xmm4, xmm1       ;Canal rojo
-;xmm1 tiene el canal verde
- 
-;Descarto el primer byte para que me quede alineado cuando desempaqueto
-;x x)(3 4 5)(6  7  8)( 9 10 11)(xx xx xx)(xx xx
-psrldq xmm1, 1
-psrldq xmm3, 1
-psrldq xmm4, 1
- 
-movdqu xmm5, xmm3       ;Copio el canal para desempaquetar
-movdqu xmm6, xmm1       ;Copio el canal para desempaquetar
-movdqu xmm7, xmm4       ;Copio el canal para desempaquetar
- 
-pxor xmm10, xmm10
-punpckhbw xmm3, xmm10
-punpckhbw xmm1, xmm10
-punpckhbw xmm4, xmm10
-punpcklbw xmm5, xmm10
-punpcklbw xmm6, xmm10
-punpcklbw xmm7, xmm10
- 
-mov r12, 0x0000000000FF0000     ;Mascara hw
-movq xmm14, r12
-punpcklbw xmm14, xmm14  ;Me cargo la mascara de words para la parte alta
- 
-pand xmm4, xmm14        ;Me quedo solo con el canal rojo
- 
-psrldq xmm14, 2 ;Cambio al canal verde
-pand xmm1, xmm14        ;Me quedo solo con el canal verde
- 
-psrldq xmm14, 2 ;Cambio al canal azul
-pand xmm3, xmm14        ;Me quedo con el canal azul
- 
-;Hago las comparaciones para el maximo de los canales en la parte alta
-pslldq xmm1, 2
-pslldq xmm3, 4
-;Ahora los tres canales estan alineados
- 
-movdqu xmm14, xmm3      ;Copio el azul
-pcmpgtw xmm3, xmm1      ;B > G
-pcmpgtw xmm14, xmm4     ;B > R
-pcmpgtw xmm1, xmm4      ;G > R
-movdqu xmm4, xmm14      ;B > R
- 
-mov r12, 0xFF0000FF00000000     ;Mascara lw
-movq xmm14, r12
-punpcklbw xmm14, xmm14  ;Me cargo la mascara de words para la parte baja
- 
-pand xmm7, xmm14        ;Me quedo con el canal rojo
- 
-psrldq xmm14, 2 ;Cambio al canal verde
-pand xmm6, xmm14        ;Me quedo con el canal verde
- 
-psrldq xmm14, 2 ;Cambio al canal azul
-pand xmm5, xmm14        ;Me quedo con el canal azul
- 
-;Hago las comparaciones para el maximo de los canales en la parte baja
-pslldq xmm6, 2
-pslldq xmm5, 4
-;Ahora los tres canales estan alineados
- 
-movdqu xmm14, xmm5      ;Copio el azul
-pcmpgtw xmm5, xmm6      ;B > G
-pcmpgtw xmm14, xmm7     ;B > R
-pcmpgtw xmm6, xmm7      ;G > R
-movdqu xmm7, xmm14      ;B > R
- 
-packsswb xmm6, xmm1     ;G > R Completo
-packsswb xmm5, xmm3     ;B > G Completo
-packsswb xmm7, xmm4     ;B > R Completo
- 
-movdqu xmm4, xmm7       ;Quiero B <= R Completo
-mov r12, 0xFFFFFFFF
-movd xmm14, r12d
-pshufd xmm14, xmm14, 0  ;Me preparo una mascara para invertir
-pxor xmm4, xmm14
- 
-;Evaluo los casos de phi
-pand xmm7, xmm5 ;Si es caso phiB
-pandn xmm5, xmm6        ;Si es caso phiG
-pandn xmm6, xmm4        ;Si es caso phiR
-pand xmm7, xmm12
-pand xmm6, xmm12
-pand xmm5, xmm12
- 
-;Acomodo para que queden las mascaras de phi como
-;0 0 0 B G R B G R B G R 0 0 0 0
-pslldq xmm6, 2
-pslldq xmm5, 1  ;Este esta donde debe
-;pslldq xmm7, 2
-por xmm5, xmm6
-por xmm5, xmm7  ;Junto todas las mascaras en xmm3 y me quedan los maximos
-psrldq xmm5, 1
- 
-movdqu xmm3, xmm5       ;Copio el filtro de phi para desempaquetar
-punpckhbw xmm3, xmm3    ;Desempaqueto sign_extended
-punpcklbw xmm5, xmm5    ;Desempaqueto sign_extended
-; xmm3 : xmm5
- 
-movdqu xmm4, xmm3 ;Copio el filtro de phi para desempaquetar
-movdqu xmm6, xmm5 ;Copio el filtro de phi para desempaquetar
-punpckhwd xmm3, xmm3    ;Desempaqueto sign_extended
-punpcklwd xmm4, xmm4    ;Desempaqueto sign_extended
-punpckhwd xmm5, xmm5    ;Desempaqueto sign_extended
-punpcklwd xmm6, xmm6    ;Desempaqueto sign_extended
-; xmm3 : xmm4 : xmm5 : xmm6
- 
-;Obtengo donde los alpha suman
-pand xmm3, xmm0 ;Filtro los phi
-pand xmm4, xmm0 ;Filtro los phi
-pand xmm5, xmm0 ;Filtro los phi
-pand xmm6, xmm0 ;Filtro los phi
-;Sumo los alphas
-addps xmm3, xmm15
-addps xmm4, xmm15
-addps xmm5, xmm15
-addps xmm6, xmm15
- 
-;Desempaqueto los datos originales
-pxor xmm14, xmm14
-movdqu xmm7, xmm2       ;Copio los datos originales
-movdqu xmm9, xmm2       ;Copio los datos originales
-punpckhbw xmm7, xmm14   ;Desempaqueto
-punpcklbw xmm9, xmm14   ;Desempaqueto
-; xmm7 : xmm9
- 
-movdqu xmm8, xmm7 ;Copio los datos originales
-movdqu xmm10, xmm9 ;Copio los datos originales
-punpckhbw xmm7, xmm14   ;Desempaqueto
-punpcklbw xmm8, xmm14   ;Desempaqueto
-punpckhbw xmm9, xmm14   ;Desempaqueto
-punpcklbw xmm10, xmm14  ;Desempaqueto
-; xmm7 : xmm8 : xmm9 : xmm10
- 
-cvtdq2ps xmm7, xmm7
-cvtdq2ps xmm8, xmm8
-cvtdq2ps xmm9, xmm9
-cvtdq2ps xmm10, xmm10
- 
-;Multiplico los phi por el canal que corresponde
-mulps xmm3, xmm7
-mulps xmm4, xmm8
-mulps xmm5, xmm9
-mulps xmm6, xmm10
- 
-;Trunco a int
-cvttps2dq xmm3, xmm3
-cvttps2dq xmm4, xmm4
-cvttps2dq xmm5, xmm5
-cvttps2dq xmm6, xmm6
- 
-;Empaqueto los datos otra vez para escribir
-packusdw xmm4, xmm3
-packusdw xmm6, xmm5
-packuswb xmm6, xmm4
- 
-movdqu xmm14, xmm13
-pand xmm6, xmm13        ;Me quedo con los 3 pixels del medio
-pandn xmm14, xmm2       ;Me quedo con los bytes de las puntas
-por xmm6, xmm14
- 
-;con este shift lo que logro es acomodar los datos
-pslldq xmm6, 1
-movdqu xmm7, [rsi + r14]
-pand xmm7, [casoBorde]
-pxor xmm7, [inversor]
-pand xmm6, xmm7
-psrldq xmm6, 3  ;Acomodo para escribir
-movdqu [rsi+r14+3], xmm6
+.guardo_los_datos_si_me_pase: ;con este shift lo ue logro es acomodar los datos
+	pslldq xmm1, 1
+	
+	;me cargo los datos que estaban en la imagen de salida para solo cargar 
+	;lo que modifique
+	movdqu xmm7, [r13]
+	
+	;aplico un filtro para q solo cambien los valores que modifique
+	movdqu xmm9, [mascara_caso_borde]
+	pand xmm7, xmm9 ;me quedo con los datos que estan en la salida salvo
+	;los que modifique
+	
+	pxor xmm9, xmm15
+	pand xmm1, xmm9 ;me quedo con los datos que modifique
+	
+	por xmm1, xmm7
+	
+	jmp .escribo_en_memoria
+	
+.guardo_los_datos:
 
-.saltoDeLinea:
-add rdi, r8
-add rsi, r9
-add rsi, rbx
-add rdi, rbx
-mov r10, 0
-;Avanzo a la siguiente fila
-dec rdx
-cmp rdx, 0
-jg .comienzoFila
- 
-add rsp, 8
-pop rbx
-pop r12
-pop r13
-pop r14
-pop r15
-pop rbp
-ret
+	movdqu xmm7, [limpio_el_medio_y_fin]
+	pand xmm9, xmm7
+
+	por xmm1, xmm9
+	;xmm1 b6|r5|g5|b5|r4|g4|b4|r3|g3|b3|r2|g2|b2|0|0|0
+	
+	;coloco el pixel que ya habia procesado
+	movdqu xmm9, [r13]
+	movdqu xmm7, [limpio_el_medio_y_comienzo]
+	pand xmm9, xmm7
+	
+	por xmm1, xmm9
+	;xmm1 b6|r5|g5|b5|r4|g4|b4|r3|g3|b3|r2|g2|b2|r1|g1|b1
+	
+.escribo_en_memoria:
+	movdqu [r13], xmm1
+	
+	;ya procese el xmm ahora veo como tengo que seguir
+	;muevo los punteros y decremento la posicion del arreglo en donde estoy
+	add r12, cant_de_datos
+	add r13, cant_de_datos
+	sub r14, cant_de_datos
+	;si r14 es negativo significa que me pase y q me faltan procesar datos
+	;pero la cantidad de los mismos es menor a 16
+	js .me_pase
+	
+	cmp r14, 0
+	je .me_pase
+	
+	jmp .bloque
+		
+.me_pase:
+	;como me faltan procesar datos, le sumo a los punteros el r14 que me indica cualtos
+	;dats tengo que retroceder para que entren en un bloque de 16. Seteo r14 en 16 para 
+	;que haga un ciclo mas y despues entre a paso_a_la_fila_de_abajo ya que la cuenta va a dar 0
+	cmp r14, r10
+	je .paso_a_la_fila_de_abajo
+		
+	add r12, r14
+	add r13, r14
+	xor r14, r14
+	add rdi, 1
+	jmp .bloque
+	
+.paso_a_la_fila_de_abajo:
+	xor rdi, rdi
+	;decremento en 1 la cantidad de filas y me fijo si tengo mas filas que procesar
+	sub edx, 1
+	cmp edx, 0
+	je .fin
+	;muevo los punteros al comienzo y le sumo el row_size
+	add r12, 7
+	add r13, 7
+	sub r12, rcx
+	sub r13, rcx
+	add r12, r8
+	add r13, r9
+	;Recargo r14
+	mov r14, rcx
+	sub r14, 16
+	jmp .bloque
+
+.fin:
+	sub rsp, 8
+	pop r12
+	pop r13
+	pop r14
+	pop r15
+	pop rbx
+	pop rbp
+	ret
+
