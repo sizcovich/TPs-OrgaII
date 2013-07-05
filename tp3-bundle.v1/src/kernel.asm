@@ -62,8 +62,6 @@ start:
 	; Imprimir mensaje de bienvenida
 	imprimir_texto_mr iniciando_mr_msg, iniciando_mr_len, 0x07, 0, 0
 
-	;xchg bx, bx
-
 	; habilitar A20
 	call deshabilitar_A20
 	call checkear_A20 ;muestra por pantalla que esta deshabilitada
@@ -160,7 +158,6 @@ limpiarPantalla:
 	mov ax, 0x40
 	ltr ax
 	; aca salto a la primer tarea
-	xchg bx, bx
 	jmp 0x48:0
 
 	; Ciclar infinitamente (por si algo sale mal)
