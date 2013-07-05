@@ -12,6 +12,9 @@
 unsigned short tareas[CANT_TAREAS];
 char indice_actual;
 
+unsigned char reloj[4] = {'|', '/', '-', '\\'};
+unsigned int relojes[5] = {0,0,0,0,0};
+
 void sched_inicializar() {
 	tareas[0] = 0x50;
 	tareas[1] = 0x58;
@@ -23,6 +26,7 @@ void sched_inicializar() {
 
 unsigned short sched_proximo_indice() {
 	if(rtr() != (GDT_TSS_ARBITRO<<3)){
+		breakpoint();
 		return (GDT_TSS_ARBITRO<<3);
 	}
 	else{
@@ -51,4 +55,33 @@ char get_actual() {
 
 void avanzar_tarea() {
 	indice_actual = sched_proximo_indice();
+}
+
+void reloj_tarea() {
+	unsigned short *video = (unsigned short *)VIDEO_ADDR;
+	
+	int actual = get_actual();
+	
+	switch (actual) {
+		case 0:
+			video[19*80] = reloj[relojes[actual]];
+			relojes[actual] = (++relojes[actual]) % 4;
+			break;
+		case 1:
+			video[20*80] = reloj[relojes[actual]];
+			relojes[actual] = (++relojes[actual]) % 4;
+			break;
+		case 2:
+			video[21*80] = reloj[relojes[actual]];
+			relojes[actual] = (++relojes[actual]) % 4;
+			break;
+		case 3:
+			video[22*80] = reloj[relojes[actual]];
+			relojes[actual] = (++relojes[actual]) % 4;
+			break;
+		case 4:
+			video[23*80] = reloj[relojes[actual]];
+			relojes[actual] = (++relojes[actual]) % 4;
+			break;
+	}
 }
