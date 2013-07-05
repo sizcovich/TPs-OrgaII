@@ -63,7 +63,7 @@
 \begin{center}
 \vspace*{0.7cm}
 
-\huge{\bf TRABAJO PR\'ACTICO N\'UMERO 2}\\
+\huge{\bf RECUPERATORIO AL TRABAJO PR\'ACTICO N\'UMERO 2}\\
 \huge{Nombre de Grupo: Napolitana con Jam\'on y Morrones}
 \vspace*{8cm}
 
@@ -76,7 +76,6 @@
 \vspace*{0.3cm}
 \Large{\textsl{L\'opez Veluscek, Matías} \hspace{0.1cm}$|$ milopezv@gmail.com $|$ 926/10}\\
 \vspace*{0.3cm}
-\vspace{0.5cm}
  
 \newpage
 %Pagina de titulo e indice
@@ -124,37 +123,69 @@ Luego, comparamos la cantidad de ciclos producidos por $C$ y por $Assembler$.\ne
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
-Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo obtenido fue el siguiente:\newline
-
-Implementación C\newline
-----------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 857860615438390\newline
-  Fin                               : 857860685974035\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 70535645\newline
-  \# de ciclos insumidos por llamada : 705356.500\newline
+Dado que el valor de $tam$ afecta de manera proporcional el tiempo de ejecución de cada filtro, decidimos probar únicamente tres valores para enfocar el análisis en la cantidad de ciclos realizados de acuerdo a la cantidad de iteraciones.\newline 
 \newline
-Implementación ASM\newline
-------------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 857860758957933\newline
-  Fin                               : 857860759960311\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 1002378\newline
-  \# de ciclos insumidos por llamada : 10023.780\newline
+Al probar lena de 200x200 con una cantidad de 1000 iteraciones y un tam de 100, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 455075.719\newline
+Ciclos ASM:               20131.344\newline
 \newline
-Resultados\newline
-----------
+Tiempo C:                 455075728\newline
+Tiempo ASM:               20131345\newline
+\newline
+
+Al probar lena de 200x200 con una cantidad de 1000 iteraciones y un tam de 50, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 140342.594\newline
+Ciclos ASM:               4661.547\newline
+\newline
+Tiempo C:                 140342599\newline
+Tiempo ASM:               4661547\newline
+
+Al probar lena de 200x200 con una cantidad de 100 iteraciones y un tam de 198, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 1667739.625\newline
+Ciclos ASM:               55538.152\newline
+\newline
+Tiempo C:                 1667739592\newline
+Tiempo ASM:               55538151\newline
+\newline
+
+
+Al probar lena de 512x512 con una cantidad de 100 iteraciones y un tam de 100, el tiempo obtenido fue el siguiente:\newline
 
 Ciclos C:                 705356.5\newline
 Ciclos ASM:               10023.78\newline
-Ciclos ASM respecto de C: 1.42109415593\% \newline
+\newline
 Tiempo C:                 70535645\newline
 Tiempo ASM:               1002378\newline
-Tiempo ASM respecto de C: 1.42109425667\% \newline
+\newline
+
+
+
+
+Al probar lena de 512x512 con una cantidad de 10000 iteraciones y un tam de 100, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 731276.25\newline
+Ciclos ASM:               37788.512\newline
+\newline
+Tiempo C:                 7312762341\newline
+Tiempo ASM:               377885115\newline
+\newline
+
+Al probar lena de 1023x767 con una cantidad de 900 iteraciones y un tam de 100, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 461137.625\newline
+Ciclos ASM:               22932.223\newline
+\newline
+Tiempo C:                 415023876\newline
+Tiempo ASM:               20639000\newline
+\newline
+
+Al probar lena de 1023x767 con una cantidad de 10000 iteraciones y un tam de 100, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 743862.688\newline
+Ciclos ASM:               42174.125\newline
+\newline
+Tiempo C:                 7438626621\newline
+Tiempo ASM:               421741242\newline
+
+
+
 
 \item {\textbf{Halftone:}}
 La idea principal de este filtro consistió en partir la imagen original en bloques de 2x2 píxeles generando, en la imagen destino, bloques del mismo tamaño. A cada nuevo bloque de la imagen original se le debió asignar el color blanco o negro dependiendo del valor de $t = \sum_{i=0}^{3} {(p_{i}}$, con $p_{i}$ píxeles del bloque de la imagen original de acuerdo a ciertas condiciones requeridas.\newline
@@ -191,37 +222,66 @@ Los píxeles resultantes debían cumplir con la siguiente condición:
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
+
+Al probar lena.bmp de 200x200, con una cantidad de 1000 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 381918.875\newline
+Ciclos ASM:               41397.273\newline
+\newline
+Tiempo C:                 381918878\newline
+Tiempo ASM:               41397271\newline
+\newline
+Al probar lena.bmp de 200x200, con una cantidad de 10000 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 517667.594\newline
+Ciclos ASM:               32787.918\newline
+\newline
+Tiempo C:                 5176676016\newline
+Tiempo ASM:               327879162\newline
+\newline
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo obtenido fue el siguiente:\newline
-
-Implementación C\newline
-----------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 259119263552208\newline
-  Fin                               : 259119729516615\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 465964407\newline
-  \# de ciclos insumidos por llamada : 4659644.000\newline
-\newline
-Implementación ASM\newline
-------------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 259119877087956\newline
-  Fin                               : 259119888325521\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 11237565\newline
-  \# de ciclos insumidos por llamada : 112375.648\newline
-\newline
-Resultados\newline
-----------
 
 Ciclos C:                 4659644.0\newline
 Ciclos ASM:               112375.648\newline
-Ciclos ASM respecto de C: 2.41167883212\%\newline
+\newline
 Tiempo C:                 465964407\newline
 Tiempo ASM:               11237565\newline
-Tiempo ASM respecto de C: 2.41167883881\%\newline
+\newline
+
+Al probar lena.bmp de 512x512, con una cantidad de 500 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 2384229.0\newline
+Ciclos ASM:               185921.234\newline
+\newline
+Tiempo C:                 1192114572\newline
+Tiempo ASM:               92960613\newline
+\newline
+
+Al probar lena.bmp de 512x512, con una cantidad de 1000 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 2431208.0\newline
+Ciclos ASM:               154461.969\newline
+\newline
+Tiempo C:                 2431207849\newline
+Tiempo ASM:               154461968\newline
+\newline
+
+Al probar lena.bmp de 512x512, con una cantidad de 10000 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 3217938.0\newline
+Ciclos ASM:               200020.438\newline
+\newline
+Tiempo C:                 32179380138\newline
+Tiempo ASM:               2000204397\newline
+\newline
+Al probar lena.bmp de 1023x767, con una cantidad de 900 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 6878677.0\newline
+Ciclos ASM:               354997.219\newline
+\newline
+Tiempo C:                 6190809076\newline
+Tiempo ASM:               319497492\newline
+\newline
+Al probar lena.bmp de 1023x767, con una cantidad de 1000 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 3217938.0\newline
+Ciclos ASM:               200020.438\newline
+\newline
+Tiempo C:                 32179380138\newline
+Tiempo ASM:               2000204397\newline
 
 \item {\textbf{Umbralizar:}}
 En Umbralizar, la imagen destino debía cumplir los siguientes requisitos:\newline
@@ -236,37 +296,70 @@ Para recorrer la matriz, decidimos desplazarnos a través de los punteros, por l
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
+
+Al probar lena.bmp de 200x200, con una cantidad de 1000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
+Ciclos C:                 810826.75\newline
+Ciclos ASM:               153146.406\newline
+\newline
+Tiempo C:                 810826727\newline
+Tiempo ASM:               153146393\newline
+\newline
+Al probar lena.bmp de 200x200, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
+Ciclos C:                 1112498.0\newline
+Ciclos ASM:               531874.0\newline
+\newline
+Tiempo C:                 11124979713\newline
+Tiempo ASM:               5318740134\newline
+\newline
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
-
-Implementación C\newline
-----------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 857572172822622\newline
-  Fin                               : 857572676855448\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 504032826\newline
-  \# de ciclos insumidos por llamada : 5040328.500\newline
-\newline
-Implementación ASM\newline
-------------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 857572838473791\newline
-  Fin                               : 857572938386751\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 99912960\newline
-  \# de ciclos insumidos por llamada : 999129.625\newline
-\newline
-Resultados\newline
-----------
-
 Ciclos C:                 5040328.5\newline
 Ciclos ASM:               999129.625\newline
-Ciclos ASM respecto de C: 19.8227084802\%\newline
+\newline
 Tiempo C:                 504032826\newline
 Tiempo ASM:               99912960\newline
-Tiempo ASM respecto de C: 19.8227089281\%\newline
+\newline
+Al probar lena.bmp de 512x512, con una cantidad de 500 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
+Ciclos C:                 4834490.0\newline
+Ciclos ASM:               727029.438\newline
+\newline
+Tiempo C:                 2417244812\newline
+Tiempo ASM:               363514722\newline
+\newline
+Al probar lena.bmp de 512x512, con una cantidad de 1000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
+Ciclos C:                 4795374.0\newline
+Ciclos ASM:               694408.812\newline
+\newline
+Tiempo C:                 4795374197\newline
+Tiempo ASM:               694408859\newline
+\newline
+Al probar lena.bmp de 512x512, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
+Ciclos C:                 6794335.0\newline
+Ciclos ASM:               3372920.25\newline
+\newline
+Tiempo C:                 67943348235\newline
+Tiempo ASM:               33729202260\newline
+\newline
+Al probar lena.bmp de 1023x767, con una cantidad de 250 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
+Ciclos C:                 13126431.0\newline
+Ciclos ASM:               2082590.125\newline
+\newline
+Tiempo C:                 3281607648\newline
+Tiempo ASM:               520647531\newline
+\newline
+Al probar lena.bmp de 1023x767, con una cantidad de 900 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
+Ciclos C:                 13193128.0\newline
+Ciclos ASM:               2025344.0\newline
+\newline
+Tiempo C:                 11873815672\newline
+Tiempo ASM:               1822809585\newline
+\newline
+Al probar lena.bmp de 1023x767, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
+Ciclos C:                 6794335.0\newline
+Ciclos ASM:               3372920.25\newline
+\newline
+Tiempo C:                 67943348235\newline
+Tiempo ASM:               33729202260\newline
+
 
 \item {\textbf{Colorizar:}}
 Para colorizar, la imagen fuente debía ser procesada de acuerdo a las siguientes definiciones: 
@@ -303,36 +396,12 @@ Por último, desempaquetamos los datos originales y los filtros para realizar lo
 \item{Comparación de Tiempo}
 \end{itemize}
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 0.5 como parámetro, el tiempo obtenido fue el siguiente:\newline
-
-Implementación C\newline
-----------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 260663107087014\newline
-  Fin                               : 260675081294295\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 11974207281\newline
-  \# de ciclos insumidos por llamada : 119742072.000\newline
-
-Implementación ASM\newline
-------------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 260675487848181\newline
-  Fin                               : 260676113912895\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 626064714\newline
-  \# de ciclos insumidos por llamada : 6260647.000\newline
-
-Resultados\newline
-----------
-
 Ciclos C:                 119742072.0\newline
 Ciclos ASM:               6260647.0\newline
-Ciclos ASM respecto de C: 5.22844385055\%\newline
+\newline
 Tiempo C:                 11974207281\newline
 Tiempo ASM:               626064714\newline
-Tiempo ASM respecto de C: 5.2284439321\%\newline
+\newline
 
 
 \item {\textbf{Waves:}}
@@ -356,36 +425,62 @@ Para recorrer la matriz, recorrimos las filas hasta el ancho-16. Una vez alcanza
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
+Al probar lena.bmp de 200x200, con una cantidad de 1000 iteraciones y 2.0 4.0 16.0 como parámetros, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 82495720.0\newline
+Ciclos ASM:               868818.688\newline
+\newline
+Tiempo C:                 82495717218\newline
+Tiempo ASM:               868818717\newline
+\newline
+Al probar lena.bmp de 200x200, con una cantidad de 5000 iteraciones y 2.0 4.0 16.0 como parámetros, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 539137024.0\newline
+Ciclos ASM:               5444864.5\newline
+\newline
+Tiempo C:                 2695685261904\newline
+Tiempo ASM:               27224322318\newline
+\newline
+Al probar lena.bmp de 200x200, con una cantidad de 10000 iteraciones y 2.0 4.0 16.0 como parámetros, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 85787504.0\newline
+Ciclos ASM:               869124.625\newline
+\newline
+Tiempo C:                 857875015971\newline
+Tiempo ASM:               8691245955\newline
+\newline
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 2.0 4.0 16.0 como parámetros, el tiempo obtenido fue el siguiente:\newline
-
-Implementación C\newline
-----------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 858182624211702\newline
-  Fin                               : 858224537429979\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 41913218277\newline
-  \# de ciclos insumidos por llamada : 419132160.000\newline
-\newline
-Implementación ASM\newline
-------------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 858224711685883\newline
-  Fin                               : 858225286387416\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 574701533\newline
-  \# de ciclos insumidos por llamada : 5747015.000\newline
-\newline
-Resultados\newline
-----------
 Ciclos C:                 419132160.0\newline
 Ciclos ASM:               5747015.0\newline
-Ciclos ASM respecto de C: 1.37117013402\%\newline
+\newline
 Tiempo C:                 41913218277\newline
 Tiempo ASM:               574701533\newline
-Tiempo ASM respecto de C: 1.37117013826\%\newline
+\newline
+Al probar lena.bmp de 512x512, con una cantidad de 1000 iteraciones y 2.0 4.0 16.0 como parámetros, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 539885568.0\newline
+Ciclos ASM:               5468718.5\newline
+\newline
+Tiempo C:                 539885556405\newline
+Tiempo ASM:               5468718753\newline
+\newline
+Al probar lena.bmp de 512x512, con una cantidad de 10000 iteraciones y 2.0 4.0 16.0 como parámetros, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 540099392.0\newline
+Ciclos ASM:               5443293.0\newline
+\newline
+Tiempo C:                 5400993944457\newline
+Tiempo ASM:               54432932814\newline
+\newline
+Al probar lena.bmp de 1023x767, con una cantidad de 1000 iteraciones y 2.0 4.0 16.0 como parámetros, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 1616738688.0\newline
+Ciclos ASM:               16345078.0\newline
+\newline
+Tiempo C:                 1616738654736\newline
+Tiempo ASM:               16345077678\newline
+\newline
+Al probar lena.bmp de 1023x767, con una cantidad de 10000 iteraciones y 2.0 4.0 16.0 como parámetros, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 1618532352.0\newline
+Ciclos ASM:               16243114.0\newline
+\newline
+Tiempo C:                 16185323663982\newline
+Tiempo ASM:               162431140968\newline
+
 
 \item {\textbf{Rotar:}} 
 El filtro rotar toma la imagen de entrada y escribe en la de salida la imagen rotada 45 grados. Cada píxel de la imagen resultante se forma de la siguiente manera:
@@ -406,37 +501,55 @@ Para la realización de dicho filtro, preferimos utilizar floats ya que para usa
 \begin{itemize}
 \item{Comparación de Tiempo}
 \end{itemize}
+
+Al probar lena.bmp de 200x200, con una cantidad de 600 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 1771498.125\newline
+Ciclos ASM:               670860.938\newline
+\newline
+Tiempo C:                 1062898911\newline
+Tiempo ASM:               402516558\newline
+\newline
+Al probar lena.bmp de 200x200, con una cantidad de 1000 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 1738533.0\newline
+Ciclos ASM:               652756.25\newline
+\newline
+Tiempo C:                 1738533042\newline
+Tiempo ASM:               652756221\newline
+\newline
+Al probar lena.bmp de 200x200, con una cantidad de 10000 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 1741106.375\newline
+Ciclos ASM:               654910.312\newline
+\newline
+Tiempo C:                 17411062968\newline
+Tiempo ASM:               6549102981\newline
+\newline
 Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones, el tiempo obtenido fue el siguiente:\newline
-Implementación C\newline
-----------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 858387565588994\newline
-  Fin                               : 858388404276534\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 838687540\newline
-  \# de ciclos insumidos por llamada : 8386875.500\newline
-\newline
-Implementación ASM\newline
-------------------
-
-Tiempo de ejecución:\newline
-  Comienzo                          : 858388558871397\newline
-  Fin                               : 858388874991387\newline
-  \# iteraciones                     : 100\newline
-  \# de ciclos insumidos totales     : 316119990\newline
-  \# de ciclos insumidos por llamada : 3161200.000\newline
-\newline
-Resultados\newline
-----------
-
 Ciclos C:                 8386875.5\newline
 Ciclos ASM:               3161200.0\newline
-Ciclos ASM respecto de C: 37.6922251916\%\newline
+\newline
 Tiempo C:                 838687540\newline
 Tiempo ASM:               316119990\newline
-Tiempo ASM respecto de C: 37.6922244487\%\newline
-
+\newline
+Al probar lena.bmp de 512x512, con una cantidad de 500 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 11225467.0\newline
+Ciclos ASM:               4067750.25\newline
+\newline
+Tiempo C:                 5612733207\newline
+Tiempo ASM:               2033875089\newline
+\newline
+Al probar lena.bmp de 512x512, con una cantidad de 1000 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 11193026.0\newline
+Ciclos ASM:               4053720.5\newline
+\newline
+Tiempo C:                 11193025185\newline
+Tiempo ASM:               4053720600\newline
+\newline
+Al probar lena.bmp de 512x512, con una cantidad de 1000 iteraciones, el tiempo obtenido fue el siguiente:\newline
+Ciclos C:                 11172481.0\newline
+Ciclos ASM:               4055511.5\newline
+\newline
+Tiempo C:                 111724816581\newline
+Tiempo ASM:               40555116072\newline
 
 \end{itemize}
 
