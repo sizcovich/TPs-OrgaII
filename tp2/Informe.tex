@@ -174,7 +174,7 @@ En primer lugar, decidimos observar de qué manera afectaba el valor de $tam$ co
 \end{center}
 \end{figure}
 
-A partir de dicha experimentación, podemos afirmar que el valor de $tam$ afecta de manera casi proporcional dado que a medida que $tam$ aumenta, la cantidad de iteraciones a realizar por el programa son mayores. Luego, de manera tal a lograr enfocar el análisis en la cantidad de ciclos realizados de acuerdo al tamaño de la imagen, decidimos utilizar $tam$=100.\newline 
+A partir de dicha experimentación, podemos afirmar que el valor de $tam$ afecta de manera casi proporcional dado que a medida que $tam$ aumenta, la cantidad de iteraciones a realizar por el programa son mayores pues la cantidad de bits a copiar en la imagen destino es mayor. Luego, de manera tal a lograr enfocar el análisis en la cantidad de ciclos realizados de acuerdo al tamaño de la imagen, decidimos utilizar un $tam$ fijado en 100.\newline 
 
 \item{Al probar lena de 200x200 con una cantidad de 10000 iteraciones y un tam de 100, el tiempo obtenido fue el siguiente:\newline
 \newline
@@ -212,14 +212,21 @@ A partir de dicha experimentación, podemos afirmar que el valor de $tam$ afecta
 
 \item{Al probar lena de 1023x767 con una cantidad de 10000 iteraciones y un tam de 100, el tiempo obtenido fue el siguiente:\newline
 \newline
-\textbf{Ciclos C:}                  743862.688\newline
+\textbf{Ciclos C:}                  943862.688\newline
 \vspace{0.15cm}
 \textbf{Ciclos ASM:}               42174.125\newline
-\textbf{Tiempo C:}                 7438626621\newline
+\textbf{Tiempo C:}                 9438626621\newline
 \textbf{Tiempo ASM:}               421741242\newline}
 
 \end{itemize}
 
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=300pt]{./ciclosRecortar.jpg}
+\end{center}
+\end{figure}
+
+A partir de los valores obtenidos, podemos afirmar que cuanto mayor es el tamaño de la imagen a procesar, mayor es la cantidad de ciclos realizados por el programa como también el tiempo para procesarlos. Esto resulta lógico considerando que a mayor tamaño de imagen mayor va a ser la cantidad de datos a procesar lo que implica que el tiempo de ejecución del programa sea más elevado.
 
 \item {\textbf{Halftone:}}
 La idea principal de este filtro consistió en partir la imagen original en bloques de 2x2 píxeles generando, en la imagen destino, bloques del mismo tamaño. A cada nuevo bloque de la imagen original se le debió asignar el color blanco o negro dependiendo del valor de $t = \sum_{i=0}^{3} {(p_{i}}$, con $p_{i}$ píxeles del bloque de la imagen original de acuerdo a ciertas condiciones requeridas.\newline
@@ -299,6 +306,12 @@ Los píxeles resultantes debían cumplir con la siguiente condición:
 
 \end{itemize}
 
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=300pt]{./ciclosHalftone.jpg}
+\end{center}
+\end{figure}
+
 \item {\textbf{Umbralizar:}}
 En Umbralizar, la imagen destino debía cumplir los siguientes requisitos:\newline
 - Cada píxel menor a $min$ debía valer 0.\newline
@@ -322,19 +335,19 @@ Para recorrer la matriz, decidimos desplazarnos a través de los punteros, por l
 
 \item{Al probar lena.bmp de 204x204, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
 \newline
-\textbf{Ciclos C:}                 1049053.75\newline
+\textbf{Ciclos C:}                 1149053.75\newline
 \vspace{0.15cm}
-\textbf{Ciclos ASM:}               99925.562\newline
-\textbf{Tiempo C:}                 10490536914\newline
-\textbf{Tiempo ASM:}               999255621\newline}
+\textbf{Ciclos ASM:}               599925.562\newline
+\textbf{Tiempo C:}                 11490536914\newline
+\textbf{Tiempo ASM:}               5999255621\newline}
 
 \item{Al probar lena.bmp de 256x256, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
 \newline
 Ciclos C:                 1631805.5\newline
 \vspace{0.15cm}
-Ciclos ASM:               161924.359\newline
+Ciclos ASM:               601924.359\newline
 Tiempo C:                 16318054494\newline
-Tiempo ASM:               1619243697\newline}
+Tiempo ASM:               6019243697\newline}
 
 \item{Al probar lena.bmp de 512x512, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
 \newline
@@ -353,6 +366,13 @@ Tiempo ASM:               1619243697\newline}
 \textbf{Tiempo ASM:}               33729202260\newline}
 
 \end{itemize}
+
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=300pt]{./ciclosUmbralizar.jpg}
+\end{center}
+\end{figure}
+
 \item {\textbf{Colorizar:}}
 Para colorizar, la imagen fuente debía ser procesada de acuerdo a las siguientes definiciones: 
 
@@ -460,6 +480,13 @@ Para recorrer la matriz, recorrimos las filas hasta el ancho-16. Una vez alcanza
 \textbf{Tiempo ASM:}               162431140968\newline}
 
 \end{itemize}
+
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=300pt]{./ciclosWaves.jpg}
+\end{center}
+\end{figure}
+
 \item {\textbf{Rotar:}} 
 El filtro rotar toma la imagen de entrada y escribe en la de salida la imagen rotada 45 grados. Cada píxel de la imagen resultante se forma de la siguiente manera:
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
@@ -514,6 +541,12 @@ Para la realización de dicho filtro, preferimos utilizar floats ya que para usa
 \textbf{Tiempo ASM:}               32053613385\newline}
 \end{itemize}
 \end{itemize}
+
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=300pt]{./ciclosRotar.jpg}
+\end{center}
+\end{figure}
 
 \section{Resultados}
 A partir de los resultados otorgados por un script realizado para calcular el tiempo de ejecución de cada función en $C$ y $Assembler$, decidimos utilizar objdump para lograr dar una explicación a lo obtenido:\newline
