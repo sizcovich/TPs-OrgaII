@@ -222,11 +222,9 @@ A partir de dicha experimentación, podemos afirmar que el valor de $tam$ afecta
 
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
 \begin{center}
-\includegraphics[width=300pt]{./ciclosRecortar.jpg}
+\includegraphics[width=560pt]{./ciclosRecortar.jpg}
 \end{center}
 \end{figure}
-
-A partir de los valores obtenidos, podemos afirmar que cuanto mayor es el tamaño de la imagen a procesar, mayor es la cantidad de ciclos realizados por el programa como también el tiempo para procesarlos. Esto resulta lógico considerando que a mayor tamaño de imagen mayor va a ser la cantidad de datos a procesar lo que implica que el tiempo de ejecución del programa sea más elevado.
 
 \item {\textbf{Halftone:}}
 La idea principal de este filtro consistió en partir la imagen original en bloques de 2x2 píxeles generando, en la imagen destino, bloques del mismo tamaño. A cada nuevo bloque de la imagen original se le debió asignar el color blanco o negro dependiendo del valor de $t = \sum_{i=0}^{3} {(p_{i}}$, con $p_{i}$ píxeles del bloque de la imagen original de acuerdo a ciertas condiciones requeridas.\newline
@@ -308,7 +306,7 @@ Los píxeles resultantes debían cumplir con la siguiente condición:
 
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
 \begin{center}
-\includegraphics[width=300pt]{./ciclosHalftone.jpg}
+\includegraphics[width=560pt]{./ciclosHalftone.jpg}
 \end{center}
 \end{figure}
 
@@ -369,7 +367,7 @@ Tiempo ASM:               6019243697\newline}
 
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
 \begin{center}
-\includegraphics[width=300pt]{./ciclosUmbralizar.jpg}
+\includegraphics[width=560pt]{./ciclosUmbralizar.jpg}
 \end{center}
 \end{figure}
 
@@ -483,7 +481,7 @@ Para recorrer la matriz, recorrimos las filas hasta el ancho-16. Una vez alcanza
 
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
 \begin{center}
-\includegraphics[width=300pt]{./ciclosWaves.jpg}
+\includegraphics[width=560pt]{./ciclosWaves.jpg}
 \end{center}
 \end{figure}
 
@@ -544,12 +542,13 @@ Para la realización de dicho filtro, preferimos utilizar floats ya que para usa
 
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
 \begin{center}
-\includegraphics[width=300pt]{./ciclosRotar.jpg}
+\includegraphics[width=560pt]{./ciclosRotar.jpg}
 \end{center}
 \end{figure}
 
 \section{Resultados}
-A partir de los resultados otorgados por un script realizado para calcular el tiempo de ejecución de cada función en $C$ y $Assembler$, decidimos utilizar objdump para lograr dar una explicación a lo obtenido:\newline
+A partir de los valores obtenidos luego de varias pruebas realizadas para calcular el tiempo de ejecución de cada función $C$ y $Assembler$, pudimos concluir que cuanto mayor es el tamaño de la imagen a procesar, mayor es la cantidad de ciclos realizados por el programa como también el tiempo para procesarlos. Esto resulta lógico considerando que a mayor tamaño de imagen, más importante va a ser la cantidad de datos a procesar lo que implica que el tiempo de ejecución del programa sea más elevado.\newline
+Luego de dichas conclusiones, decidimos utilizar objdump para lograr dar una explicación a lo obtenido:\newline
 En primera instancia, hallamos que la cantidad de ciclos realizados por $Assembler$ es muy menor a la realizada por $C$. Esto se debe a que el $Assembler$ de $C$ realiza múltiples llamados a memoria en cada ciclo. Por ejemplo, la mayoría de los datos que utiliza son almacenados en la pila por lo que en cada iteración realiza operaciones utilizando, por ejemplo, [rbp-0x28]. Ésta es la causa principal del retraso temporal generado por el $C$ respecto del $Assembler$. \newline 
 Por otro lado, nos resultó sorprendente la extensión de los códigos en $Assembler$ generados por los $C$ en comparación con los nuestros. Para hallarle una explicación a dicha consecuencia, pensamos que el causante de esto fue que, al estar todo almacenado en la pila, los desplazamientos requieren de numerosas instrucciones. Contrariamente, al moverse con un puntero, lo único necesario para el desplazamiento no es más que un incrementador. \newline
 Por otra parte, hallamos que los códigos en $Assembler$ generados por los $C$ realizan operaciones innecesarias, como por ejemplo multiplicar por 1, dado que se producen de manera automática.\newline
