@@ -325,43 +325,43 @@ Para recorrer la matriz, decidimos desplazarnos a través de los punteros, por l
 \begin{itemize}
 \item{Al probar lena.bmp de 200x200, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
 \newline
-\textbf{Ciclos C:}                  1112498.0\newline
+\textbf{Ciclos C:}                  785681.438\newline
 \vspace{0.15cm}
-\textbf{Ciclos ASM:}               531874.0\newline
-\textbf{Tiempo C:}                 11124979713\newline
-\textbf{Tiempo ASM:}               5318740134\newline}
+\textbf{Ciclos ASM:}               98347.219\newline
+\textbf{Tiempo C:}                 7856814390\newline
+\textbf{Tiempo ASM:}               983472192\newline}
 
 \item{Al probar lena.bmp de 204x204, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
 \newline
-\textbf{Ciclos C:}                 1149053.75\newline
+\textbf{Ciclos C:}                 818877.312\newline
 \vspace{0.15cm}
-\textbf{Ciclos ASM:}               599925.562\newline
-\textbf{Tiempo C:}                 11490536914\newline
-\textbf{Tiempo ASM:}               5999255621\newline}
+\textbf{Ciclos ASM:}               98011.891\newline
+\textbf{Tiempo C:}                 8188772784\newline
+\textbf{Tiempo ASM:}               980118944\newline}
 
 \item{Al probar lena.bmp de 256x256, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
 \newline
-Ciclos C:                 1631805.5\newline
+\textbf{Ciclos C:}                 1272471.875\newline
 \vspace{0.15cm}
-Ciclos ASM:               601924.359\newline
-Tiempo C:                 16318054494\newline
-Tiempo ASM:               6019243697\newline}
+\textbf{Ciclos ASM:}               169552.75\newline
+\textbf{Tiempo C:}                 12724718784\newline
+\textbf{Tiempo ASM:}               1695527376\newline}
 
 \item{Al probar lena.bmp de 512x512, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
 \newline
-\textbf{Ciclos C:}                  6794335.0\newline
+\textbf{Ciclos C:}                  4928822.5\newline
 \vspace{0.15cm}
-\textbf{Ciclos ASM:}               3372920.25\newline
-\textbf{Tiempo C:}                 67943348235\newline
-\textbf{Tiempo ASM:}               33729202260\newline}
+\textbf{Ciclos ASM:}               593732.438\newline
+\textbf{Tiempo C:}                 49288225994\newline
+\textbf{Tiempo ASM:}               5937324345\newline}
 
 \item{Al probar lena.bmp de 1023x767, con una cantidad de 10000 iteraciones y 64 128 16 como parámetros, el tiempo obtenido fue el siguiente: \newline
 \newline
-\textbf{Ciclos C:}                  6794335.0\newline
+\textbf{Ciclos C:}                  13530963.0\newline
 \vspace{0.15cm}
-\textbf{Ciclos ASM:}               3372920.25\newline
-\textbf{Tiempo C:}                 67943348235\newline
-\textbf{Tiempo ASM:}               33729202260\newline}
+\textbf{Ciclos ASM:}               1772185.25\newline
+\textbf{Tiempo C:}                 135309628750\newline
+\textbf{Tiempo ASM:}               17721851734\newline}
 
 \end{itemize}
 
@@ -531,7 +531,7 @@ El filtro rotar toma la imagen de entrada y escribe en la de salida la imagen ro
 \includegraphics[width=400pt]{./rotar.jpg}
 \end{center}
 \end{figure}
-El filtro rotar no es un buen candidato para paralelizar. Esto se debe a que, al levantar los píxeles consecutivos de la imagen fuente, éstos no deben ser consecutivos en la imagen destino. Esto significa que el orden de los píxeles de la imagen destino es distinto al de la imagen fuente. Nuestra manera de paralelizar fue al realizar los cálculos que le darían la posición correcta a la imagen destino.\newline
+El filtro rotar no es un buen candidato para implementar con SIMD. Esto se debe a que, al levantar los píxeles consecutivos de la imagen fuente, éstos no deben ser consecutivos en la imagen destino. Esto significa que el orden de los píxeles de la imagen destino es distinto al de la imagen fuente. Nuestra manera de paralelizar fue al realizar los cálculos que le darían la posición correcta a la imagen destino.\newline
 Luego del análisis previo, elegimos proceder de la siguiente manera:\newline
 En primer lugar, calculamos Cy y Cx con simples shr del ancho y alto de la imagen fuente. Luego, procedimos calculando $\sqrt{2}$/2 habiendo extendido los cálculos a todos los bits del XMM para, luego, realizar los cálculos con todos los píxeles levantados en una iteración.\newline
 Para realizar los cálculos tomando el índice $x$ correcto, decidimos almacenar una escalera en memoria de manera tal a evitar ciclos innecesarios y a realizar cuentas velozmente.\newline
