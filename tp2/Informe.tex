@@ -405,14 +405,53 @@ Por último, desempaquetamos los datos originales y los filtros para realizar lo
 \subsection{Comparación de Tiempo}
 
 \begin{itemize}
-\item{Al probar lena.bmp de 512x512, con una cantidad de 100 iteraciones y 0.5 como parámetro, el tiempo obtenido fue el siguiente:\newline
+\item{Al probar lena.bmp de 200x200, con una cantidad de 10000 iteraciones y 0.5 como parámetro, el tiempo obtenido fue el siguiente:\newline
 \newline
-\textbf{Ciclos C:}                  119742072.0\newline
+\textbf{Ciclos C:}                 14686647.0\newline
 \vspace{0.15cm}
-\textbf{Ciclos ASM:}               6260647.0\newline
-\textbf{Tiempo C:}                 11974207281\newline
-\textbf{Tiempo ASM:}               626064714\newline}
+\textbf{Ciclos ASM:}               512187.438\newline
+\textbf{Tiempo C:}                  146866477084\newline
+\textbf{Tiempo ASM:}               5121874249\newline}
+
+\item{Al probar lena.bmp de 204x204, con una cantidad de 10000 iteraciones y 0.5 como parámetro, el tiempo obtenido fue el siguiente:\newline
+\newline
+\textbf{Ciclos C:}                 15266872.0\newline
+\vspace{0.15cm}
+\textbf{Ciclos ASM:}               538598.312\newline
+\textbf{Tiempo C:}                 152668724208\newline
+\textbf{Tiempo ASM:}               5385982752\newline}
+
+\item{Al probar lena.bmp de 256x256, con una cantidad de 10000 iteraciones y 0.5 como parámetro, el tiempo obtenido fue el siguiente:\newline
+\newline
+\textbf{Ciclos C:}                 24220022.0\newline
+\vspace{0.15cm}
+\textbf{Ciclos ASM:}               1257442.375\newline
+\textbf{Tiempo C:}                 242200208670\newline
+\textbf{Tiempo ASM:}               12574423775\newline}
+
+\item{Al probar lena.bmp de 512x512, con una cantidad de 10000 iteraciones y 0.5 como parámetro, el tiempo obtenido fue el siguiente:\newline
+\newline
+\textbf{Ciclos C:}                 95509400.0\newline
+\vspace{0.15cm}
+\textbf{Ciclos ASM:}               5063423.0\newline
+\textbf{Tiempo C:}                 955094000358\newline
+\textbf{Tiempo ASM:}               50634231520\newline}
+
+\item{Al probar lena.bmp de 1023x767, con una cantidad de 10000 iteraciones y 0.5 como parámetro, el tiempo obtenido fue el siguiente:\newline
+\newline
+\textbf{Ciclos C:}                 280806784.0\newline
+\vspace{0.15cm}
+\textbf{Ciclos ASM:}               15221196.0\newline
+\textbf{Tiempo C:}                 2808067870590\newline
+\textbf{Tiempo ASM:}               152211957569\newline}
+
 \end{itemize}
+
+\begin{figure}[H] %[h] Aqui [b] para button [t] para top
+\begin{center}
+\includegraphics[width=560pt]{./ciclosColorizar.jpg}
+\end{center}
+\end{figure}
 
 \item {\textbf{Waves:}}
 La idea de Waves consistió en combinar la imagen fuente con una imagen de ondas dando tonos más oscuros y más claros en forma de onda. Éstas se generan de manera repetida a lo largo de los ejes x e y. Cada píxel $(i,j)$ de la imagen destino se obtuvo a través del siguiente cálculo:
@@ -553,10 +592,10 @@ En primera instancia, hallamos que la cantidad de ciclos realizados por $Assembl
 Por otro lado, nos resultó sorprendente la extensión de los códigos en $Assembler$ generados por los $C$ en comparación con los nuestros. Para hallarle una explicación a dicha consecuencia, pensamos que el causante de esto fue que, al estar todo almacenado en la pila, los desplazamientos requieren de numerosas instrucciones. Contrariamente, al moverse con un puntero, lo único necesario para el desplazamiento no es más que un incrementador. \newline
 Por otra parte, hallamos que los códigos en $Assembler$ generados por los $C$ realizan operaciones innecesarias, como por ejemplo multiplicar por 1, dado que se producen de manera automática.\newline
 Por último, encontramos que el ensamblado del $C$ no utiliza instrucciones SIMD, empaquetando y desempaquetando, por lo que la cantidad de operaciones a realizar está multiplicada por 16.\newline
-En el siguiente gráfico, puede observarse la cantidad de ciclos generada por la función en C y en Assembler, donde se ve claramente que la ejecución en C utiliza una mayor cantidad de ciclos:\newline
+En el siguiente gráfico, puede observarse el porcentaje sobre la cantidad de ciclos realizados por cada filtro en ASM a partir de los realizados por los mismos en C. En éste, puede verse claramente que la ejecución en C utiliza una cantidad de ciclos muy superior a los realizados por ASM:\newline
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
 \begin{center}
-\includegraphics[width=560pt]{./velocidad.jpg}
+\includegraphics[width=570pt]{./velocidad.jpg}
 \end{center}
 \end{figure}
 \section{Conclusi\'on}
