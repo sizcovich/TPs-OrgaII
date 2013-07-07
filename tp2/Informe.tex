@@ -592,7 +592,7 @@ En primera instancia, hallamos que la cantidad de ciclos realizados por $Assembl
 Por otro lado, nos resultó sorprendente la extensión de los códigos en $Assembler$ generados por los $C$ en comparación con los nuestros. Para hallarle una explicación a dicha consecuencia, pensamos que el causante de esto fue que, al estar todo almacenado en la pila, los desplazamientos requieren de numerosas instrucciones. Contrariamente, al moverse con un puntero, lo único necesario para el desplazamiento no es más que un incrementador. \newline
 Por otra parte, hallamos que los códigos en $Assembler$ generados por los $C$ realizan operaciones innecesarias, como por ejemplo multiplicar por 1, dado que se producen de manera automática.\newline
 Por último, encontramos que el ensamblado del $C$ no utiliza instrucciones SIMD, empaquetando y desempaquetando, por lo que la cantidad de operaciones a realizar está multiplicada por 16.\newline
-En el siguiente gráfico, puede observarse el porcentaje sobre la cantidad de ciclos realizados por cada filtro en ASM a partir de los realizados por los mismos en C. En éste, puede verse claramente que la ejecución en C utiliza una cantidad de ciclos muy superior a los realizados por ASM:\newline
+En el siguiente gráfico, puede observarse el porcentaje sobre la cantidad de ciclos realizados por cada filtro en ASM a partir de los realizados por los mismos en C. En éste, puede verse claramente que la ejecución en C utiliza una cantidad de ciclos muy superior a los realizados por ASM ya que, en todos los casos, la cantidad de ciclos de ASM no supera el 12\% de los ciclos realizados por C:\newline
 \begin{figure}[H] %[h] Aqui [b] para button [t] para top
 \begin{center}
 \includegraphics[width=570pt]{./velocidad.jpg}
