@@ -93,8 +93,31 @@ El siguiente trabajo práctico consiste en un conjunto de ejercicios en los que 
 A lo largo del trabajo práctico, se utilizaron los mecanismos que posee el procesador para la programación desde el punto de vista del sistema operativo enfocados sobre el sistema de protección. En lo que sigue, se detallan explícitamente los pasos realizados para lograr el objetivo mencionado.
 
 \section{Ejercicio 1}
+En el primer ejercicio, nos limitamos a completar la GDT conformada por un arreglo de gdt\_entry's tomando como ejemplo la GDT\_NULL provista por la cátedra. Para ello, debimos definir tres segmentos de códigos y de datos, manteniendo el segmento NULL para el buen funcionamiento de la estructura. El primero de ellos (el 0) correspondiente al kernel, el segundo (el 2) al árbitro y el tercero (el 3) a los jugadores. Dado que la GDT tiene un formato de segmentacion flat, la base de cada segmento comienza en 0 y el límite consiste en el tamaño de lo que deseamos mapear. Cada segmento fue completado del siguiente modo:
 
-En el primer ejercicio, nos limitamos a completar la GDT tomando como ejemplo la GDT\_NULL provista por la cátedra. Para ello, debimos definir tres segmentos de códigos y de datos. El primero de ellos (el 0) correspondiente al kernel, el segundo (el 2) al árbitro y el tercero (el 3) a los jugadores.\newline
+\begin{table}[H]
+\centering
+    \begin{tabular}{|c|l|}
+        \hline
+        0xFFFF & limit[0:15] \\ 
+        0x0000 & base[0:15] \\
+        0x00 & base[23:16] \\ 
+        0x02 & type \\ 
+        0x01 & s \\ 
+        0x00 & dpl \\ 
+        0x01 & p \\ 
+        0x07 & limit[16:19] \\ 
+        0x00 & avl \\ 
+        0x00 & l \\ 
+        0x01 & db \\ 
+        0x01 & g \\ 
+        0x00 & base[31:24] \\ 
+        \hline
+    \end{tabular}
+    \caption{GDT}
+\end{table}
+
+Las diferencias entre DATA y CODE 
 {\subsection{Pregunta 1:}} ¿Qué ocurre si se intenta escribir en la fila 26, columna 1 de la matriz de video, utilizando el segmento de la GDT que direcciona a la memoria de video? ¿Por qué?\newline
 \newline
 \textit{La consecuencia de intentar escribir en la fila 26, columna 1 de la matriz de video accediendola desde el segmento declarado, es que se produce una interrupción 13(General Protection) porque se accede a memoria fuera del segmento.}\newline
