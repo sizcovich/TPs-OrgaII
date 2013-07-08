@@ -12,12 +12,16 @@
 \usepackage{listings}
 \usepackage{listingsutf8}
 \usepackage{graphicx}
+\usepackage{subfloat}
+\usepackage{framed}
 \usepackage{amsfonts}
 \usepackage{verbatim}
 \usepackage{latexsym}
 \usepackage{lastpage}
-\usepackage[colorlinks=true, linkcolor=blue]{hyperref}
-\usepackage{calc}
+\usepackage[colorlinks=true, linkcolor=blue]{hyperref} \usepackage{calc}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{multicol}
 
 \newcommand{\f}[1]{\text{#1}}
 \newcommand{\real}{\mathbb{R}}
@@ -87,13 +91,13 @@
 \newpage
 \section{Introducci\'on}
 El siguiente trabajo práctico consiste en un conjunto de ejercicios en los que se aplican de forma gradual los conceptos de System Programming vistos a lo largo de la materia. El objetivo de éste consiste en construir un sistema capaz de correr el juego \textit{Infección}. Para la realización del mismo, debimos crear el soporte para que los jugadores (o sea las tareas) puedan ejecutar las reglas del juego. Dado que las tareas eran capaces de hacer cualquier cosa, debimos considerar que el sistema debía tener la capacidad de capturar cualquier problema y poder quitar a la tarea del juego.\newline
-A lo largo del trabajo práctico, se utilizaron los mecanismos que posee el procesador para la programación desde el punto de vista del sistema operativo enfocados sobre el sistema de protección. En lo que sigue, se detallan explícitamente los pasos realizados para lograr el objetivo mencionado.
+A lo largo del trabajo práctico, se utilizaron los mecanismos que posee el procesador para la programación desde el punto de vista del sistema operativo enfocados sobre el sistema de protección. En lo que sigue, se detallan explícitamente los pasos realizados para lograr el objetivo mencionado.
 
 \section{Desarrollo}
 
 \subsection{Ejercicio 1}
 
-En el primer ejercicio, nos limitamos a completar la GDT tomando como ejemplo la GDT_NULL provista por la cátedra. Para ello, debimos definir tres segmentos de códigos y de datos. El primero de ellos (el 0) correspondiente al kernel, el segundo (el 2) al árbitro y el tercero (el 3) a los jugadores.\newline
+En el primer ejercicio, nos limitamos a completar la GDT tomando como ejemplo la GDT\_NULL provista por la cátedra. Para ello, debimos definir tres segmentos de códigos y de datos. El primero de ellos (el 0) correspondiente al kernel, el segundo (el 2) al árbitro y el tercero (el 3) a los jugadores.\newline
 {\textbf{Pregunta 1:}} ¿Qué ocurre si se intenta escribir en la fila 26, columna 1 de la matriz de video, utilizando el segmento de la GDT que direcciona a la memoria de video? ¿Por qué?\newline
 \newline
 \textit{La consecuencia de intentar escribir en la fila 26, columna 1 de la matriz de video depende de cómo fue definido el segmento. Si el tamaño del segmento es igual al tamaño de la pantalla en bytes, entonces va a ocurrir un Segmentation Fault. En el caso en el que el segmento no sea del mismo tamaño de la pantalla, el caracter no va a ser visible.}\newline
@@ -141,7 +145,7 @@ Para abarcar los primeros 2GB de la memoria, claramente la base es 0x00000000, y
 2GB = 2048MB = 2097152KB = 524288 páginas de 4KB = 0x80000.
 \end{center}
 
-Como el l­ímite es la última posición accesible, en este caso es 0x7FFFF.
+Como el límite es la última posición accesible, en este caso es 0x7FFFF.
 		\begin{figure}[H]
 	  		\centering
 %			\includegraphics[scale=0.7]{./imagenes/descriptorGDTComunes.png}
@@ -241,12 +245,19 @@ clearScreen:
 Para pintar la primer y última linea, se realiza un procedimiento análogo, solo que al caracter se le asigna color blanco (consultar \texttt{kernel.asm}). 
 		
 \subsection{Preguntas}
-\subsubsection*{Pregunta 1}
- \begin{framed}
+\subsubsection{Pregunta 1}
+\begin{framed}
 ¿Qué ocurre si se intenta escribir en la fila 26, columna 1 de la matriz de video, utilizando el usando el segmento de la GDT que direcciona a la memoria de video?
 ¿Por qué?
 \end{framed}
-Si intentamos escribir la fila 26 de la memoria de video utilizando el descriptor previamente declarado, nos encontramos con un General Protection Fault, ya que esa memoria (fila 26, columna 1), es posterior al lí­mite del segmento declarado, que abarca 25 filas.
+Si intentamos escribir la fila 26 de la memoria de video utilizando 
+el descriptor previamente declarado, 
+nos encontramos con un General Protection Fault, ya que esa 
+memoria (fila 26, 
+columna 1), es 
+posterior al límite
+ del segmento declarado, 
+que abarca 25 filas.
 \subsubsection*{Pregunta 2}
  \begin{framed}
 ¿Qué ocurre si no se setean todos los registros de segmento al entrar en modo protegido?, ¿Es necesario setearlos todos?, ¿Por qué?
@@ -256,35 +267,35 @@ Los segmentos que son necesarios setear son CS, DS y SS, si no se setean, se pro
 \section{Ejercicio 2: IDT}
 \subsection{Implementación}
 En base al modelo provisto por la cátedra, se crearon dos macros de trap gates, uno con permiso de nivel 0, para las interrupciones de kernel, y otro con permiso de nivel 3, para las interrupciones de clock, teclado y de servicios. La configuración es la siguiente:
-\begin{table}[h]
-	\begin{subtable}[h]{0.5\textwidth}
-		\begin{minipage}{0.9\textwidth}
-			\resizebox{8cm}{!} {
-				\begin{tabular}{|c|c|}
-					\hline
-					\&\_isr\# bits 0 a 15 & 0x8F00 \\ \hline
-					0x0050 & \&\_isr\# bits 16 a 31 \\
-					\hline
-				\end{tabular}
-			}
-			\caption{Estructura del gate de nivel 0. \&\_isr\# es la dirección dentro del segmento en la que esta la rutina que resuelve la interrupción.}
-		\end{minipage}
-	\end{subtable}
-~
-	\begin{subtable}[h]{0.5\textwidth}
-		\begin{minipage}{0.9\textwidth}
-			\resizebox{8cm}{!} {
-				\begin{tabular}{|c|c|}
-					\hline
-					\&\_isr\# bits 0 a 15 & 0xEF00 \\ \hline
-					0x0050 & \&\_isr\# bits 16 a 31 \\
-					\hline
-				\end{tabular}
-			}
-			\caption{Estructura del gate de nivel 3. \&\_isr\# es la dirección dentro del segmento en la que esta la rutina que resuelve la interrupción.}
-		\end{minipage}
-	\end{subtable}
-\end{table}
+%\begin{table}[H]
+%	\begin{subtable}[H]{0.5\textwidth}
+%		\begin{minipage}{0.9\textwidth}
+%			\resizebox{8cm}{!} {
+%				\begin{tabular}{|c|c|}
+%					\hline
+%					\&\_isr\# bits 0 a 15 & 0x8F00 \\ \hline
+%					0x0050 & \&\_isr\# bits 16 a 31 \\
+%					\hline
+%				\end{tabular}
+%			}
+%			\caption{Estructura del gate de nivel 0. \&\_isr\# es la dirección dentro del segmento en la que esta la rutina que resuelve la interrupción.}
+%		\end{minipage}
+%	\end{subtable}
+%~
+%	\begin{subtable}[h]{0.5\textwidth}
+%		\begin{minipage}{0.9\textwidth}
+%			\resizebox{8cm}{!} {
+%				\begin{tabular}{|c|c|}
+%					\hline
+%					\&\_isr\# bits 0 a 15 & 0xEF00 \\ \hline
+%					0x0050 & \&\_isr\# bits 16 a 31 \\
+%					\hline
+%				\end{tabular}
+%			}
+%			\caption{Estructura del gate de nivel 3. \&\_isr\# es la dirección dentro del segmento en la que esta la rutina que resuelve la interrupción.}
+%		\end{minipage}
+%	\end{subtable}
+%\end{table}
 \\
 La diferencia en ambos modelos esta en los bits de DPL, el resto se configura de la misma manera.
 Para obtener el offset se hace uso de una etiqueta definida mediante un macro provisto por la cátedra en el archivo isr.asm, el cual define un comportamiento básico para el manejo de interrupciones; a ese macro se le agregó la llamada a IMPRIMIR\_TEXTO, una función provista por la cátedra, la cual muestra en pantalla.
@@ -312,39 +323,39 @@ Para generar una excepción sin utilizar la instrucción \texttt{int} se puede h
 Cuando se genera una interrupción, se debe preservar el estado actual de los flags y todos los registros que son necesarios para retornar a la normal ejecución una vez resuelta la interrupción.
 Cuando se produce la interrupción puede que sucedan 2 cosas, la interrupción tiene el mismo nivel de privilegio que el proceso en el que se generó o bien tiene un privilegio diferente. Como nuestro kernel opera en nivel de privilegio 3 y solo cambia de privilegio al ejecutar un servicio o al generar una interrupción de kernel, siempre que suceda una interrupción de nivel 0 se produciría un cambio de privilegio con lo que el stack de la interrupción para una interrupción de nivel 0 siempre es el formato de cambio de privilegio y para una interrupción de nivel 3 siempre es el formato de mismo nivel.
 
-\begin{table}[h]
-	\begin{subtable}[h]{0.5\textwidth}
-		\begin{minipage}{0.7\textwidth}
-			\hspace*{0.3\textwidth}
-			\begin{tabular}{|c|}
-				\\ \hline
-				Error Code \\ \hline
-				EIP \\ \hline
-				CS \\ \hline
-				EFLAGS \\ \hline
-				\\
-			\end{tabular}
-			\caption{Stack de interrupción de nivel 3}
-		\end{minipage}
-	\end{subtable}
-~
-	\begin{subtable}[h]{0.5\textwidth}
-		\begin{minipage}{0.7\textwidth}
-			\hspace*{0.3\textwidth}
-			\begin{tabular}{|c|}
-				\\ \hline
-				Error Code \\ \hline
-				EIP \\ \hline
-				CS \\ \hline
-				EFLAGS \\ \hline
-				ESP \\ \hline
-				SS \\ \hline
-				\\
-			\end{tabular}
-			\caption{Stack de interrupción de nivel 0}
-		\end{minipage}
-	\end{subtable}
-\end{table}
+%\begin{table}[h]
+%	\begin{subtable}[h]{0.5\textwidth}
+%		\begin{minipage}{0.7\textwidth}
+%			\hspace*{0.3\textwidth}
+%			\begin{tabular}{|c|}
+%				\\ \hline
+%				Error Code \\ \hline
+%				EIP \\ \hline
+%				CS \\ \hline
+%				EFLAGS \\ \hline
+%				\\
+%			\end{tabular}
+%			\caption{Stack de interrupción de nivel 3}
+%		\end{minipage}
+%	\end{subtable}
+%~
+%	\begin{subtable}[h]{0.5\textwidth}
+%		\begin{minipage}{0.7\textwidth}
+%			\hspace*{0.3\textwidth}
+%			\begin{tabular}{|c|}
+%				\\ \hline
+%				Error Code \\ \hline
+%				EIP \\ \hline
+%				CS \\ \hline
+%				EFLAGS \\ \hline
+%				ESP \\ \hline
+%				SS \\ \hline
+%				\\
+%			\end{tabular}
+%			\caption{Stack de interrupción de nivel 0}
+%		\end{minipage}
+%	\end{subtable}
+%\end{table}
 
 Los datos que se almacenan por automático son entonces:
 \begin{itemize}
@@ -467,21 +478,21 @@ para mostrar la animación descripta anteriormente.
 
 \subsection{Teclado}
 
-La interrupción de teclado por el momento lo que va a hacer es, al leer que se presionÃ³ una tecla correspondiente a un número, imprimirlo en la esquina superior 
+La interrupción de teclado por el momento lo que va a hacer es, al leer que se presionó una tecla correspondiente a un número, imprimirlo en la esquina superior 
 derecha de la pantalla. Con la instrucción \texttt{in al, 0x60} se lee el scan code de la tecla presionada, y se realizan comparaciones para saber de qué tecla se 
 trata. En primer lugar se compara con 0x0b y si es mayor, se salta al final de la interrupción, ya que no corresponde a un número. Si es igual, es un cero y es 
 tratado como un caso especial. Luego se compara con 0x2 y si es menor también se salta a fin, por no tratarse de un número. En el caso del cero, se imprime un cero,
 y en otro caso se decrementa el scan code y se le suma 0x30 para obtener el ascii deseado. Finalmente, se imprime.
 
 \subsection{interrupción 0x45 (a.k.a 69)}
-Esta interrupción será la encargada de proveerle a las tareas los servicios del sistema operativo de administración de memoria e impresiÃ³n por pantalla. Por el momento, nos limitamos a utilizarla para colocar el valor 42 en \texttt{eax}.
+Esta interrupción será la encargada de proveerle a las tareas los servicios del sistema operativo de administración de memoria e impresión por pantalla. Por el momento, nos limitamos a utilizarla para colocar el valor 42 en \texttt{eax}.
 
 \subsection{Preguntas}
 \subsubsection*{Pregunta 11}
  \begin{framed}
 Â¿qué pasa si en la interrupción de teclado no se lee la tecla presionada?
 \end{framed}
-Si no se lee la tecla, su valor se encola en un buffer especial que tiene el controlador de teclado, y en la próxima lectura, se extrae de ahÃ­.
+Si no se lee la tecla, su valor se encola en un buffer especial que tiene el controlador de teclado, y en la próxima lectura, se extrae de ahí.
 
 \subsubsection*{Pregunta 12}
  \begin{framed}
@@ -527,7 +538,7 @@ La \texttt{IDLE} la definimos mediante la función \texttt{inicializar\_tss\_idl
 \begin{itemize}
 \item Le asigna como base la dirección 0x10000.
 \item EIP lo inicializa con la dirección 0x3A0000 que es la dirección virtual de código, esto vale para todas las demás tareas.
-\item Dado que la pila de la \texttt{IDLE} se encuentra en 0x3F000, asigna al ESP y EBP este valor más el tamaÃ±o de la página.
+\item Dado que la pila de la \texttt{IDLE} se encuentra en 0x3F000, asigna al ESP y EBP este valor más el tamaño de la página.
 \item Setea flags con interrupciones habilitadas.
 \item Dado que esta tarea corre en nivel cero, ESP0 va a ser igual a ESP.
 \item Setea los selectores de segmento (cs = 0x50, el resto en 0x60)
@@ -558,7 +569,7 @@ Colocando un breakpoint luego de cargar una tarea, ¿Cómo se puede verificar, u
 ¿Cómo se llega a esta conclusión?
 \end{framed}
 Si el breakpoint se pone inmediatamente después del salto de tarea, sería un buen indicio que en principio no se detenga el flujo de ejecución, ya que
-después del jump far se deberÃ­a estar ejecutando el código de la tarea que se acaba de cargar. Esto se puede verificar poniendo un breakpoint antes del salto, y luego 
+después del jump far se debería estar ejecutando el código de la tarea que se acaba de cargar. Esto se puede verificar poniendo un breakpoint antes del salto, y luego 
 haciendo  next mediante el debuguer de Bochs. Luego de ejecutar el salto, se puede observar en la GDT el descriptor de TSS correspondiente a esa tarea, y corroborar
 que el bit de busy esté prendido. también se puede chequear que los registros TR y CR3 sean los correspondientes a la tarea que debió cargarse.
 \subsubsection*{Pregunta 14}
@@ -576,7 +587,7 @@ Si no está implementada la interrupción, se produce una excepción de protecci
 \subsection{Scheduler}
 El funcionamiento del scheduler es muy básico, simplemente debe decirle a la interrupción de reloj, qué tarea es la próxima que debe ejecutar. Inicialmente todas son candidatas, y apenas alguna genera una excepción de algún tipo, debe ser desalojada, esto significa que deja de ejecutarse en ese momento, y no vuelve a ser considerada como próxima a ejecutar.
 
-La idea es manejarnos con los índices de las tareas, entonces decidimos implementarlo simplemente como un arreglo de unsigned shorts (que funcionan como bools), llamado $tareas$. El arreglo tiene longitud CANT\_TAREAS, e inicializamos todas las posiciones en 1. Entonces para saber si una tarea $i$ es candidata o no a ejecutarse, hay que ver si $tareas[i]$ es igual a 1\footnote{Indizamos las tareas desde el 0.}. también tenemos una variable llamada $tareaActal$ para guardar la tarea actual, inicializada en 4 (así al ejecutarse por primera vez la función de próxima tarea a ejecutar, resulta en 0, la primera). De esta forma tenemos la información de qué tarea se está ejecutando actualmente, y cuáles son candidatas a ejecutarse (a estas las vamos a llamar "vivas", las que no son candidatas, "muertas"), y la función de proximoIndice, que nos devuelve el índice de la próxima tarea a ejecutar, es directa. La función hace dos cosas: Actualiza el valor de $tareaActal$, y devuelve el índice de la próxima tarea que debe ejecutarse, o un valor especial, que es 6, y nos dice que no debemos saltar de tarea. ¿Cuándo puede suceder esto? En dos casos: Cuando el próximo índice a ejecutar es una tarea que no está viva (por la implementación de la función, puede suceder, e implica que todas las tareas están muertas), o cuando estoy en la misma tarea que debo ejecutar, sin estar idle, esto implicaría saltar a la misma tarea, que esta busy, y resultarí­a en un GPF.
+La idea es manejarnos con los índices de las tareas, entonces decidimos implementarlo simplemente como un arreglo de unsigned shorts (que funcionan como bools), llamado $tareas$. El arreglo tiene longitud CANT\_TAREAS, e inicializamos todas las posiciones en 1. Entonces para saber si una tarea $i$ es candidata o no a ejecutarse, hay que ver si $tareas[i]$ es igual a 1\footnote{Indizamos las tareas desde el 0.}. también tenemos una variable llamada $tareaActal$ para guardar la tarea actual, inicializada en 4 (así al ejecutarse por primera vez la función de próxima tarea a ejecutar, resulta en 0, la primera). De esta forma tenemos la información de qué tarea se está ejecutando actualmente, y cuáles son candidatas a ejecutarse (a estas las vamos a llamar "vivas", las que no son candidatas, "muertas"), y la función de proximoIndice, que nos devuelve el índice de la próxima tarea a ejecutar, es directa. La función hace dos cosas: Actualiza el valor de $tareaActal$, y devuelve el índice de la próxima tarea que debe ejecutarse, o un valor especial, que es 6, y nos dice que no debemos saltar de tarea. ¿Cuándo puede suceder esto? En dos casos: Cuando el próximo índice a ejecutar es una tarea que no está viva (por la implementación de la función, puede suceder, e implica que todas las tareas están muertas), o cuando estoy en la misma tarea que debo ejecutar, sin estar idle, esto implicaría saltar a la misma tarea, que esta busy, y resultaría en un GPF.
 
 	\begin{figure}[H]
   		\centering
@@ -629,7 +640,7 @@ void map_compartida(unsigned short indice)
 
 Primero se calcula la dirección física que queremos mapear, y luego se mapea a TASK\_SHARE (0x3C0000), utilizando el cr3 actual, que es el de la tarea que pidió el servicio set\_page.
 
-Como debíamos mostrar la página compartida en pantalla, y eventualmente sacarla de la pantalla si la tarea muere, decidimos guardar el índice de la página compartida de cada tarea, si la tuviese. Para esto utilizamos un arreglo, donde se guarda el índice de la página compartida para cada tarea. Cada vez que una tarea mapea una página nueva, nos fijamos si ya tenÃ­a una, si la tiene, cambiamos el índice en el arreglo, y cambiamos en la pantalla la página que se muestra como la compartida de esa tarea\footnote{Este fragmento de código es el que no se muestra en la figura 9, puede verse en sched.c}.
+Como debíamos mostrar la página compartida en pantalla, y eventualmente sacarla de la pantalla si la tarea muere, decidimos guardar el índice de la página compartida de cada tarea, si la tuviese. Para esto utilizamos un arreglo, donde se guarda el índice de la página compartida para cada tarea. Cada vez que una tarea mapea una página nueva, nos fijamos si ya tenía una, si la tiene, cambiamos el índice en el arreglo, y cambiamos en la pantalla la página que se muestra como la compartida de esa tarea\footnote{Este fragmento de código es el que no se muestra en la figura 9, puede verse en sched.c}.
 
 Para get\_code\_stack, simplemente hacemos la cuenta inversa que en set\_page para conseguir los índices (la hacemos dos veces, una con la posición de memoria del código y otra con la del stack), y devolvemos el índice.
 A continuación puede verse el código para getCode, el de getStack es análogo pero utiliza el arreglo que contiene las posiciones de memoria de los stacks en vez del de las de código.
