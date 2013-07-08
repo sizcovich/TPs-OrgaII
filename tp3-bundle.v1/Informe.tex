@@ -92,51 +92,49 @@
 El siguiente trabajo práctico consiste en un conjunto de ejercicios en los que se aplican de forma gradual los conceptos de System Programming vistos a lo largo de la materia. El objetivo de éste consiste en construir un sistema capaz de correr el juego \textit{Infección}. Para la realización del mismo, debimos crear el soporte para que los jugadores (o sea las tareas) puedan ejecutar las reglas del juego. Dado que las tareas eran capaces de hacer cualquier cosa, debimos considerar que el sistema debía tener la capacidad de capturar cualquier problema y poder quitar a la tarea del juego.\newline
 A lo largo del trabajo práctico, se utilizaron los mecanismos que posee el procesador para la programación desde el punto de vista del sistema operativo enfocados sobre el sistema de protección. En lo que sigue, se detallan explícitamente los pasos realizados para lograr el objetivo mencionado.
 
-\section{Desarrollo}
-
-\subsection{Ejercicio 1}
+\section{Ejercicio 1}
 
 En el primer ejercicio, nos limitamos a completar la GDT tomando como ejemplo la GDT\_NULL provista por la cátedra. Para ello, debimos definir tres segmentos de códigos y de datos. El primero de ellos (el 0) correspondiente al kernel, el segundo (el 2) al árbitro y el tercero (el 3) a los jugadores.\newline
 \newline
-{\textbf{Pregunta 1:}} ¿Qué ocurre si se intenta escribir en la fila 26, columna 1 de la matriz de video, utilizando el segmento de la GDT que direcciona a la memoria de video? ¿Por qué?\newline
+{\subsection{Pregunta 1:}} ¿Qué ocurre si se intenta escribir en la fila 26, columna 1 de la matriz de video, utilizando el segmento de la GDT que direcciona a la memoria de video? ¿Por qué?\newline
 \newline
 \textit{La consecuencia de intentar escribir en la fila 26, columna 1 de la matriz de video depende de cómo fue definido el segmento. Si el tamaño del segmento es igual al tamaño de la pantalla en bytes, entonces va a ocurrir un Segmentation Fault. En el caso en el que el segmento no sea del mismo tamaño de la pantalla, el caracter no va a ser visible.}\newline
 \newline
-{\textbf{Pregunta 2:}} ¿Qué ocurre si no se setean todos los registros de segmento al entrar en modo protegido? ¿Es necesario setearlos todos? ¿Por qué?\newline
+{\subsection{Pregunta 2:}} ¿Qué ocurre si no se setean todos los registros de segmento al entrar en modo protegido? ¿Es necesario setearlos todos? ¿Por qué?\newline
 \textit{En el caso en el que los registros no se seteen se genera un General Protection.}
 
-\subsection{Ejercicio 2}
-{\textbf{Pregunta 3:}} ¿Cómo se puede hacer para generar una excepción sin utilizar la instrucción int? Mencionar al menos 3 formas posibles.\newline
+\section{Ejercicio 2}
+{\subsection{Pregunta 3:}} ¿Cómo se puede hacer para generar una excepción sin utilizar la instrucción int? Mencionar al menos 3 formas posibles.\newline
 
-{\textbf{Pregunta 4:}} ¿Cuáles son los valores del stack cuando se genera una interrupción? ¿Qué significan? (Indicar para el caso de operar en nivel 3 y nivel 0).\newline
+{\subsection{Pregunta 4:}} ¿Cuáles son los valores del stack cuando se genera una interrupción? ¿Qué significan? (Indicar para el caso de operar en nivel 3 y nivel 0).\newline
 
 
-\subsection{Ejercicio 3}
-{\textbf{Pregunta 5:}} ¿Puede el directorio de páginas estar en cualquier posición arbitraria de memoria?\newline
+\section{Ejercicio 3}
+{\subsection{Pregunta 5:}} ¿Puede el directorio de páginas estar en cualquier posición arbitraria de memoria?\newline
 
-{\textbf{Pregunta 6:}} ¿Es posible acceder a una página de nivel de kernel desde usuario?\newline
+{\subsection{Pregunta 6:}} ¿Es posible acceder a una página de nivel de kernel desde usuario?\newline
 
-{\textbf{Pregunta 7:}} ¿Se puede mapear una página física desde dos direcciones virtuales
+{\subsection{Pregunta 7:}} ¿Se puede mapear una página física desde dos direcciones virtuales
 distintas, de manera tal que una esté mapeada con nivel de usuario y la otra a nivel de kernel? De ser posible, ¿Qué problemas puede traer?\newline
 
-\subsection{Ejercicio 4}
-{\textbf{Pregunta 8:}} Qué permisos pueden tener las tablas y directorios de páginas? ¿Cuáles son los permisos efectivos de una dirección de memoria según los permisos del directorio
+\section{Ejercicio 4}
+{\subsection{Pregunta 8:}} Qué permisos pueden tener las tablas y directorios de páginas? ¿Cuáles son los permisos efectivos de una dirección de memoria según los permisos del directorio
 y tabla de páginas?
 
-{\textbf{Pregunta 9:}} ¿Es posible desde dos directorios de página, referenciar a una misma tabla de páginas? 
-{\textbf{Pregunta 10:}} ¿qué es TLB (Translation Lookaside Buffer) y para qué sirve?
+{\subsection{Pregunta 9:}} ¿Es posible desde dos directorios de página, referenciar a una misma tabla de páginas? 
+{\subsection{Pregunta 10:}} ¿qué es TLB (Translation Lookaside Buffer) y para qué sirve?
 
-\subsection{Ejercicio 5}
-{\textbf{Pregunta 11:}} ¿qué pasa si en la interrupción de teclado no se lee la tecla presionada?
-{\textbf{Pregunta 12:}} ¿qué pasa si no se resetea el PIC?
-\subsection{Ejercicio 6}
+\section{Ejercicio 5}
+{\subsection{Pregunta 11:}} ¿qué pasa si en la interrupción de teclado no se lee la tecla presionada?
+{\subsection{Pregunta 12:}} ¿qué pasa si no se resetea el PIC?
+\section{Ejercicio 6}
 
-{\textbf{Pregunta 13:}} Colocando un breakpoint luego de cargar una tarea, ¿Cómo se puede verificar, utilizando el debugger de Bochs, que la tarea se cargó correctamente?
+{\subsection{Pregunta 13:}} Colocando un breakpoint luego de cargar una tarea, ¿Cómo se puede verificar, utilizando el debugger de Bochs, que la tarea se cargó correctamente?
 ¿Cómo se llega a esta conclusión?
 
-{\textbf{Pregunta 14:}} ¿Cómo se puede verificar que la conmutación de tarea fue exitosa?
-{\textbf{Pregunta 15:}} Se sabe que las tareas llaman a la interrupción \texttt{0x80} y por \texttt{0x90}, ¿qué ocurre si esta no está implementada? ¿Por qué?
-\subsection{Ejercicio 7}
+{\subsection{Pregunta 14:}} ¿Cómo se puede verificar que la conmutación de tarea fue exitosa?
+{\subsection{Pregunta 15:}} Se sabe que las tareas llaman a la interrupción \texttt{0x80} y por \texttt{0x90}, ¿qué ocurre si esta no está implementada? ¿Por qué?
+\section{Ejercicio 7}
 
 
 \section{Ejercicio 1: Modo Protegido y GDT}
