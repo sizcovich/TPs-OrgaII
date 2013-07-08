@@ -199,22 +199,35 @@ distintas, de manera tal que una esté mapeada con nivel de usuario y la otra a 
 }
 
 \section{Ejercicio 4}
-{\subsection{Pregunta 8:}} Qué permisos pueden tener las tablas y directorios de páginas? ¿Cuáles son los permisos efectivos de una dirección de memoria según los permisos del directorio
-y tabla de páginas?
+{\subsection{Pregunta 8:}} ¿Qué permisos pueden tener las tablas y directorios de páginas? ¿Cuáles son los permisos efectivos de una dirección de memoria según los permisos del directorio y tabla de páginas?
+\textit{Las tablas y directorios de páginas pueden tener permisos de usuario o supervisor, lectura o lectura/escritura. El permiso efectivo de una dirección de memoria es, principalmente, el permiso de la tabla de páginas. Esto se debe a que los permisos del page directory indican el permiso que se tiene sobre el page table mapeado en la pde con lo cual, si se tiene permiso de lectura, se aplican los permisos de la pte. En el caso en el que el page directory indicara que el page table tiene permiso de usuario entonces el usuario no tendría acceso a las páginas mapeadas en ese table.}
 
-{\subsection{Pregunta 9:}} ¿Es posible desde dos directorios de página, referenciar a una misma tabla de páginas? 
-{\subsection{Pregunta 10:}} ¿qué es TLB (Translation Lookaside Buffer) y para qué sirve?
+{\subsection{Pregunta 9:}} ¿Es posible desde dos directorios de página, referenciar a una misma tabla de páginas?\newline
+\textit{Es posible desde dos directorios de página referenciar a una misma tabla de páginas. Para que esto ocurra, debe escribirse la dirección de la tabla que se quiere referenciar en la entrada de cada directorio de tablas de páginas. Por ejemplo, esto puede ocurrir cuando dos tareas con directorios propios quieran referenciar las mismas páginas con distintos privilegios en las mismas direcciones físicas.}
+
+{\subsection{Pregunta 10:}} ¿Qué es TLB (Translation Lookaside Buffer) y para qué sirve?\newline
+\textit{Consiste en una tabla en el proceso de memoria que contiene información sobre las páginas en memoria que el procesador accedió recientemente. La tabla hace remisión a direcciones virtuales del programa con las direcciones correspondientes en la memoria física que el programa usó más recientemente. El TLB permite mayor velocidad computacional debido a que facilita el proceso de direcciones que toman lugar independientemente del canal normal de traducción de direcciones.}
 
 \section{Ejercicio 5}
-{\subsection{Pregunta 11:}} ¿qué pasa si en la interrupción de teclado no se lee la tecla presionada?
-{\subsection{Pregunta 12:}} ¿qué pasa si no se resetea el PIC?
+{\subsection{Pregunta 11:}} ¿Qué pasa si en la interrupción de teclado no se lee la tecla presionada?\newline
+\textit{En el caso en el que la interrupción del teclado no lea la tecla presionada, dicha interrupción tendría un único comportamiento dado que no existe manera de saber qué tecla fue pulsada.}
+
+{\subsection{Pregunta 12:}} ¿Qué pasa si no se resetea el PIC?\newline
+\textit{En el caso en el que el PIC no sea reseteado, más de una interrupción puede ser atendida por el mismo handler. Esto se debe a que el PIC se encuentra mapeado por defecto sobre interrupciones del sistema, por lo tanto, hay que configurarlo para que quede fuera del rango de las interrupciones de Intel.}
+
 \section{Ejercicio 6}
 
 {\subsection{Pregunta 13:}} Colocando un breakpoint luego de cargar una tarea, ¿Cómo se puede verificar, utilizando el debugger de Bochs, que la tarea se cargó correctamente?
-¿Cómo se llega a esta conclusión?
+¿Cómo se llega a esta conclusión?\newline
+\textit{Para verificar que una tarea fue cargada correctamente, se puede pedir el $info\ tss$ en BOCHS y verificar que en el $TR$ se encuentra el selector de segmento que apunta al descriptor de tss de la tarea en la GDT. Por otro lado, el bit de Busy debe hallarse encendido.}
 
-{\subsection{Pregunta 14:}} ¿Cómo se puede verificar que la conmutación de tarea fue exitosa?
-{\subsection{Pregunta 15:}} Se sabe que las tareas llaman a la interrupción \texttt{0x80} y por \texttt{0x90}, ¿qué ocurre si esta no está implementada? ¿Por qué?
+{\subsection{Pregunta 14:}} ¿Cómo se puede verificar que la conmutación de tarea fue exitosa?\newline
+\textit{Dicha verificación puede realizarse a partir de los registros TR y CR3. Si se deseara comprobar que la tarea desde la que se saltó guardó correctamente los valores en la tss, se debe volver a saltar a ella misma y comprobar que dichos valores sean los mismos.}
+
+
+{\subsection{Pregunta 15:}} Se sabe que las tareas llaman a la interrupción \texttt{0x80} y por \texttt{0x90}, ¿qué ocurre si esta no está implementada? ¿Por qué?\newline
+\textit{En el caso en el que se llame a la interrupción 0x80 y 0x90 y éstas no se encuentren definidas, se genera un General Protection.}
+
 \section{Ejercicio 7}
 
 
