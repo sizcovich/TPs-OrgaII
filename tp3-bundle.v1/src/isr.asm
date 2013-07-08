@@ -198,7 +198,6 @@ _isr14:
 	add esp, 4 ;descarto el error code
 	call get_actual
 	push eax
-	
 	mov eax, cr2 ;tengo la direccion lineal en cr2
 	push eax
 	call obtener
@@ -244,7 +243,7 @@ _isr14:
 	.borrar:
 	mov dword[TAREA_QUANTUM], 0
 	
-.fin:	
+.fin:
 	iret
 
 ;;
