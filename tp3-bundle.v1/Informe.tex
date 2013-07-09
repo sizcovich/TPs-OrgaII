@@ -127,8 +127,83 @@ Las diferencias entre DATA y CODE
 \textit{En el caso en el que los registros no se seteen se genera un General Protection; al menos se necesitan CS, DS y SS configurados correctamente para el funcionamiento en modo protegido, estos son el selector de c\'odigo, el selector de datos y el selector de stack respectivamente. Para respetar la convenci\'on C se deben inicializar tambi\'en los selectores de prop\'osito general, ES, FS y GS, al mismo valor que DS.}
 
 \subsection{Ejercicio 2}
-{\textbf{Pregunta 3:}} \textbf{¿Cómo se puede hacer para generar una excepción sin utilizar la instrucción int? Mencionar al menos 3 formas posibles.}\newline
-\newline
+El ejercicio 2 nos plantea la creaci\'on de la Interrupt Descriptor Table(IDT) para responder ante las interrupciones de sistema(Interrupci\'on 0 a 19).\\
+Las interrupciones se producen cuando se realiza alguna acción no permitida por el sistema y por lo tanto deben proveer una respuesta, ya sea desalojando a la tarea que cometi\'o el error o proveyendo del recurso necesario para que al retornar no se produzca el error. Puntualmente en esta instancia solo es necesario indicar de que interrupci\'on se trata, por lo que implementamos un macro gen\'erico que mostraba en pantalla el error y atrapaba la ejecuci\'on en un loop infinito.\newline
+
+Para empezar creamos las entradas en la IDT, la cual se defini\'o en C como un arreglo de \verb+idt_entry+, un struct con la siguiente forma:
+\begin{verbatim}
+typedef struct str_idt_entry_fld {
+	unsigned short offset_0_15;
+	unsigned short segsel;
+	unsigned short attr;
+	unsigned short offset_16_31;
+} __attribute__((__packed__, aligned (8))) idt_entry;
+\end{verbatim}
+Estas entradas estan compuestas por un selector de segmento(\verb+segsel+) que indica el segmento de la GDT donde se almacena el handler de la tarea, un offset(partido en los primeros y los \'ultimos 16 bits) que indica la posici\'on dentro del segmento y un campo \verb+attr+ que contiene los atributos de la entrada. Estos atributos indican de que tipo de interrupci\'on se trata, que permisos de usuario son necesarios para llamarla y si el segmento esta presente.\\
+Para este kernel los atributos se configuraron para todas las entradas de interrupci\'on de sistema(0 a 19) el flag de segmento presente en 1(Presente), DPL 0 y tipo 1110(Interrupt Gate de 32 bits). El segmento es el de c\'odigo de nivel 0 y el offset es la direcci\'on f\'isica de la interrupci\'on ya que tenemos una segmentaci\'on flat.\newline
+
+Para las rutinas de atenci\'on de las interrupciones se definieron los siguientes macros en assembly:
+
+\begin{center}
+		\begin{verbatim}
+		%macro error 2
+		error%1: db "Interrupcion ",%2
+		error%1_len equ $ - error%1
+		%endmacro
+
+		%macro ISR 1
+		global _isr%1
+
+		_isr%1:
+			mov eax, %1
+			push ebx
+			mov bx, es
+			
+			mov ecx, 4000
+			mov ax, 0x38
+			mov es, ax
+			mov ax, 0x0F00
+			.escribeTodo:
+			mov [es:ecx], ax
+			dec ecx
+			loop .escribeTodo
+			mov [es:ecx], ax
+			mov es, bx
+			pop ebx
+			imprimir_texto_mp error%1, error%1_len, 0xF, 0, 0
+			jmp $
+		%endmacro
+
+		%macro ISR_CODED 1
+		global _isr%1
+
+		_isr%1:
+			add esp, 4
+			mov eax, %1
+			push ebx
+			mov bx, es
+			
+			mov ecx, 4000
+			mov ax, 0x38
+			mov es, ax
+			mov ax, 0x0F00
+			.escribeTodo:
+			mov [es:ecx], ax
+			dec ecx
+			loop .escribeTodo
+			mov [es:ecx], ax
+			mov es, bx
+			pop ebx
+			imprimir_texto_mp error%1, error%1_len, 0xF, 0, 0
+			jmp $
+		%endmacro
+	\end{verbatim}
+\end{center}
+
+El macro \verb+error+ declara una etiqueta con una cadena de caracteres para imprimir en el mensaje de error, as\'i como una etiqueta con el largo de la cadena, estas etiquetas son luego utilizadas por los macros \verb+ISR+ e \verb+ISR_CODED+. Se tienen dos macros porque algunas interrupciones apilan tambi\'en un Error Code que a los efectos del TP es irrelevante, luego la \'unica diferencia entre ambos macros es que \verb+ISR_CODED+ descarta el Error Code de la tarea.\\
+Ambos formatos de handler para las interrupciones borran la pantalla y luego imprimen el mensaje correspondiente.
+
+{\textbf{Pregunta 3:}} ¿Cómo se puede hacer para generar una excepción sin utilizar la instrucción int? Mencionar al menos 3 formas posibles.\newline
 \textit{
 	Para generar una excepci\'on sin utilizar la instrucci\'on \texttt{int} se puede hacer uso de los siguientes m\'etodos:
 	\begin{itemize}
