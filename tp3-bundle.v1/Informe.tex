@@ -93,7 +93,7 @@ El siguiente trabajo práctico consiste en un conjunto de ejercicios en los que 
 A lo largo del trabajo práctico, se utilizaron los mecanismos que posee el procesador para la programación desde el punto de vista del sistema operativo enfocados sobre el sistema de protección. En lo que sigue, se detallan explícitamente los pasos realizados para lograr el objetivo mencionado.
 
 \section{Ejercicio 1}
-En el primer ejercicio, nos limitamos a completar la GDT conformada por un arreglo de gdt\_entry's tomando como ejemplo la GDT\_NULL provista por la cátedra. Para ello, debimos definir tres segmentos de códigos y de datos, manteniendo el segmento NULL para el buen funcionamiento de la estructura. El primero de ellos (el 0) correspondiente al kernel, el segundo (el 2) al árbitro y el tercero (el 3) a los jugadores. Dado que la GDT tiene un formato de segmentacion flat, la base de cada segmento comienza en 0 y el límite consiste en el tamaño de lo que deseamos mapear. Cada segmento fue completado del siguiente modo:
+En el primer ejercicio, nos limitamos a completar la GDT conformada por un arreglo de gdt\_entry tomando como ejemplo la entrada GDT\_NULL provista por la cátedra. Para ello, debimos definir tres segmentos de códigos y de datos, manteniendo el segmento NULL para el buen funcionamiento de la estructura. El primero de ellos (de nivel de privilegio 0) correspondiente al kernel, el segundo (de nivel 2) al árbitro y el tercero (de nivel 3) a los jugadores. Dado que la GDT tiene un formato de segmentacion flat, la base de cada segmento comienza en 0 y el límite consiste en el tamaño de la memoria que deseamos poder acceder. Cada segmento fue completado del siguiente modo:
 
 \begin{table}[H]
 \centering
@@ -102,9 +102,9 @@ En el primer ejercicio, nos limitamos a completar la GDT conformada por un arreg
         0xFFFF & limit[0:15] \\ 
         0x0000 & base[0:15] \\
         0x00 & base[23:16] \\ 
-        0x02 & type \\ 
+        0xX & type \\ 
         0x01 & s \\ 
-        0x00 & dpl \\ 
+        0xX & dpl \\ 
         0x01 & p \\ 
         0x07 & limit[16:19] \\ 
         0x00 & avl \\ 
@@ -117,7 +117,26 @@ En el primer ejercicio, nos limitamos a completar la GDT conformada por un arreg
     \caption{GDT}
 \end{table}
 
-Las diferencias entre DATA y CODE 
+Dado que, como ya establecimos, se trata de una segmentaci\'on flat, las \'unicas diferencias entre los segmentos creados es el tipo y el DPL.\\
+El DPL(Default Privilege Level) es el privilegio m\'inimo que necesita la tarea para acceder de cualquier forma a ese segmento, por lo tanto un proceso ejecut\'andose en el anillo de privilegio 3 no podr\'ia acceder a un segmento de privilegio 0, 1 o 2, pero cualquiera de estos otros privilegios si a uno de privilegio 3 ya que son m\'as privilegiados.\\
+Por otro lado, el tipo del segmento es una combinaci\'on de 4 bits de los cuales el m\'as singificativo indica si se trata de un segmento de datos(0) o uno de c\'odigo(1); es importante la diferencia entre ambos porque no se puede ejecutar desde un segmento de datos así como no se puede escribir en un segmento de c\'odigo, por lo que es un nivel de protecci\'on extra contra acciones maliciosas. Por otro lado los siguientes 3 bits tienen funciones que dependen del tipo de segmento:
+
+\begin{table}
+	\centering
+	\begin{tabular}{l | c | c | c |}
+		& bit 10 & bit 9 & bit 8 \\ \hline
+		Datos & Expand-Down & Write & Accessed \\ \hline
+		C\'odigo & Conforming & Read & Accessed \\ \hline
+	\end{tabular}
+	\caption{Bits de tipo}
+\end{table}
+
+El bit 8 es el bit que indica si fue accedido o no el segmento, por defecto se configura en 0 porque al inicio del programa no puede haber sido accedido ning\'un segmento.\\
+El bit 9 es el bit que indica, en caso de tratarse de un segmento de datos, si el segmento es de escritura o lectura/escritura o, en caso de tratarse de un segmento de c\'odigo, si es de ejecuci\'on o lectura. En caso de ser \'unicamente de ejecuci\'on, en caso de haber constantes en el c\'odigo estas no podr\'ian ser accedidas. Para que el kernel se ejecute correctamente pusimos este bit en 1 para que los segmentos de datos puedan ser escritos y los de c\'odigo le\'idos.\\
+El bit 10 indica comportamientos un poco m\'as avanzados para los segmentos que no son usados en el TP y por lo tanto es configurado en 0. En el caso de ser un segmento de datos, este bit indica que el segmento ``crece hacia abajo'' como las pilas. En caso de ser un segmento de datos, este bit indica si se puede acceder al segmento desde un privilegio menor de manera directa o no.\newline
+
+Finalmente se configuraron los selectores de segmento para que CS(Code) tenga el selector de segmento que corresponde al c\'odigo de nivel 0 y DS(Data), ES, FS, GS y SS(Stack) tengan el selector de segmento que corresponde al segmento de datos.
+
 {\subsection{Pregunta 1:}} \textbf{¿Qué ocurre si se intenta escribir en la fila 26, columna 1 de la matriz de video, utilizando el segmento de la GDT que direcciona a la memoria de video? ¿Por qué?}\newline
 \newline
 \textit{La consecuencia de intentar escribir en la fila 26, columna 1 de la matriz de video accediendola desde el segmento declarado, es que se produce una interrupción 13(General Protection) porque se accede a memoria fuera del segmento.}\newline
@@ -126,7 +145,7 @@ Las diferencias entre DATA y CODE
 \newline
 \textit{En el caso en el que los registros no se seteen se genera un General Protection; al menos se necesitan CS, DS y SS configurados correctamente para el funcionamiento en modo protegido, estos son el selector de c\'odigo, el selector de datos y el selector de stack respectivamente. Para respetar la convenci\'on C se deben inicializar tambi\'en los selectores de prop\'osito general, ES, FS y GS, al mismo valor que DS.}
 
-\subsection{Ejercicio 2}
+\section{Ejercicio 2}
 El ejercicio 2 nos plantea la creaci\'on de la Interrupt Descriptor Table(IDT) para responder ante las interrupciones de sistema(Interrupci\'on 0 a 19).\\
 Las interrupciones se producen cuando se realiza alguna acción no permitida por el sistema y por lo tanto deben proveer una respuesta, ya sea desalojando a la tarea que cometi\'o el error o proveyendo del recurso necesario para que al retornar no se produzca el error. Puntualmente en esta instancia solo es necesario indicar de que interrupci\'on se trata, por lo que implementamos un macro gen\'erico que mostraba en pantalla el error y atrapaba la ejecuci\'on en un loop infinito.\newline
 
@@ -258,9 +277,11 @@ Los datos que se almacenan por automático son entonces:
 	\item Error Code: El código de error, en caso de existir para la interrupci\'on, codifica información extra sobre el error para facilitar el diagn\'ostico del motivo de la interrupci\'on ya que pueden haber m\'ultiples causas.
 \end{itemize}
 
-El Error Code tiene 32 bits, de los cuales los bits 16 a 31 están reservados para mantener el stack alineado. El bit 0(EXT) indica si la interrupción es por un evento externo al procesador, el bit 1(IDT) indica si el índice, que va de los bits 3 a 15, hace referencia a un elemento de la IDT o a un descriptor en la GDT/LDT y el bit 2(TI) indica, solo en caso de que le bit 1 indique que se trata de un descriptor de GDT/LDT, en que tabla se encuentra el descriptor.
+El Error Code tiene 32 bits, de los cuales los bits 16 a 31 están reservados para mantener el stack alineado. El bit 0(EXT) indica si la interrupción es por un evento externo al procesador, el bit 1(IDT) indica si el índice, que va de los bits 3 a 15, hace referencia a un elemento de la IDT o a un descriptor en la GDT/LDT y el bit 2(TI) indica, solo en caso de que le bit 1 indique que se trata de un descriptor de GDT/LDT, en que tabla se encuentra el descriptor.\newline
 
-\subsection{Ejercicio 3}
+\section{Ejercicio 3}
+
+
 {\subsection{Pregunta 5:}} \textbf{¿Puede el directorio de páginas estar en cualquier posición arbitraria de memoria?}\newline
 \newline
 \textit{
