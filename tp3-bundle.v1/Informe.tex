@@ -280,7 +280,39 @@ Los datos que se almacenan por automático son entonces:
 El Error Code tiene 32 bits, de los cuales los bits 16 a 31 están reservados para mantener el stack alineado. El bit 0(EXT) indica si la interrupción es por un evento externo al procesador, el bit 1(IDT) indica si el índice, que va de los bits 3 a 15, hace referencia a un elemento de la IDT o a un descriptor en la GDT/LDT y el bit 2(TI) indica, solo en caso de que le bit 1 indique que se trata de un descriptor de GDT/LDT, en que tabla se encuentra el descriptor.\newline
 
 \section{Ejercicio 3}
-
+Para inicializar el Page Directory y el Page Table necesarios para que el kernel se siga ejecutando una vez activada la paginaci\'on, seg\'un la configuraci\'on que se usa en este trabajo práctico, es necesario reservar dos futuras p\'aginas de 4kb, una para el PD y otra para la PT.\\
+Para empezar se analizaron las direcciones que se deseaban mapear como si mismas en la paginaci\'on. Estas direcciones lineales van desde la $0x00000000$ a la $0x00163FFF$, las cuales se interpretan de la siguiente forma: \newline
+\begin{table}[h]
+	\centering
+	\begin{tabular}{|c|c|c|}
+		10 bits & 10 bits & \; \; 12 bits \; \; \\
+		\hline
+		PDIndex & PTIndex & Offset \\
+		\hline
+	\end{tabular}
+	\caption{Interpretaci\'on de la direcci\'on lineal por la unidad de paginaci\'on}
+\end{table}	\newline
+Los 10 bits m\'as significativos cumplen el rol de \'indice del PD; en todas las direcciones estos bits son $0$, por lo que solo es necesario un PT. Entonces, en la p\'agina que empieza en $0x21000$ inicializamos la estructura del PD completamente vac\'ia y luego configuramos la primera entrada para que busque la PT en la p\'agina $0x22000$ como indica la consigna. Adem\'as configuramos la entrada para que la p\'agina no sea accesible por procesos de privilegio \textit{usuario}, sea de lectura y escritura y tambi\'en se indic\'o como presente en memoria. Un Page Directory Entry tiene la siguiente estructura:\newline
+\begin{itemize}
+	\item Los 20 bits m\'as significativos corresponden a los 20 bits m\'as significativos de la direcci\'on de la PT.
+	\item Los siguientes 9 bits estan destinados a flags que no tienen relevancia para el TP.
+	\item El bit 2 es el bit que indica el nivel de permiso, es decir, si la p\'agina mapeada requiere nivel de \textit{superusuario}($0$) o no($1$). En relaci\'on con la unidad de segmentaci\'on, se trata de \textit{superusuario} a los niveles 0, 1 y 2 y de \textit{usuario} al nivel 3.
+	\item El bit 1 indica si la p\'agina es de solo lectura($0$) o si adem\'as puede ser modificada($1$).
+	\item El bit 0 indica que la p\'agina se encuentra presente en memoria($1$) o no($0$).
+\end{itemize}
+Con el PD configurado correctamente continuamos con la configuraci\'on del PT. Los \'indices que se usan para esta van del $0$ al $355$, por lo que una vez inicializada la estructura vac\'ia, se configuraron las primeras $355$ entradas para que mapeen a la misma direcci\'on por la que se lleg\'o.\\
+Un Page Table Entry tiene, a los efectos del trabajo pr\'actico, un formato id\'entico al del PDE exceptuando los primeros 20 bits que son los primeros 20 bits de la direcci\'on f\'isica que se desea mapear, siendo los 20 bits m\'as significativos los necesarios para encontrar el inicio de cada p\'agina de 4kb.\newline
+Una vez inicializadas las entradas se activa la paginaci\'on con las siguientes lineas de c\'odigo assembly:
+\begin{center}
+	\begin{verbatim}
+		mov eax, 0x00021000		;Cargo la direccion del directorio en cr3
+		mov cr3, eax
+		mov eax, cr0				
+		or  eax, 0x80000000		;Activado el flag de paginacion
+		mov cr0, eax
+	\end{verbatim}
+\end{center}
+Como se indica en el c\'odigo, primero se carga en el registro CR3 la direcci\'on del PD y luego se activa el flag de paginaci\'on en CR0, de no ser así se producir\'ia un Page Fault al no poder encontrar el PD bien formado.
 
 {\subsection{Pregunta 5:}} \textbf{¿Puede el directorio de páginas estar en cualquier posición arbitraria de memoria?}\newline
 \newline
@@ -301,6 +333,8 @@ distintas, de manera tal que una esté mapeada con nivel de usuario y la otra a 
 }
 
 \section{Ejercicio 4}
+
+
 {\subsection{Pregunta 8:}} \textbf{¿Qué permisos pueden tener las tablas y directorios de páginas? ¿Cuáles son los permisos efectivos de una dirección de memoria según los permisos del directorio y tabla de páginas?}\newline
 \newline
 \textit{Las tablas y directorios de páginas pueden tener permisos de usuario o supervisor, lectura o lectura/escritura. El permiso efectivo de una dirección de memoria es, principalmente, el permiso de la tabla de páginas. Esto se debe a que los permisos del page directory indican el permiso que se tiene sobre el page table mapeado en la pde con lo cual, si se tiene permiso de lectura, se aplican los permisos de la pte. En el caso en el que el page directory indicara que el page table tiene permiso de usuario entonces el usuario no tendría acceso a las páginas mapeadas en ese table.}
