@@ -334,6 +334,29 @@ distintas, de manera tal que una esté mapeada con nivel de usuario y la otra a 
 
 \section{Ejercicio 4}
 
+En este ejercicio se inicializaron las estructuras de paginación de las tareas tanto para los jugadores como para el árbitro. Para esto, fueron utilizadas las funciones mmu\_inicializar\_tarea\_jugador y mmu\_inicializar\_tarea\_arbitro. Dichas funciones se encargan de inicializar el page table y page directory de cada uno. Se utilizó la misma rutina que para el kernel para crear el identity mapping pues ese sector de memoria es compartido con todos aunque con otros permisos. Además, se mapearon las páginas necesarias para la ejecución de las tareas (la página de código, pila y tablero).\newline
+\begin{itemize}
+\item \textbf{mmu\_inicializar\_tarea\_arbitro} mapea el código a 0x3A0000, la pila a 0x3B0000 y el tablero con permiso de escritura a 0x3C0000.
+\item \textbf{mmu\_inicializar\_tarea\_jugador} invoca, a su vez, a un inicializador para cada jugador. Éstos mapean el código a 0x3A0000, la pila a 0x3B0000 y el tablero sin permiso de escritura a 0x3C0000.
+\end{itemize}
+
+Para mapear estas páginas, se utilizó la función mmu\_mapear\_pagina. Ésta recibe la dirección física y la dirección virtual que se quiere mapear, el CR3 y los atributos del mapeo.
+
+\begin{center}
+		\begin{verbatim}
+void mmu_mapear_pagina(unsigned int virtual, unsigned int cr3, unsigned int fisica, unsigned int attrs){
+	int *page_dir = (int *)cr3; //cargo page directory
+	
+	int PDE = virtual >> 22; //busco PDE, quiero los 10 primeros bits de la direccion lineal
+	int *page_tab = (int *)(*((unsigned int*) &(page_dir[PDE])) & 0xFFFFF000); //obtengo la direccion del page table
+	
+	int PTE = (0x003FF000 & virtual) >> 12; //pongo en 0 virtual para obtener el indice dentro del page table
+	*((unsigned int*) &(page_tab[PTE])) = (0xFFFFF000 & fisica) | (0xFFF & attrs); //escribo en esa direccion la entrada de la direccion correspondiente
+}
+	\end{verbatim}
+\end{center}
+
+Conociendo el CR3, se accede al page directory y, basados en los primeros 10 bits de la dirección lineal, se calcula la entrada del page directory que apunta a la tabla de páginas en donde se mapeará la dirección. De aquí se extrae la dirección del page table en el cual, usando los siguientes 10 bits más significativos de la dirección virtual, se tomará la entrada del page table a la cual mapear la dirección física. La entrada page table, entonces, se crea con los 20 bits más significativos de la dirección física y los atributos que se recibieron por parámetro.
 
 {\subsection{Pregunta 8:}} \textbf{¿Qué permisos pueden tener las tablas y directorios de páginas? ¿Cuáles son los permisos efectivos de una dirección de memoria según los permisos del directorio y tabla de páginas?}\newline
 \newline
@@ -348,6 +371,12 @@ distintas, de manera tal que una esté mapeada con nivel de usuario y la otra a 
 \textit{Consiste en una tabla en el proceso de memoria que contiene información sobre las páginas en memoria que el procesador accedió recientemente. La tabla hace remisión a direcciones virtuales del programa con las direcciones correspondientes en la memoria física que el programa usó más recientemente. El TLB permite mayor velocidad computacional debido a que facilita el proceso de direcciones que toman lugar independientemente del canal normal de traducción de direcciones.}
 
 \section{Ejercicio 5}
+
+En este ejercicio, se implementaron las rutinas de atención de interrupción de el reloj, el teclado, int 0x80 e int 0x90. Para esto, hubo que reconfigurar el pic para evitar los conflictos de interrupciones externas al procesador. Ésto se realizó con deshabilitar\_pic, resetear\_pic y habilitar\_pic, las cuales fueron provistas por la cátedra. Una vez reconfigurado el pic, las interrupciones de reloj y teclado llegan por las interrupciones 0x32 y 0x33 de la idt respectivamente.\newline
+Por otro lado, los handlers de las interrupciones debieron ser alterados de manera tal que, al generarse la interrupción se invoque a la función del scheduler 'sched\_remover\_tarea' para que desaloje la tarea de la cola y detener su ejecución. La tarea de reloj invoca a la función proximo\_reloj que muestra en pantalla el pasaje de los ticks. La rutina de teclado se encuentra vacía pues no hay tareas ejecutándose que se puedan detener con esta interrupción.\newline
+Las interrupciones de servicio (int 0x80 e int 0x90) reciben un set de parámetros a través de los registros EAX, EBX, ECX, EDX y ESI. En el caso de la interrupción 0x80, el jugador puede solicitar uno de dos servicios: duplicar y migrar los cuales se encuentran provistos por la cátedra. Para esto, se apilan, según la convención C, los parámetros recibidos para otorgárselos a la función del servicio. Para poder cumplir con esto, hubo que averiguar el proceso actual por medio de la función get\_actual del Scheduler, ya que es uno de los parámetros requeridos por las funciones.\newline
+En el caso de la interrupción 0x90, las funciones iniciar y terminar no requieren de ningún parámetro por lo que se invocan sin apilar nada. Estas funciones se explican en detalle más adelante.
+
 {\subsection{Pregunta 11:}} \textbf{¿Qué pasa si en la interrupción de teclado no se lee la tecla presionada?}\newline
 \newline
 \textit{En el caso en el que la interrupción del teclado no lea la tecla presionada, dicha interrupción tendría un único comportamiento dado que no existe manera de saber qué tecla fue pulsada.}
@@ -357,6 +386,8 @@ distintas, de manera tal que una esté mapeada con nivel de usuario y la otra a 
 \textit{En el caso en el que el PIC no sea reseteado, más de una interrupción puede ser atendida por el mismo handler. Esto se debe a que el PIC se encuentra mapeado por defecto sobre interrupciones del sistema, por lo tanto, hay que configurarlo para que quede fuera del rango de las interrupciones de Intel.}
 
 \section{Ejercicio 6}
+En este ejercicio se pide la inicialización de las diferentes estructuras para el intercambio de tareas y el comienzo de la ejecución del Scheduler.
+
 
 {\subsection{Pregunta 13:}} \textbf{Colocando un breakpoint luego de cargar una tarea, ¿Cómo se puede verificar, utilizando el debugger de Bochs, que la tarea se cargó correctamente?
 ¿Cómo se llega a esta conclusión?}\newline
