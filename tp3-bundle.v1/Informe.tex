@@ -386,8 +386,27 @@ En el caso de la interrupción 0x90, las funciones iniciar y terminar no requier
 \textit{En el caso en el que el PIC no sea reseteado, más de una interrupción puede ser atendida por el mismo handler. Esto se debe a que el PIC se encuentra mapeado por defecto sobre interrupciones del sistema, por lo tanto, hay que configurarlo para que quede fuera del rango de las interrupciones de Intel.}
 
 \section{Ejercicio 6}
-En este ejercicio se pide la inicialización de las diferentes estructuras para el intercambio de tareas y el comienzo de la ejecución del Scheduler.
+En este ejercicio se pide la inicialización de las diferentes estructuras para el intercambio de tareas y el comienzo de la ejecución del Scheduler. El Scheduler es un componente del sistema operativo que administra el inicio de la ejecuci\'on de las tareas, \'orden de ejecuci\'on de las tareas y detenerlas en caso de que se haya producido un error durante su ejecuci\'on. Para que este funcione se debe poner en marcha el intercambio de tareas. Es necesario entonces la creaci\'on de las TSS correspondientes a las tareas Idle, \'Arbitro y Jugadores y una para la ``tarea inicial'' inexistente, la cual, al no haber tareas ejecut\'andose al inicio y tener que guardarse obligatoriamente el estado actual, cumple la \'unica funci\'on de permitir el inicio de ejecuci\'on de la tarea Idle.\newline
 
+Un Task-State Segment(TSS) es un segmento de 104 bytes que almacena el estado de todos los registros relevantes a la ejecuci\'on de una tarea con el siguiente formato:
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=400pt]{tss.png}
+	\caption{Formato del TSS}
+\end{figure}
+
+Los bits reservados deben ir en 0.\\
+Para realizar el cambio a una tarea, se debe inicializar la estructura correctamente, en otras palabras configurar los descriptores de segmento correctamente para que carguen los segmentos adecuados al permiso de la tarea y el SS0 al segmento de Datos de nivel 0, configurar el CR3 para que cargue el correcto Page Directory, los registros ESP y EBP al comienzo de la pila de la tarea, ESP0 al comienzo de la pila de nivel 0 para cuando se cambie de nivel por una interrupci\'on y finalmente el EIP para que la tarea inicie su ejecuci\'on desde el inicio de la tarea. Además se configura EFLAGS en $0x202$ para habilitar las interrupciones y el valor de IOMAP en 0xFFFF.\newline
+
+Cada tarea(Idle, Jugadores y \'Arbitro) tienen una de estas estructuras inicializadas. Adem\'as existe un TSS que esta sin inicializar para la tarea inicial, la cual, como se dijo antes, solo sirve para empezar el intercambio de tareas; esta tarea, sin embargo, tiene un descriptor de TSS en la GDT al igual que las tareas ``reales'' pues se necesita de ese descriptor para que el procesador encuentre la posici\'on de memoria donde debe guardar el estado. Por lo tanto se crean 7 nuevas entradas en la GDT, cada una con un descriptor de TSS el cual se diferencia de los otros descriptores de segmentos utilizados por ser un segmento de sistema y no de datos/c\'odigo. Todos los segmentos tienen un tamaño de 104 bytes y tienen como base la posic\'on de la estructura declarada en el archivo tss.h y tss.c.\newline
+Antes de hacer el salto a la tarea Idle se modific\'o \verb+mmu_inicializar_kernel+ para que mapeara la p\'agina del c\'odigo de Idle, ya que este comparte su Page Directory con el Kernel. Una vez mapeada esta p\'agina se modific\'o kernel.asm para realizar el salto a la tarea Idle:
+\begin{verbatim}
+	mov ax, 0x40
+	ltr ax
+	
+	jmp 0x48:0
+\end{verbatim}
+El registro TR(Task Register) almacena el selector de segmento correspondiente al TSS de la tarea que se esta ejecutando. Como no hay ninguna tarea a\'un, lo configuramos para que apunte al TSS de la ``tarea inicial'' y luego ejecutamos un far jump a la tarea idle, proporcionando el selector de segmento de su TSS.
 
 {\subsection{Pregunta 13:}} \textbf{Colocando un breakpoint luego de cargar una tarea, ¿Cómo se puede verificar, utilizando el debugger de Bochs, que la tarea se cargó correctamente?
 ¿Cómo se llega a esta conclusión?}\newline
@@ -404,6 +423,47 @@ En este ejercicio se pide la inicialización de las diferentes estructuras para 
 \textit{En el caso en el que se llame a la interrupción 0x80 y 0x90 y éstas no se encuentren definidas, se genera un General Protection.}
 
 \section{Ejercicio 7}
+Para este ejercicio se completaron las funciones del scheduler y de game.c y game.h para que el juego pueda desarrollarse, además se creo el handler para la interrupci\'on de teclado de modo tal que se genere la pausa en el juego y se modific\'o el handler del reloj para que efect\'ue el cambio de tareas cuando se acabe el queantum.\newline
+La interrupci\'on de teclado captura la tecla P y R para que al soltar la tecla se efect\'ue la pausa y reanudar respectivamente, para esto se tomaron los c\'odigos de captura correspondientes a soltar la tecla o ``make code''. De recibirse el pedido de pausa se configura un flag para indicar que se debe dejar de descontar quantum y saltar a la tarea Idle hasta detectarse el pedido de reanudaci\'on del juego, el cual configura el flag para indicar que debe continuar el juego para que en la pr\'oxima interrupci\'on del clock se vuelva a la ejecuci\'on.\\
+\begin{center}
+	\begin{verbatim}
+		_isr33:
+			cli
+			pushad
+			call fin_intr_pic1
+			in al, 0x60
+			cmp al, 0x99 ;ver si se pulso p
+			je .P
+			
+			cmp al, 0x93 ;ver si se pulso r
+			je .R
+			jmp .fin
+			
+			.R:
+			mov byte[pausa], 0
+			jmp .fin
+			
+			.P:
+			mov byte[pausa], 1
+			jmp .fin
+			
+			.fin:
+			popad
+			sti
+			iret
+	\end{verbatim}
+\end{center}
 
+Por otra parte se modific\'o la rutina del reloj para que por cada interrupci\'on mientras se ejecute el juego descuente uno al quantum de la tarea. En caso de acabarse el quantum la interrupci\'on pide al scheduler el selector de segmento de la pr\'oxima tarea y realiza un far jump a esta. Adem\'as la interrupci\'on debe cargar primero la tarea \'Arbitro si el juego no se inicializ\'o, para que esta pueda llamar al servicio que inicializa el juego.\newline
+En caso del scheduler se tienen las funciones \verb+sched_inicializar+, \verb+sched_proximo_indice+, \verb+sched_remover_tarea+, \verb+get_actual+ y \verb+reloj_tarea+.
+\begin{itemize}
+	\item \verb+sched_inicializar+: Inicializa los valores de \verb+indice_actual+, el cual indica el \'indice del arreglo del scheduler de la tarea actual, y \verb+tareas+ que es un arreglo de los selectores de segmento de los TSS correspondientes.
+	\item \verb+sched_proximo_indice+: Retorna el pr\'oximo selector no nulo de la lista de tareas jugadores del scheduler en caso de ser el \'Arbitro, en caso de no serlo retorna el selector de segmento del TSS del \'Arbitro.
+	\item \verb+sched_remover_tarea+: Configura en $0$ el valor del arreglo \verb+tareas+ que corresponde a la tarea actual, para esto se hace uso de la funci\'on \verb+get_actual+ que obtiene el \'indice actual.
+	\item \verb+get_actual+: Busca en el arreglo \verb+tareas+ el \'indice que contiene el selector de segmento que se corresponde con el valor actual del registro TR.
+	\item \verb+reloj_tarea+: En base al \'indice de la tarea actual se avanza el reloj de la tarea actual y se modifica en pantalla el ``reloj'' correspondiente.
+\end{itemize}
+
+En el caso de game.c y game.h 
 
 \end{document}
