@@ -464,6 +464,24 @@ En caso del scheduler se tienen las funciones \verb+sched_inicializar+, \verb+sc
 	\item \verb+reloj_tarea+: En base al \'indice de la tarea actual se avanza el reloj de la tarea actual y se modifica en pantalla el ``reloj'' correspondiente.
 \end{itemize}
 
-En el caso de game.c y game.h 
+En el caso de game.c y game.h se crearon las funciones \verb+juego_finalizo+ y \verb+juego_iniciado+ para ser utilizadas por el \'Arbitro.\newline
+Se program\'o el \'Arbitro en su archivo arbitro.c de la siguiente manera:
+
+\begin{itemize}
+	\item \verb+imprimir_tablero+: Imprimir tablero dibuja en pantalla el cuadro del tablero, este se actualiza con cada iteraci\'on del ciclo en el cuerpo de la tarea.
+	\item \verb+imprimir_puntaje+: Imprime el conteo de casilleros para cada jugadore, este se actualiza con cada iteraci\'on del ciclo del cuerpo de la tarea.
+	\item \verb+imprimir_ganador+: Una vez finalizado el juego imprime en pantalla, al lado del puntaje del jugador correspondiente y en color acorde al que lo identifica, un mensaje que señala el ganador por puntos.
+	\item \verb+juego_terminado+: Comprueba si el juego se termin\'o
+	\item \verb+actualizar_pantalla+: Llama a las funciones \verb+calcular_puntajes+, \verb+imprimir_puntaje+ e \verb+imprimir_tablero+.
+	\item \verb+calcular_puntajes+: Recorre el tablero contando los puntajes de cada jugador y los guarda en el arreglo puntJugadores, el cual almacena los puntajes de cada uno de los cuatro jugadores.
+	\item \verb+screen_pintar_pantalla+: Imprime todo el fondo de la pantalla. Esta funci\'on solo se invoca al iniciar el juego.
+	\item \verb+imprimir+: Imprime la cadena de caracteres que recibe por par\'ametro con los colores y en la posici\'on de la pantalla pedidos.
+	\item \verb+imprimir_char+: Invoca a \verb+imprimir+ para que imprima un solo caracter con los colores y en la posici\'on de la pantalla pedidos.
+	\item \verb+imprimir_fondo+: Invoca a \verb+imprimir_char+ para que imprima un solo caracter vac\'io con los colores y en la posici\'on de la pantalla pedidos.
+	\item \verb+int2str+: Convierte un int a una cadena de caracteres y lo imprime para el jugador correspondiente.
+	\item \verb+length+: Obtiene el ``largo'' del int que recibe por par\'ametro.
+\end{itemize}
+
+Por \'ultimo se modificaron las rutinas de las interrupciones para que impriman el error en el espacio correspondiente a cada tarea y se modific\'o la rutina de la interrupci\'on de Page Fault para que en caso de querer accederse una p\'agina no mapeada del set de p\'aginas vertuales permitidas se le mapee una nueva p\'agina al Page Directory de la tarea correspondiente. Además se controla que no se hayan pedido m\'as de 5 p\'aginas por proceso y en caso contrario se desaloje la tarea.
 
 \end{document}
